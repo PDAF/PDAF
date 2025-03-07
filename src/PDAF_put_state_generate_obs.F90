@@ -48,6 +48,10 @@
 !! * 2019-01 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFput_state_generate_obs
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_op_f, &
      U_init_obserr_f, U_get_obs_f, U_prepoststep, outflag)
 
@@ -185,3 +189,5 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_generate_obs
+
+END MODULE PDAFput_state_generate_obs

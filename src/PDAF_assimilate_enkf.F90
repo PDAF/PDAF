@@ -42,6 +42,10 @@
 !! * 2013-08 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_enkf
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_enkf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_add_obs_error, &
      U_init_obs_covar, U_next_observation, outflag)
@@ -54,6 +58,8 @@ SUBROUTINE PDAF_assimilate_enkf(U_collect_state, U_distribute_state, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
        ONLY: PDAF_get_state
+  USE PDAFput_state_enkf, &
+       ONLY: PDAF_put_state_enkf
 
   IMPLICIT NONE
 
@@ -127,3 +133,5 @@ SUBROUTINE PDAF_assimilate_enkf(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_assimilate_enkf
+
+END MODULE PDAFassimilate_enkf

@@ -45,6 +45,10 @@
 !! *  Other revisions - see repository log
 !! *  Other revisions - see repository log
 !!
+MODULE PDAFput_state_lenkf
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      U_init_obs, U_prepoststep, U_localize, U_add_obs_err, U_init_obs_covar, &
      outflag)
@@ -190,3 +194,5 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_lenkf
+
+END MODULE PDAFput_state_lenkf

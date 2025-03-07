@@ -55,6 +55,7 @@ SUBROUTINE PDAF3_put_state_3dvar_nondiagR(collect_state_pdaf, &
   
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_3dvar, ONLY: PDAF_put_state_3dvar
 
   IMPLICIT NONE
   
@@ -118,6 +119,7 @@ SUBROUTINE PDAF3_put_state_en3dvar_estkf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_en3dvar_estkf, ONLY: PDAF_put_state_en3dvar_estkf
 
   IMPLICIT NONE
   
@@ -187,6 +189,7 @@ SUBROUTINE PDAF3_put_state_en3dvar_lestkf_nondiagR(collect_state_pdaf, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFput_state_en3dvar_lestkf, ONLY: PDAF_put_state_en3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -262,6 +265,7 @@ SUBROUTINE PDAF3_put_state_hyb3dvar_estkf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_hyb3dvar_estkf, ONLY: PDAF_put_state_hyb3dvar_estkf
 
   IMPLICIT NONE
   
@@ -335,6 +339,7 @@ SUBROUTINE PDAF3_put_state_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFput_state_hyb3dvar_lestkf, ONLY: PDAF_put_state_hyb3dvar_lestkf
 
   IMPLICIT NONE
   

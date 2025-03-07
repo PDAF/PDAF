@@ -44,6 +44,10 @@
 !! * 2025-02 - Lars Nerger - Initial code based on EnKF
 !! *  Other revisions - see repository log
 !!
+MODULE PDAFput_state_ensrf
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_ensrf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      U_init_obs, U_init_obsvars, U_localize_covar_serial, U_prepoststep, outflag)
 
@@ -188,3 +192,5 @@ SUBROUTINE PDAF_put_state_ensrf(U_collect_state, U_init_dim_obs, U_obs_op,  &
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_ensrf
+
+END MODULE PDAFput_state_ensrf

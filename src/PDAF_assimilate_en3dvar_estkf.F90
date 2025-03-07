@@ -42,6 +42,10 @@
 !! * 2013-08 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_en3dvar_estkf
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_en3dvar_estkf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
@@ -55,6 +59,8 @@ SUBROUTINE PDAF_assimilate_en3dvar_estkf(U_collect_state, U_distribute_state, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
        ONLY: PDAF_get_state
+  USE PDAFput_state_en3dvar_estkf, &
+       ONLY: PDAF_put_state_en3dvar_estkf
 
   IMPLICIT NONE
   
@@ -134,3 +140,5 @@ SUBROUTINE PDAF_assimilate_en3dvar_estkf(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_assimilate_en3dvar_estkf
+
+END MODULE PDAFassimilate_en3dvar_estkf

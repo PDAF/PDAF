@@ -48,11 +48,61 @@ MODULE PDAF
        ONLY: PDAF_print_info
   USE PDAFlocal
 
-  USE PDAF3_init
+  ! Interfaces for init and get_state
+  USE PDAFinit
   USE PDAFget_state
+
+  ! Full put_state interfaces
+  USE PDAFput_state_enkf
+  USE PDAFput_state_ensrf
+  USE PDAFput_state_estkf
+  USE PDAFput_state_etkf
+  USE PDAFput_state_lenkf
+  USE PDAFput_state_lestkf
+  USE PDAFput_state_letkf
+  USE PDAFput_state_lknetf
+  USE PDAFput_state_lnetf
+  USE PDAFput_state_lseik
+  USE PDAFput_state_netf
+  USE PDAFput_state_pf
+  USE PDAFput_state_prepost
+  USE PDAFput_state_seik
+
+  USE PDAFput_state_generate_obs
+
+  USE PDAFput_state_3dvar
+  USE PDAFput_state_en3dvar_estkf
+  USE PDAFput_state_en3dvar_lestkf
+  USE PDAFput_state_hyb3dvar_estkf
+  USE PDAFput_state_hyb3dvar_lestkf
+
+  ! Full assimilate interfaces
+  USE PDAFassimilate_enkf
+  USE PDAFassimilate_ensrf
+  USE PDAFassimilate_estkf
+  USE PDAFassimilate_etkf
+  USE PDAFassimilate_lenkf
+  USE PDAFassimilate_lestkf
+  USE PDAFassimilate_letkf
+  USE PDAFassimilate_lknetf
+  USE PDAFassimilate_lnetf
+  USE PDAFassimilate_lseik
+  USE PDAFassimilate_netf
+  USE PDAFassimilate_pf
+  USE PDAFassimilate_prepost
+  USE PDAFassimilate_seik
+
+  USE PDAFgenerate_obs
+
+  USE PDAFassimilate_3dvar
+  USE PDAFassimilate_en3dvar_estkf
+  USE PDAFassimilate_en3dvar_lestkf
+  USE PDAFassimilate_hyb3dvar_estkf
+  USE PDAFassimilate_hyb3dvar_lestkf
+
+  ! PDAF-3 advances interfaces
   USE PDAF_assimilate_ens
   USE PDAF_put_state_ens
-
   USE PDAF_assimilate_ens_nondiagR
   USE PDAF_put_state_ens_nondiagR
 
@@ -61,6 +111,7 @@ MODULE PDAF
   USE PDAF_assimilate_3dvars_nondiagR
   USE PDAF_put_state_3dvars_nondiagR
 
+  ! PDAF-2 OMI interfaces
   USE PDAFomi_assimilate_ens
   USE PDAFomi_put_state_ens
 
@@ -70,14 +121,19 @@ MODULE PDAF
   USE PDAFomi_assimilate_3dvars
   USE PDAFomi_put_state_3dvars
 
+  ! PDAF-2 LOCALOMI interfaces
   USE PDAFlocalomi_assimilate_ens
   USE PDAFlocalomi_put_state_ens
   USE PDAFlocalomi_assimilate_3dvars
   USE PDAFlocalomi_put_state_3dvars
 
+  ! PDAF-2 LOCAL interfaces
   USE PDAFlocal_assimilate_ens
   USE PDAFlocal_put_state_ens
   USE PDAFlocal_assimilate_3dvars
   USE PDAFlocal_put_state_3dvars
+
+  ! PDAF-OMI interfaces
+  USE PDAFomi
 
 END MODULE PDAF

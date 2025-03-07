@@ -42,6 +42,10 @@
 !! * 2014-05 - Paul Kirchgessner - Initial code based on ETKF
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_netf
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_netf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, &
      U_likelihood, U_next_observation, outflag)
@@ -54,6 +58,8 @@ SUBROUTINE PDAF_assimilate_netf(U_collect_state, U_distribute_state, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
        ONLY: PDAF_get_state
+  USE PDAFput_state_netf, &
+       ONLY: PDAF_put_state_netf
 
   IMPLICIT NONE
   
@@ -126,3 +132,5 @@ SUBROUTINE PDAF_assimilate_netf(U_collect_state, U_distribute_state, &
 
 
 END SUBROUTINE PDAF_assimilate_netf
+
+END MODULE PDAFassimilate_netf

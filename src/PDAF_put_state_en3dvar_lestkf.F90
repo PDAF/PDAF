@@ -47,6 +47,10 @@
 !! * 2021-03 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFput_state_en3dvar_lestkf
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prodRinvA, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
@@ -226,3 +230,5 @@ SUBROUTINE PDAF_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_en3dvar_lestkf
+
+END MODULE PDAFput_state_en3dvar_lestkf

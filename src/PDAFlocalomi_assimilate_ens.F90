@@ -57,6 +57,12 @@ SUBROUTINE PDAFlocalomi_assimilate(collect_state_pdaf, distribute_state_pdaf, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_lseik, ONLY: PDAF_assimilate_lseik
+  USE PDAFassimilate_letkf, ONLY: PDAF_assimilate_letkf
+  USE PDAFassimilate_lestkf, ONLY: PDAF_assimilate_lestkf
+  USE PDAFassimilate_lnetf, ONLY: PDAF_assimilate_lnetf
+  USE PDAFassimilate_lknetf, ONLY: PDAF_assimilate_lknetf
+  USE PDAFassimilate_ensrf, ONLY: PDAF_assimilate_ensrf
 
   IMPLICIT NONE
 
@@ -166,6 +172,9 @@ SUBROUTINE PDAFlocalomi_assimilate_nondiagR(collect_state_pdaf, distribute_state
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_lseik, ONLY: PDAF_assimilate_lseik
+  USE PDAFassimilate_letkf, ONLY: PDAF_assimilate_letkf
+  USE PDAFassimilate_lestkf, ONLY: PDAF_assimilate_lestkf
 
   IMPLICIT NONE
 
@@ -260,6 +269,7 @@ SUBROUTINE PDAFlocalomi_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_lnetf, ONLY: PDAF_assimilate_lnetf
 
   IMPLICIT NONE
 
@@ -334,6 +344,7 @@ SUBROUTINE PDAFlocalomi_assimilate_lknetf_nondiagR(collect_state_pdaf, distribut
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_lknetf, ONLY: PDAF_assimilate_lknetf
 
   IMPLICIT NONE
 

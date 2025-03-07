@@ -54,6 +54,12 @@ SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &             !< Project global to local state vector
        PDAFlocal_l2g_cb                      !< Project local to global state vecto
+  USE PDAFassimilate_lseik, ONLY: PDAF_assimilate_lseik
+  USE PDAFassimilate_letkf, ONLY: PDAF_assimilate_letkf
+  USE PDAFassimilate_lestkf, ONLY: PDAF_assimilate_lestkf
+  USE PDAFassimilate_lnetf, ONLY: PDAF_assimilate_lnetf
+  USE PDAFassimilate_lknetf, ONLY: PDAF_assimilate_lknetf
+  USE PDAFassimilate_ensrf, ONLY: PDAF_assimilate_ensrf
 
   IMPLICIT NONE
 
@@ -156,6 +162,13 @@ SUBROUTINE PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
+  USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
+  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
+  USE PDAFassimilate_etkf, ONLY: PDAF_assimilate_etkf
+  USE PDAFassimilate_estkf, ONLY: PDAF_assimilate_estkf
+  USE PDAFassimilate_netf, ONLY: PDAF_assimilate_netf
+  USE PDAFassimilate_pf, ONLY: PDAF_assimilate_pf
 
   IMPLICIT NONE
   
@@ -243,6 +256,7 @@ SUBROUTINE PDAF3_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
 
   IMPLICIT NONE
   
@@ -264,7 +278,7 @@ SUBROUTINE PDAF3_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -300,6 +314,7 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_ensrf, ONLY: PDAF_assimilate_ensrf
 
   IMPLICIT NONE
   
@@ -321,7 +336,7 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &

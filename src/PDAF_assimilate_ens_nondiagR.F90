@@ -74,6 +74,9 @@ SUBROUTINE PDAF3_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_lseik, ONLY: PDAF_assimilate_lseik
+  USE PDAFassimilate_letkf, ONLY: PDAF_assimilate_letkf
+  USE PDAFassimilate_lestkf, ONLY: PDAF_assimilate_lestkf
 
   IMPLICIT NONE
 
@@ -151,6 +154,87 @@ END SUBROUTINE PDAF3_assimilate_local_nondiagR
 
 
 !-------------------------------------------------------------------------------
+!> Interface to PDAF for global filters
+!!
+!! __Revision history:__
+!! * 2024-08 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF3_assimilate_global_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, prodRinvA_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
+
+  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
+  USE PDAFassimilate_etkf, ONLY: PDAF_assimilate_etkf
+  USE PDAFassimilate_estkf, ONLY: PDAF_assimilate_estkf
+
+  IMPLICIT NONE
+  
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag      !< Status flag
+  
+! *** External subroutines ***
+  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
+       distribute_state_pdaf, &        !< Routine to distribute a state vector
+       next_observation_pdaf, &        !< Provide time step, time and dimension of next observation
+       prepoststep_pdaf                !< User supplied pre/poststep routine
+  EXTERNAL :: init_dim_obs_pdaf, &     !< Initialize dimension of observation vector
+       obs_op_pdaf                     !< Observation operator
+  EXTERNAL :: prodRinvA_pdaf           !< Provide product R^-1 A
+  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
+       PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
+       PDAFomi_init_obscovar_cb, &     !< Initialize mean observation error variance
+       PDAFomi_add_obs_error_cb        !< Add observation error covariance matrix
+
+
+! **************************************************
+! *** Call the full put_state interface routine  ***
+! **************************************************
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAF3_assimilate_global_nondiagR -- START'
+
+  IF (TRIM(filterstr) == 'SEIK') THEN
+     CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          prodRinvA_pdaf, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'ENKF') THEN
+     WRITE (*,*) 'PDAF-ERROR: Use PDAF3_assimilate_enkf_nondiagR for EnKF'
+     outflag=200
+  ELSEIF (TRIM(filterstr) == 'ETKF') THEN
+     CALL PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          prodRinvA_pdaf, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'ESTKF') THEN
+     CALL PDAF_assimilate_estkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          prodRinvA_pdaf, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'NETF') THEN
+     WRITE (*,*) 'PDAF-ERROR: Use PDAF3_assimilate_nonlin_nondiagR for NETF and PF'
+     outflag=200
+  ELSEIF (TRIM(filterstr) == 'PF') THEN
+     WRITE (*,*) 'PDAF-ERROR: Use PDAF3_assimilate_nonlin_nondiagR for NETF and PF'
+     outflag=200
+  ELSE
+     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAF3_assimilate_global_nondiagR'
+     outflag=200
+  END IF
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAF3_assimilate_global_nondiagR -- END'
+
+END SUBROUTINE PDAF3_assimilate_global_nondiagR
+
+
+!-------------------------------------------------------------------------------
 !> Interface to transfer state to PDAF
 !!
 !! __Revision history:__
@@ -168,6 +252,7 @@ SUBROUTINE PDAF3_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute_state_
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_lnetf, ONLY: PDAF_assimilate_lnetf
 
   IMPLICIT NONE
 
@@ -201,7 +286,7 @@ SUBROUTINE PDAF3_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute_state_
 
   IF (TRIM(filterstr) == 'LNETF') THEN
      CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_l_cb, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
           prepoststep_pdaf, likelihood_l_pdafomi, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, &
           PDAFomi_g2l_obs_cb, next_observation_pdaf, outflag)
@@ -242,6 +327,7 @@ SUBROUTINE PDAF3_assimilate_lknetf_nondiagR(collect_state_pdaf, distribute_state
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_lknetf, ONLY: PDAF_assimilate_lknetf
 
   IMPLICIT NONE
 
@@ -310,90 +396,13 @@ END SUBROUTINE PDAF3_assimilate_lknetf_nondiagR
 !! * 2024-08 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-SUBROUTINE PDAF3_assimilate_global_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-     init_dim_obs_pdaf, obs_op_pdaf, prodRinvA_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
-
-  USE PDAF_mod_filter, ONLY: filterstr, debug
-  USE PDAFomi, ONLY: PDAFomi_dealloc
-
-  IMPLICIT NONE
-  
-! *** Arguments ***
-  INTEGER, INTENT(out) :: outflag      !< Status flag
-  
-! *** External subroutines ***
-  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
-       distribute_state_pdaf, &        !< Routine to distribute a state vector
-       next_observation_pdaf, &        !< Provide time step, time and dimension of next observation
-       prepoststep_pdaf                !< User supplied pre/poststep routine
-  EXTERNAL :: init_dim_obs_pdaf, &     !< Initialize dimension of observation vector
-       obs_op_pdaf                     !< Observation operator
-  EXTERNAL :: prodRinvA_pdaf           !< Provide product R^-1 A
-  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-       PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-       PDAFomi_init_obscovar_cb, &     !< Initialize mean observation error variance
-       PDAFomi_add_obs_error_cb        !< Add observation error covariance matrix
-
-
-! **************************************************
-! *** Call the full put_state interface routine  ***
-! **************************************************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAF3_assimilate_global_nondiagR -- START'
-
-  IF (TRIM(filterstr) == 'SEIK') THEN
-     CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          prodRinvA_pdaf, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
-  ELSEIF (TRIM(filterstr) == 'ENKF') THEN
-     WRITE (*,*) 'PDAF-ERROR: Use PDAF3_assimilate_enkf_nondiagR for EnKF'
-     outflag=200
-  ELSEIF (TRIM(filterstr) == 'ETKF') THEN
-     CALL PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          prodRinvA_pdaf, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
-  ELSEIF (TRIM(filterstr) == 'ESTKF') THEN
-     CALL PDAF_assimilate_estkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          prodRinvA_pdaf, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
-  ELSEIF (TRIM(filterstr) == 'NETF') THEN
-     WRITE (*,*) 'PDAF-ERROR: Use PDAF3_assimilate_nonlin_nondiagR for NETF and PF'
-     outflag=200
-  ELSEIF (TRIM(filterstr) == 'PF') THEN
-     WRITE (*,*) 'PDAF-ERROR: Use PDAF3_assimilate_nonlin_nondiagR for NETF and PF'
-     outflag=200
-  ELSE
-     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAF3_assimilate_global_nondiagR'
-     outflag=200
-  END IF
-
-
-! *******************************************
-! *** Deallocate and re-init observations ***
-! *******************************************
-
-  CALL PDAFomi_dealloc()
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAF3_assimilate_global_nondiagR -- END'
-
-END SUBROUTINE PDAF3_assimilate_global_nondiagR
-
-
-!-------------------------------------------------------------------------------
-!> Interface to PDAF for global filters
-!!
-!! __Revision history:__
-!! * 2024-08 - Lars Nerger - Initial code
-!! * Other revisions - see repository log
-!!
 SUBROUTINE PDAF3_assimilate_enkf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
      init_dim_obs_pdafomi, obs_op_pdafomi, add_obs_error_pdafomi, init_obscovar_pdafomi, &
      prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
 
   IMPLICIT NONE
   
@@ -457,6 +466,7 @@ SUBROUTINE PDAF3_assimilate_lenkf_nondiagR(collect_state_pdaf, distribute_state_
 
   USE PDAF_mod_filter, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
 
   IMPLICIT NONE
   
@@ -514,6 +524,8 @@ SUBROUTINE PDAF3_assimilate_nonlin_nondiagR(collect_state_pdaf, distribute_state
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_netf, ONLY: PDAF_assimilate_netf
+  USE PDAFassimilate_pf, ONLY: PDAF_assimilate_pf
 
   IMPLICIT NONE
   

@@ -51,6 +51,9 @@ SUBROUTINE PDAFomi_put_state_local_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
+  USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
+  USE PDAFput_state_lestkf, ONLY: PDAF_put_state_lestkf
 
   IMPLICIT NONE
   
@@ -136,6 +139,9 @@ SUBROUTINE PDAFomi_put_state_global_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_seik, ONLY: PDAF_put_state_seik
+  USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf
+  USE PDAFput_state_estkf, ONLY: PDAF_put_state_estkf
 
   IMPLICIT NONE
   
@@ -213,6 +219,7 @@ SUBROUTINE PDAFomi_put_state_enkf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf
 
   IMPLICIT NONE
   
@@ -273,6 +280,7 @@ SUBROUTINE PDAFomi_put_state_lenkf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_lenkf, ONLY: PDAF_put_state_lenkf
 
   IMPLICIT NONE
   
@@ -327,6 +335,8 @@ SUBROUTINE PDAFomi_put_state_nonlin_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_netf, ONLY: PDAF_put_state_netf
+  USE PDAFput_state_pf, ONLY: PDAF_put_state_pf
 
   IMPLICIT NONE
 
@@ -390,6 +400,7 @@ SUBROUTINE PDAFomi_put_state_lnetf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_lnetf, ONLY: PDAF_put_state_lnetf
 
   IMPLICIT NONE
   
@@ -459,6 +470,7 @@ SUBROUTINE PDAFomi_put_state_lknetf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_lknetf, ONLY: PDAF_put_state_lknetf
 
   IMPLICIT NONE
   

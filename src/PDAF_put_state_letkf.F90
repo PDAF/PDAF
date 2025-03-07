@@ -39,6 +39,10 @@
 !! * 2009-07 - Lars Nerger - Initial code
 !! *  Other revisions - see repository log
 !!
+MODULE PDAFput_state_letkf
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_letkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_init_n_domains_p, &
      U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
@@ -199,3 +203,5 @@ SUBROUTINE PDAF_put_state_letkf(U_collect_state, U_init_dim_obs, U_obs_op, &
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_letkf
+
+END MODULE PDAFput_state_letkf

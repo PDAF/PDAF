@@ -55,6 +55,7 @@ SUBROUTINE PDAF3_assimilate_3dvar_nondiagR(collect_state_pdaf, distribute_state_
   
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_3dvar, ONLY: PDAF_assimilate_3dvar
 
   IMPLICIT NONE
   
@@ -78,7 +79,7 @@ SUBROUTINE PDAF3_assimilate_3dvar_nondiagR(collect_state_pdaf, distribute_state_
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -120,6 +121,7 @@ SUBROUTINE PDAF3_assimilate_en3dvar_estkf_nondiagR(collect_state_pdaf, distribut
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_en3dvar_estkf, ONLY: PDAF_assimilate_en3dvar_estkf
 
   IMPLICIT NONE
   
@@ -143,7 +145,7 @@ SUBROUTINE PDAF3_assimilate_en3dvar_estkf_nondiagR(collect_state_pdaf, distribut
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -190,6 +192,7 @@ SUBROUTINE PDAF3_assimilate_en3dvar_lestkf_nondiagR(collect_state_pdaf, distribu
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_en3dvar_lestkf, ONLY: PDAF_assimilate_en3dvar_lestkf
 
   IMPLICIT NONE
 
@@ -220,7 +223,7 @@ SUBROUTINE PDAF3_assimilate_en3dvar_lestkf_nondiagR(collect_state_pdaf, distribu
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -268,6 +271,7 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_estkf_nondiagR(collect_state_pdaf, distribu
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_hyb3dvar_estkf, ONLY: PDAF_assimilate_hyb3dvar_estkf
 
   IMPLICIT NONE
   
@@ -293,7 +297,7 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_estkf_nondiagR(collect_state_pdaf, distribu
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -342,6 +346,7 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, distrib
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_hyb3dvar_lestkf, ONLY: PDAF_assimilate_hyb3dvar_lestkf
 
   IMPLICIT NONE
 
@@ -375,7 +380,7 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, distrib
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &

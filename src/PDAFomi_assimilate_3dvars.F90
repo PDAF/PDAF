@@ -48,6 +48,7 @@ SUBROUTINE PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
   
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_3dvar, ONLY: PDAF_assimilate_3dvar
 
   IMPLICIT NONE
   
@@ -71,7 +72,7 @@ SUBROUTINE PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -113,6 +114,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_en3dvar_estkf, ONLY: PDAF_assimilate_en3dvar_estkf
 
   IMPLICIT NONE
   
@@ -137,7 +139,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -180,6 +182,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_stat
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_en3dvar_lestkf, ONLY: PDAF_assimilate_en3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -213,7 +216,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_stat
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -259,6 +262,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_stat
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_hyb3dvar_estkf, ONLY: PDAF_assimilate_hyb3dvar_estkf
 
   IMPLICIT NONE
   
@@ -287,7 +291,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_stat
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -331,6 +335,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_sta
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_hyb3dvar_lestkf, ONLY: PDAF_assimilate_hyb3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -366,7 +371,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_sta
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -413,6 +418,7 @@ SUBROUTINE PDAFomi_assimilate_3dvar_nondiagR(collect_state_pdaf, distribute_stat
   
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_3dvar, ONLY: PDAF_assimilate_3dvar
 
   IMPLICIT NONE
   
@@ -436,7 +442,7 @@ SUBROUTINE PDAFomi_assimilate_3dvar_nondiagR(collect_state_pdaf, distribute_stat
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -478,6 +484,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_estkf_nondiagR(collect_state_pdaf, distrib
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_en3dvar_estkf, ONLY: PDAF_assimilate_en3dvar_estkf
 
   IMPLICIT NONE
   
@@ -501,7 +508,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_estkf_nondiagR(collect_state_pdaf, distrib
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -545,6 +552,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_lestkf_nondiagR(collect_state_pdaf, distri
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_en3dvar_lestkf, ONLY: PDAF_assimilate_en3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -577,7 +585,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_lestkf_nondiagR(collect_state_pdaf, distri
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -625,6 +633,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf_nondiagR(collect_state_pdaf, distri
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_hyb3dvar_estkf, ONLY: PDAF_assimilate_hyb3dvar_estkf
 
   IMPLICIT NONE
   
@@ -650,7 +659,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf_nondiagR(collect_state_pdaf, distri
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -695,6 +704,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, distr
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_hyb3dvar_lestkf, ONLY: PDAF_assimilate_hyb3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -730,7 +740,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, distr
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &

@@ -31,7 +31,7 @@
 !! * 2003-08 - Lars Nerger - Initial code
 !! *  Other revisions - see repository log
 !!
-MODULE PDAF3_init
+MODULE PDAFinit
 
 CONTAINS
 
@@ -286,4 +286,4 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 
 END SUBROUTINE PDAF_init
 
-END MODULE PDAF3_init
+END MODULE PDAFinit

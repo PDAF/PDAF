@@ -35,6 +35,10 @@
 !! * 2022-01 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_prepost
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_prepost(U_collect_state, U_distribute_state, &
      U_prepoststep, U_next_observation, outflag)
 
@@ -103,3 +107,5 @@ SUBROUTINE PDAF_assimilate_prepost(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_assimilate_prepost
+
+END MODULE PDAFassimilate_prepost

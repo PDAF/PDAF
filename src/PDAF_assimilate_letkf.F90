@@ -42,6 +42,10 @@
 !! * 2013-08 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_letkf
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_letkf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prepoststep, &
      U_prodRinvA_l, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
@@ -56,6 +60,8 @@ SUBROUTINE PDAF_assimilate_letkf(U_collect_state, U_distribute_state, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
        ONLY: PDAF_get_state
+  USE PDAFput_state_letkf, &
+       ONLY: PDAF_put_state_letkf
 
   IMPLICIT NONE
   
@@ -139,3 +145,5 @@ SUBROUTINE PDAF_assimilate_letkf(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_assimilate_letkf
+
+END MODULE PDAFassimilate_letkf

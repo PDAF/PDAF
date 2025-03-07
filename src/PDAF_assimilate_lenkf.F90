@@ -42,6 +42,10 @@
 !! * 2015-12 - Lars Nerger - Initial code by copying and adapting PDAF_assimilate_enkf
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_lenkf
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_localize, &
      U_add_obs_error, U_init_obs_covar, U_next_observation, outflag)
@@ -54,6 +58,8 @@ SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
        ONLY: PDAF_get_state
+  USE PDAFput_state_lenkf, &
+       ONLY: PDAF_put_state_lenkf
 
   IMPLICIT NONE
   
@@ -129,3 +135,5 @@ SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_assimilate_lenkf
+
+END MODULE PDAFassimilate_lenkf

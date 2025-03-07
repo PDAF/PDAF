@@ -34,6 +34,10 @@
 !! * 2019-01 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFgenerate_obs
+
+CONTAINS
+
 SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
      U_init_dim_obs_f, U_obs_op_f, U_init_obserr_f, U_get_obs_f, &
      U_prepoststep, U_next_observation, outflag)
@@ -105,3 +109,5 @@ SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_generate_obs
+
+END MODULE PDAFgenerate_obs

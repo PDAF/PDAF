@@ -42,6 +42,10 @@
 !! * 2017-08 - Lars Nerger - Initial code based on LETKF
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_lknetf
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_lknetf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prepoststep, &
      U_prodRinvA_l, U_prodRinvA_hyb_l, U_init_n_domains_p, U_init_dim_l, &
@@ -58,6 +62,8 @@ SUBROUTINE PDAF_assimilate_lknetf(U_collect_state, U_distribute_state, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
        ONLY: PDAF_get_state
+  USE PDAFput_state_lknetf, &
+       ONLY: PDAF_put_state_lknetf
 
   IMPLICIT NONE
   
@@ -145,3 +151,5 @@ SUBROUTINE PDAF_assimilate_lknetf(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_assimilate_lknetf
+
+END MODULE PDAFassimilate_lknetf

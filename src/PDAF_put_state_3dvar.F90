@@ -46,6 +46,10 @@
 !! * 2021-03 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFput_state_3dvar
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
@@ -207,3 +211,5 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_3dvar
+
+END MODULE PDAFput_state_3dvar

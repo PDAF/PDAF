@@ -46,6 +46,10 @@
 !! * 2019-05 - Lars Nerger - Initial code based on NETF
 !! * Other revisions - see repository log
 !!
+MODULE PDAFput_state_pf
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_likelihood, outflag)
 
@@ -185,3 +189,5 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_pf
+
+END MODULE PDAFput_state_pf

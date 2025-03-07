@@ -46,6 +46,10 @@
 !! * 2014-05 - Paul Kirchgessner - Initial code based on LETKF
 !! * Other revisions - see repository log
 !!
+MODULE PDAFput_state_netf
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_likelihood, outflag)
 
@@ -186,3 +190,5 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_netf
+
+END MODULE PDAFput_state_netf

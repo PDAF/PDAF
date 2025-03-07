@@ -47,6 +47,7 @@ SUBROUTINE PDAFomi_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op
   
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_3dvar, ONLY: PDAF_put_state_3dvar
 
   IMPLICIT NONE
   
@@ -104,6 +105,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_estkf(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_en3dvar_estkf, ONLY: PDAF_put_state_en3dvar_estkf
 
   IMPLICIT NONE
   
@@ -165,6 +167,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_en3dvar_lestkf, ONLY: PDAF_put_state_en3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -235,6 +238,7 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_estkf(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_hyb3dvar_estkf, ONLY: PDAF_put_state_hyb3dvar_estkf
 
   IMPLICIT NONE
   
@@ -299,6 +303,7 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_lestkf(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_hyb3dvar_lestkf, ONLY: PDAF_put_state_hyb3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -371,6 +376,7 @@ SUBROUTINE PDAFomi_put_state_3dvar_nondiagR(collect_state_pdaf, &
   
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_3dvar, ONLY: PDAF_put_state_3dvar
 
   IMPLICIT NONE
   
@@ -434,6 +440,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_estkf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_en3dvar_estkf, ONLY: PDAF_put_state_en3dvar_estkf
 
   IMPLICIT NONE
   
@@ -499,6 +506,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_lestkf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_en3dvar_lestkf, ONLY: PDAF_put_state_en3dvar_lestkf
 
   IMPLICIT NONE
 
@@ -576,6 +584,7 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_estkf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_hyb3dvar_estkf, ONLY: PDAF_put_state_hyb3dvar_estkf
 
   IMPLICIT NONE
   
@@ -645,6 +654,7 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_hyb3dvar_lestkf, ONLY: PDAF_put_state_hyb3dvar_lestkf
 
   IMPLICIT NONE
   

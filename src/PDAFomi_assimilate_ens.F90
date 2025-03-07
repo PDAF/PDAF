@@ -49,6 +49,12 @@ SUBROUTINE PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_lseik, ONLY: PDAF_assimilate_lseik
+  USE PDAFassimilate_letkf, ONLY: PDAF_assimilate_letkf
+  USE PDAFassimilate_lestkf, ONLY: PDAF_assimilate_lestkf
+  USE PDAFassimilate_lnetf, ONLY: PDAF_assimilate_lnetf
+  USE PDAFassimilate_lknetf, ONLY: PDAF_assimilate_lknetf
+  USE PDAFassimilate_ensrf, ONLY: PDAF_assimilate_ensrf
 
   IMPLICIT NONE
   
@@ -110,7 +116,7 @@ SUBROUTINE PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           next_observation_pdaf, outflag)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
      CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_l_cb, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
           prepoststep_pdaf, PDAFomi_likelihood_l_cb, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           PDAFomi_g2l_obs_cb, next_observation_pdaf, outflag)
@@ -154,6 +160,13 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
+  USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
+  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
+  USE PDAFassimilate_etkf, ONLY: PDAF_assimilate_etkf
+  USE PDAFassimilate_estkf, ONLY: PDAF_assimilate_estkf
+  USE PDAFassimilate_netf, ONLY: PDAF_assimilate_netf
+  USE PDAFassimilate_pf, ONLY: PDAF_assimilate_pf
 
   IMPLICIT NONE
   
@@ -241,6 +254,7 @@ SUBROUTINE PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
 
   IMPLICIT NONE
   
@@ -299,6 +313,7 @@ SUBROUTINE PDAFomi_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_ensrf, ONLY: PDAF_assimilate_ensrf
 
   IMPLICIT NONE
   
@@ -369,6 +384,7 @@ SUBROUTINE PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
        next_observation_pdaf, outflag)
 
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFgenerate_obs, ONLY: PDAF_generate_obs
 
   IMPLICIT NONE
   

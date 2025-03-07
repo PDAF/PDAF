@@ -58,6 +58,7 @@ SUBROUTINE PDAFlocalomi_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_en3dvar_lestkf, ONLY: PDAF_assimilate_en3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -89,7 +90,7 @@ SUBROUTINE PDAFlocalomi_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -140,6 +141,7 @@ SUBROUTINE PDAFlocalomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribut
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_hyb3dvar_lestkf, ONLY: PDAF_assimilate_hyb3dvar_lestkf
 
   IMPLICIT NONE
   
@@ -173,7 +175,7 @@ SUBROUTINE PDAFlocalomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribut
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -225,6 +227,7 @@ SUBROUTINE PDAFlocalomi_assimilate_en3dvar_lestkf_nondiagR(collect_state_pdaf, d
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_en3dvar_lestkf, ONLY: PDAF_assimilate_en3dvar_lestkf
 
   IMPLICIT NONE
 
@@ -255,7 +258,7 @@ SUBROUTINE PDAFlocalomi_assimilate_en3dvar_lestkf_nondiagR(collect_state_pdaf, d
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &
@@ -307,6 +310,7 @@ SUBROUTINE PDAFlocalomi_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, 
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFassimilate_hyb3dvar_lestkf, ONLY: PDAF_assimilate_hyb3dvar_lestkf
 
   IMPLICIT NONE
 
@@ -340,7 +344,7 @@ SUBROUTINE PDAFlocalomi_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, 
 
 
 ! **************************************************
-! *** Call the full put_state interface routine  ***
+! *** Call the full assimilate interface routine  ***
 ! **************************************************
 
   IF (debug>0) &

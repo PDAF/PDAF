@@ -46,6 +46,10 @@
 !! * 2017-08 - Lars Nerger - Initial code based on LETKF
 !! * Other revisions - see repository log
 !!
+MODULE PDAFput_state_lknetf
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_prodRinvA_hyb_l, &
      U_init_n_domains_p, &
@@ -223,3 +227,5 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_lknetf
+
+END MODULE PDAFput_state_lknetf

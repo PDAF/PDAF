@@ -48,6 +48,12 @@ SUBROUTINE PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_
 
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
+  USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
+  USE PDAFput_state_lestkf, ONLY: PDAF_put_state_lestkf
+  USE PDAFput_state_lnetf, ONLY: PDAF_put_state_lnetf
+  USE PDAFput_state_lknetf, ONLY: PDAF_put_state_lknetf
+  USE PDAFput_state_ensrf, ONLY: PDAF_put_state_ensrf
 
   IMPLICIT NONE
   
@@ -139,6 +145,13 @@ SUBROUTINE PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdaf, obs_o
 
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_seik, ONLY: PDAF_put_state_seik
+  USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf
+  USE PDAFput_state_lenkf, ONLY: PDAF_put_state_lenkf
+  USE PDAFput_state_etkf, ONLY: PDAF_put_state_etkf
+  USE PDAFput_state_estkf, ONLY: PDAF_put_state_estkf
+  USE PDAFput_state_netf, ONLY: PDAF_put_state_netf
+  USE PDAFput_state_pf, ONLY: PDAF_put_state_pf
 
   IMPLICIT NONE
   
@@ -212,6 +225,7 @@ SUBROUTINE PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op
      prepoststep_pdaf, localize_covar_pdaf, outflag)
 
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_lenkf, ONLY: PDAF_put_state_lenkf
 
   IMPLICIT NONE
   
@@ -258,6 +272,7 @@ SUBROUTINE PDAFomi_put_state_ensrf(collect_state_pdaf, init_dim_obs_pdaf, obs_op
      localize_covar_serial_pdaf, prepoststep_pdaf, outflag)
 
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_ensrf, ONLY: PDAF_put_state_ensrf
 
   IMPLICIT NONE
   
@@ -302,6 +317,7 @@ SUBROUTINE PDAFomi_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pda
      obs_op_f_pdaf, get_obs_f_pdaf, prepoststep_pdaf, outflag)
 
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_generate_obs, ONLY: PDAF_put_state_generate_obs
 
   IMPLICIT NONE
 

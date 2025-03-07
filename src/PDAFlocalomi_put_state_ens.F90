@@ -56,6 +56,12 @@ SUBROUTINE PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_f_pdaf, obs_o
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
+  USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
+  USE PDAFput_state_lestkf, ONLY: PDAF_put_state_lestkf
+  USE PDAFput_state_lnetf, ONLY: PDAF_put_state_lnetf
+  USE PDAFput_state_lknetf, ONLY: PDAF_put_state_lknetf
+  USE PDAFput_state_ensrf, ONLY: PDAF_put_state_ensrf
 
   IMPLICIT NONE
   
@@ -151,6 +157,9 @@ SUBROUTINE PDAFlocalomi_put_state_nondiagR(collect_state_pdaf, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
+  USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
+  USE PDAFput_state_lestkf, ONLY: PDAF_put_state_lestkf
 
   IMPLICIT NONE
   
@@ -240,6 +249,7 @@ SUBROUTINE PDAFlocalomi_put_state_lnetf_nondiagR(collect_state_pdaf, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFput_state_lnetf, ONLY: PDAF_put_state_lnetf
 
   IMPLICIT NONE
   
@@ -311,6 +321,7 @@ SUBROUTINE PDAFlocalomi_put_state_lknetf_nondiagR(collect_state_pdaf, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
+  USE PDAFput_state_lknetf, ONLY: PDAF_put_state_lknetf
 
   IMPLICIT NONE
   

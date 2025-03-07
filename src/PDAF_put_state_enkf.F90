@@ -44,6 +44,10 @@
 !! * 2003-07 - Lars Nerger - Initial code
 !! *  Other revisions - see repository log
 !!
+MODULE PDAFput_state_enkf
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      U_init_obs, U_prepoststep, U_add_obs_err, U_init_obs_covar, outflag)
 
@@ -188,3 +192,5 @@ SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_enkf
+
+END MODULE PDAFput_state_enkf

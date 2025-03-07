@@ -42,6 +42,10 @@
 !! * 2025-02 - Lars Nerger - Initial code based on EnKF
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_ensrf
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_ensrf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvars, U_localize_covar_serial, &
      U_prepoststep, U_next_observation, outflag)
@@ -54,6 +58,8 @@ SUBROUTINE PDAF_assimilate_ensrf(U_collect_state, U_distribute_state, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
        ONLY: PDAF_get_state
+  USE PDAFput_state_ensrf, &
+       ONLY: PDAF_put_state_ensrf
 
   IMPLICIT NONE
 
@@ -127,3 +133,5 @@ SUBROUTINE PDAF_assimilate_ensrf(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_assimilate_ensrf
+
+END MODULE PDAFassimilate_ensrf

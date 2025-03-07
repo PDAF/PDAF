@@ -54,6 +54,9 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_stat
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_lseik, ONLY: PDAF_assimilate_lseik
+  USE PDAFassimilate_letkf, ONLY: PDAF_assimilate_letkf
+  USE PDAFassimilate_lestkf, ONLY: PDAF_assimilate_lestkf
 
   IMPLICIT NONE
   
@@ -144,6 +147,9 @@ SUBROUTINE PDAFomi_assimilate_global_nondiagR(collect_state_pdaf, distribute_sta
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
+  USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
+  USE PDAFassimilate_estkf, ONLY: PDAF_assimilate_estkf
 
   IMPLICIT NONE
   
@@ -223,6 +229,7 @@ SUBROUTINE PDAFomi_assimilate_enkf_nondiagR(collect_state_pdaf, distribute_state
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
 
   IMPLICIT NONE
   
@@ -286,6 +293,7 @@ SUBROUTINE PDAFomi_assimilate_lenkf_nondiagR(collect_state_pdaf, distribute_stat
 
   USE PDAF_mod_filter, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
 
   IMPLICIT NONE
   
@@ -343,6 +351,8 @@ SUBROUTINE PDAFomi_assimilate_nonlin_nondiagR(collect_state_pdaf, distribute_sta
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_netf, ONLY: PDAF_assimilate_netf
+  USE PDAFassimilate_pf, ONLY: PDAF_assimilate_pf
 
   IMPLICIT NONE
   
@@ -410,6 +420,7 @@ SUBROUTINE PDAFomi_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute_stat
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_lnetf, ONLY: PDAF_assimilate_lnetf
 
   IMPLICIT NONE
   
@@ -445,7 +456,7 @@ SUBROUTINE PDAFomi_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute_stat
 
   IF (TRIM(filterstr) == 'LNETF') THEN
      CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_l_cb, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
           prepoststep_pdaf, likelihood_l_pdafomi, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           PDAFomi_g2l_obs_cb, next_observation_pdaf, outflag)
@@ -482,6 +493,7 @@ SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR(collect_state_pdaf, distribute_sta
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFassimilate_lknetf, ONLY: PDAF_assimilate_lknetf
 
   IMPLICIT NONE
   

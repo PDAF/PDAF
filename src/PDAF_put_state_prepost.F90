@@ -45,6 +45,10 @@
 !! * 2014-11 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFput_state_prepost
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
 
   USE PDAF_communicate_ens, &
@@ -169,3 +173,5 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_prepost
+
+END MODULE PDAFput_state_prepost

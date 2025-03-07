@@ -42,6 +42,10 @@
 !! * 2013-08 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFassimilate_3dvar
+
+CONTAINS
+
 SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
@@ -55,6 +59,8 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
        ONLY: PDAF_get_state
+  USE PDAFput_state_3dvar, &
+       ONLY: PDAF_put_state_3dvar
 
   IMPLICIT NONE
   
@@ -133,3 +139,5 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_assimilate_3dvar
+
+END MODULE PDAFassimilate_3dvar
