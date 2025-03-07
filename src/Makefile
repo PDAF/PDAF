@@ -285,9 +285,10 @@ $(LIBDIR)/libpdaf-d.a: $(OBJ_PDAF) $(OBJ_SANGOMA)
 	$(info $(bold)Generate Filter library$(sgr0))
 	$(AR) rs $(AR_SPEC) $(LIBDIR)/libpdaf-d.a $(OBJ_PDAF) $(OBJ_SANGOMA)
 
-$(LIBDIR)/libpdaf-var.a:  $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM)
+$(LIBDIR)/libpdaf-var.a:  $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM) $(OBJ_SANGOMA)
 	$(info $(bold)Generate Var Filter library$(sgr0))
-	$(AR) rs $(AR_SPEC) $(LIBDIR)/libpdaf-var.a $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM)
+	$(AR) rs $(AR_SPEC) $(LIBDIR)/libpdaf-var.a $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM) \
+		 $(OBJ_SANGOMA)
 
 # use pattern rule to create rules for all object files
 $(OBJDIR)/%.o: $(SRCDIR)/%.F90
