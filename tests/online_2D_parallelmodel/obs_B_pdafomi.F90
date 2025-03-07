@@ -459,4 +459,48 @@ CONTAINS
 
   END SUBROUTINE localize_covar_B
 
+
+
+!-------------------------------------------------------------------------------
+!> Perform covariance localization for ENSRF on the module-type observation
+!!
+!! The routine is called in the analysis step of the ENSRF
+!! with serial observation processing. It has to apply localization
+!! to the two vectors HP and HXY for the single observation with
+!! index iobs
+!!
+!! This routine calls the routine PDAFomi_localize_covar_serial
+!! for each observation type. The call allows to specify a
+!! different localization radius and localization functions
+!! for each observation type.
+!!
+  SUBROUTINE localize_covar_serial_B(iobs, dim_p, dim_obs, HP_p, HXY_p, coords_p)
+
+    ! Include PDAFomi function
+    USE PDAFomi, ONLY: PDAFomi_localize_covar_serial
+
+    ! Include localization radius and local coordinates
+    USE mod_assimilation, &   
+         ONLY: cradius, locweight, sradius
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: iobs                  !< Index of current observation
+    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
+    INTEGER, INTENT(in) :: dim_obs               !< Dimension of observation vector
+    REAL, INTENT(inout) :: HP_p(dim_p)           !< Process-local part of matrix HP for observation iobs
+    REAL, INTENT(inout) :: HXY_p(dim_obs)        !< Process-local part of matrix HX(HX_all) for full observations
+    REAL, INTENT(in)    :: coords_p(:,:)         !< Coordinates of state vector elements
+
+
+! *************************************
+! *** Apply covariance localization ***
+! *************************************
+
+   CALL PDAFomi_localize_covar_serial(thisobs, iobs, dim_p, dim_obs, locweight, &
+        cradius, sradius, coords_p, HP_p, HXY_p)
+
+  END SUBROUTINE localize_covar_serial_B
+
 END MODULE obs_B_pdafomi

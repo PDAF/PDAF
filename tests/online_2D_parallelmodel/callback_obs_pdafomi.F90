@@ -173,3 +173,41 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   CALL localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
 
 END SUBROUTINE localize_covar_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for localize_covar
+!!
+!! This routine calls the routine PDAFomi_localize_covar_serial
+!! for each observation type to apply covariance
+!! localization in the ENSRF with serial observation processing.
+!!
+SUBROUTINE localize_covar_serial_pdafomi(iobs, dim_p, dim_obs, HP_p, HXY_p)
+
+  ! Include functions for different observations
+  USE obs_A_pdafomi, ONLY: localize_covar_serial_A
+  USE obs_B_pdafomi, ONLY: localize_covar_serial_B
+
+  USE mod_model, &              ! Include information on model grid
+       ONLY: coords_p
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: iobs                  !< Index of current observation
+  INTEGER, INTENT(in) :: dim_p                 !< Process-local state dimension
+  INTEGER, INTENT(in) :: dim_obs               !< Number of observations
+  REAL, INTENT(inout) :: HP_p(dim_p)           !< Process-local part of matrix HP for observation iobs
+  REAL, INTENT(inout) :: HXY_p(dim_obs)        !< Process-local part of matrix HX(HX_all) for full observations
+
+
+! *************************************
+! *** Apply covariance localization ***
+! *************************************
+
+  ! Call localize_covar specific for each observation
+  CALL localize_covar_serial_A(iobs, dim_p, dim_obs, HP_p, HXY_p, coords_p)
+  CALL localize_covar_serial_B(iobs, dim_p, dim_obs, HP_p, HXY_p, coords_p)
+
+END SUBROUTINE localize_covar_serial_pdafomi

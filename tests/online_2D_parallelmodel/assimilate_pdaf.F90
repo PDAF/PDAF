@@ -40,8 +40,7 @@ SUBROUTINE assimilate_pdaf()
   ! Interface to PDAF-OMI for local and global filters
   EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
-       localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
+       init_dim_obs_l_pdafomi         ! Get dimension of obs. vector for local analysis domain
 
 
 ! *********************************
