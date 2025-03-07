@@ -46,7 +46,10 @@ SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
        ONLY: cnt_steps, nsteps, assim_flag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
-
+  USE PDAFput_state_generate_obs, &
+       ONLY: PDAF_put_state_generate_obs
+  USE PDAFget_state, &
+       ONLY: PDAF_get_state
 
   IMPLICIT NONE
   
