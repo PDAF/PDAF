@@ -31,19 +31,23 @@
 !! * 2024-12 - Lars Nerger - Initial code for template based on ETKF
 !! * Later revisions - see repository log
 !!
+MODULE PDAFput_state_GLOBALTEMPLATE
+
+CONTAINS
+
 SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prepoststep, U_prodRinvA, U_init_obsvar, outflag)
+     U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, outflag)
 
   USE PDAF_timer, &                 ! Routines for timings
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &           ! Routine for memory counting
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &            ! Variables for framework functionality
+  USE PDAF_mod_core, &              ! Variables for framework functionality
        ONLY: screen, flag, initevol, offline_mode, &
        dim_p, dim_ens, local_dim_ens, nsteps, step_obs, step, &
        state, ens, Ainv, member, member_save, &
        subtype_filter, sens, dim_lag, cnt_maxlag
-  USE PDAF_mod_filtermpi, &         ! Variables for parallelization
+  USE PDAF_mod_parallel, &         ! Variables for parallelization
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
   USE PDAF_communicate_ens, &       ! Ensemble gathering or scattering
@@ -202,3 +206,5 @@ SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_
   outflag = flag
 
 END SUBROUTINE PDAF_put_state_GLOBALTEMPLATE
+
+END MODULE PDAFput_state_GLOBALTEMPLATE

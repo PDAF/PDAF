@@ -4,12 +4,12 @@
 !! DA method LOCALTEMPLATE. 
 !!
 !! Parameters that are specific for the DA methods are declared while some
-!! other parameters are use-included from PDAF_mod_filter. This allows
+!! other parameters are use-included from PDAF_mod_core. This allows
 !! us to only include this module in the method-specific analysis routines.
 !! In addition, subroutines are included that initialize these parameters.
 !!
 !! ADAPTING THE TEMPLATE:
-!! When implementing a new DA method one needs to declate method-specific
+!! When implementing a new DA method one needs to declare method-specific
 !! variables or parameters in the header part of the module. 
 !! Then one needs to adapt the other included routines based on the 
 !! available parameters and functionality.
@@ -20,8 +20,8 @@
 !!
 MODULE PDAF_LOCALTEMPLATE
 
-  USE PDAF_mod_filter, &            ! Variables for framework functionality
-       ONLY: localfilter, incremental, debug, dim_lag, member_save
+  USE PDAF_mod_core, &            ! Variables for framework functionality
+       ONLY: localfilter, debug, dim_lag, member_save
 
   IMPLICIT NONE
 
@@ -64,7 +64,7 @@ CONTAINS
   SUBROUTINE PDAF_LOCALTEMPLATE_init(subtype, param_int, dim_pint, &
        param_real, dim_preal, ensemblefilter, fixedbasis, verbose, outflag)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_ens, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
@@ -105,7 +105,7 @@ CONTAINS
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
-! TEMPLATE: These three parameters are declared in PDAFmod_filter and we set them here to defaults
+! TEMPLATE: These three parameters are declared in PDAFmod_core and we set them here to defaults
 
     ! Set parameter default values - other defaults are set directly in the module
     observe_ens = .false.
@@ -155,9 +155,9 @@ CONTAINS
 !!
   SUBROUTINE PDAF_LOCALTEMPLATE_alloc(outflag)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_ens, dim_p, dim_bias_p
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: dim_ens_l
 
     IMPLICIT NONE
@@ -174,13 +174,12 @@ CONTAINS
 ! *** Allocate filter fields ***
 ! ******************************
 
-    do_alloc_state_inc = incremental   ! We use 'incremental' to control the alloc of state_inc_p
     do_alloc_statetask = 0             ! Will be allocated with size dim_p if ==1
 
 ! TEMPLATE: Adapt this call according to the required arrays of the DA-method
 
     CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, dim_bias_p, &
-         dim_lag, do_alloc_statetask, do_alloc_state_inc, outflag)
+         dim_lag, do_alloc_statetask, 0, outflag)
 
   END SUBROUTINE PDAF_LOCALTEMPLATE_alloc
 
@@ -197,7 +196,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_LOCALTEMPLATE_config(subtype, verbose)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_ens, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens, type_obs_init
@@ -260,8 +259,6 @@ CONTAINS
        ELSE IF (type_obs_init==1) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
-       IF (incremental == 1) &
-            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout
 
@@ -490,9 +487,9 @@ CONTAINS
          ONLY: PDAF_time_tot
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount_get, PDAF_memcount_get_global
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: subtype_filter, offline_mode
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: filterpe, mype_world, COMM_pdaf
     USE PDAFomi, &
          ONLY: omi_was_used

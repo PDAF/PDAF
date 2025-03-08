@@ -32,7 +32,7 @@ CONTAINS
          ONLY: PDAF_timeit
     USE PDAF_memcounting, &          ! Routine for memory counting
          ONLY: PDAF_memcount
-    USE PDAF_mod_filtermpi, &        ! Variables for parallelization
+    USE PDAF_mod_parallel, &         ! Variables for parallelization
          ONLY: mype
     USE PDAF_analysis_utils, &       ! Utility functions
          ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean

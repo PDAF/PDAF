@@ -28,7 +28,7 @@ CONTAINS
          ONLY: PDAF_timeit, PDAF_time_temp
     USE PDAF_memcounting, &          ! Routine for memory counting
          ONLY: PDAF_memcount
-    USE PDAF_mod_filtermpi, &        ! Variables for parallelization
+    USE PDAF_mod_parallel, &        ! Variables for parallelization
          ONLY: mype, dim_ens_l
     USE PDAF_analysis_utils, &       ! Routine for adaptive forgetting factor
          ONLY: PDAF_set_forget

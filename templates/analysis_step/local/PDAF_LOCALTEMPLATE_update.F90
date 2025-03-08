@@ -33,18 +33,18 @@
 MODULE PDAF_LOCALTEMPLATE_update
 
 CONTAINS
-  SUBROUTINE  PDAFLOCALTEMPLATE_update(step, dim_p, dim_obs_f, dim_ens, &
-       state_p, Ainv, ens_p, U_init_dim_obs, U_obs_op, &
-       U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
-       U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
-       U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, &
+  SUBROUTINE PDAFLOCALTEMPLATE_update(step, dim_p, dim_obs_f, dim_ens, &
+       state_p, Ainv, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+       U_init_n_domains_p, U_init_dim_l, U_g2l_state, U_l2g_state, &
+       U_init_dim_obs_l, U_g2l_obs, U_init_obs_l, U_prodRinvA_l, &
+       U_init_obsvar, U_init_obsvar_l, U_prepoststep, &
        screen, subtype, dim_lag, sens_p, cnt_maxlag, flag)
 
     USE PDAF_timer, &                 ! Routines for timings
          ONLY: PDAF_timeit, PDAF_time_temp
     USE PDAF_memcounting, &           ! Routine for memory counting
          ONLY: PDAF_memcount
-    USE PDAF_mod_filtermpi, &         ! Variables for parallelization
+    USE PDAF_mod_parallel, &          ! Variables for parallelization
          ONLY: mype, dim_ens_l
     USE PDAF_analysis_utils, &        ! Routine for adaptive forgetting factor
          ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &
