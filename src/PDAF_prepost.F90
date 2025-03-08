@@ -33,6 +33,10 @@
 !! * 2014-12 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFprepost
+
+CONTAINS
+
 SUBROUTINE PDAF_prepost(U_collect_state, U_distribute_state, &
      U_prepoststep, U_next_observation, outflag)
 
@@ -95,3 +99,5 @@ SUBROUTINE PDAF_prepost(U_collect_state, U_distribute_state, &
   END IF
 
 END SUBROUTINE PDAF_prepost
+
+END MODULE PDAFprepost
