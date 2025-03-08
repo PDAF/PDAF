@@ -11,11 +11,10 @@
 !!
 SUBROUTINE assimilate_pdaf()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAFomi_assimilate_3dvar, PDAFomi_assimilate_en3dvar_estkf, &
-       PDAFomi_assimilate_hyb3dvar_estkf
-  USE PDAFlocal, &                ! Interface definitions for PDAFlocal
-       ONLY: PDAFlocalomi_assimilate_en3dvar_lestkf, PDAFlocalomi_assimilate_hyb3dvar_lestkf
+       PDAFomi_assimilate_hyb3dvar_estkf, PDAFlocalomi_assimilate_en3dvar_lestkf, &
+       PDAFlocalomi_assimilate_hyb3dvar_lestkf
   USE mod_parallel_model, &       ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation

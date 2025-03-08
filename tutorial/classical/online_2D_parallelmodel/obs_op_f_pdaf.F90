@@ -36,6 +36,8 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 ! !USES:
   USE mod_assimilation, &
        ONLY: obs_index_p, dim_obs_p
+  USE PDAF, &
+       ONLY: PDAF_gather_obs_f
   
 
   IMPLICIT NONE

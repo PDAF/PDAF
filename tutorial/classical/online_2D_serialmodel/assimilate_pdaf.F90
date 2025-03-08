@@ -20,6 +20,10 @@ SUBROUTINE assimilate_pdaf()
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: filtertype
+  USE PDAF, &                     ! PDAF interface definitions
+       ONLY: PDAF_assimilate_seik, PDAF_assimilate_enkf, PDAF_assimilate_lseik, &
+       PDAF_assimilate_etkf, PDAF_assimilate_letkf, PDAF_assimilate_estkf, &
+       PDAF_assimilate_lestkf
 
   IMPLICIT NONE
 
@@ -78,7 +82,7 @@ SUBROUTINE assimilate_pdaf()
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' in PDAF_put_state - stopping! (PE ', mype_world,')'
+          ' in PDAF_assimilate - stopping! (PE ', mype_world,')'
      CALL  abort_parallel()
   END IF
 

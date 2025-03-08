@@ -21,6 +21,8 @@ SUBROUTINE init_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &             ! PDAF interface definitions
+       ONLY: PDAF_init, PDAF_set_offline_mode
   USE mod_parallel, &     ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel

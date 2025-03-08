@@ -21,6 +21,8 @@ SUBROUTINE init_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &             ! PDAF interface definitions
+       ONLY: PDAF_init, PDAF_get_state
   USE mod_model, &        ! Model variables
        ONLY: nx, ny
   USE mod_parallel_pdaf, &     ! Parallelization variables

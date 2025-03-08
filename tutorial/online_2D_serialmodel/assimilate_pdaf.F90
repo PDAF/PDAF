@@ -11,11 +11,9 @@
 !!
 SUBROUTINE assimilate_pdaf()
 
-  USE PDAF_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
-       PDAFomi_assimilate_lenkf, PDAF_get_localfilter
-  USE PDAFlocal, &                ! Interface definitions for PDAFlocal
-       ONLY: PDAFlocalomi_put_state
+       PDAFomi_assimilate_lenkf, PDAF_get_localfilter, PDAFlocalomi_assimilate
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation

@@ -22,10 +22,9 @@ then
     cd ..
 
     echo "------------ offline_2D_parallel ---------------"
-    export PDAF_ARCH=$ARCH
-    echo PDAF_ARCH: $PDAF_ARCH
     cd offline_2D_parallel
-    make cleanall
+    make clean
+    make cleandata
     make
     cd ..
 

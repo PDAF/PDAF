@@ -2,10 +2,12 @@
 
 # ARCH specifies PDAF_ARCH without and with PDAF
 export ARCH=linux_gfortran_openmpi
+export ARCH=macos_gfortran_openmpi
 export DA_SPECS="-filtertype 7 -screen 1"
 export DA_SPECS2="-filtertype 6 -screen 1"
 export DA_SPECS3="-filtertype 7 screen 1 -assim_A .false. -assim_B .true"
 
+COMPILEPDAF=0
 COMPILE=1
 RUN_OFFLINE=1
 RUN_ONLINE_SERIAL=1
@@ -21,15 +23,20 @@ then
 
     echo "------------ offline_2D_serial --------------"
     cd offline_2D_serial
-    make cleanall
+    if [ $COMPILEPDAF -eq 1]
+    then
+        make cleanall
+    else
+        make clean
+        make cleandataq
+    fi
     make
     cd ..
 
     echo "------------ offline_2D_parallel ---------------"
-    export PDAF_ARCH=$ARCH
-    echo PDAF_ARCH: $PDAF_ARCH
     cd offline_2D_parallel
-    make cleanall
+    make clean
+    make cleandata
     make
     cd ..
 

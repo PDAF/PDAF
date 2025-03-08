@@ -25,6 +25,10 @@ SUBROUTINE assimilation_pdaf_offline()
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, & ! airables for assimilation
        ONLY: filtertype
+  USE PDAF, &                     ! PDAF interface definitions
+       ONLY: PDAF_put_state_seik, PDAF_put_state_enkf, PDAF_put_state_lseik, &
+       PDAF_put_state_etkf, PDAF_put_state_letkf, PDAF_put_state_estkf, &
+       PDAF_put_state_lestkf
 
   IMPLICIT NONE
 

@@ -14,11 +14,10 @@
 !!
 SUBROUTINE assimilate_pdaf_offline()
 
-  USE PDAF_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF, &                     ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_put_state_3dvar, PDAFomi_put_state_en3dvar_estkf, &
-       PDAFomi_put_state_hyb3dvar_estkf
-  USE PDAFlocal, &                ! Interface definitions for PDAFlocal
-       ONLY: PDAFlocalomi_put_state_en3dvar_lestkf, PDAFlocalomi_put_state_hyb3dvar_lestkf 
+       PDAFomi_put_state_hyb3dvar_estkf, PDAFlocalomi_put_state_en3dvar_lestkf, &
+       PDAFlocalomi_put_state_hyb3dvar_lestkf 
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation

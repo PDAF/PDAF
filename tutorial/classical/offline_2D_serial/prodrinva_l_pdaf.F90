@@ -33,6 +33,8 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
        ONLY: cradius, locweight, sradius, rms_obs, distance_l
   USE mod_parallel, &
        ONLY: mype_filter
+  USE PDAF, &
+       ONLY: PDAF_local_weight
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_thread_num

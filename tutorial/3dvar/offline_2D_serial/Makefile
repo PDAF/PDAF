@@ -93,7 +93,7 @@ $(EXE) : libpdaf-var.a \
 
 libpdaf-var.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR); make;
+	@cd $(BASEDIR); make libpdafvar;
 
 ######################################################
 

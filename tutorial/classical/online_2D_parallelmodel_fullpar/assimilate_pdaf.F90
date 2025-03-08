@@ -20,6 +20,10 @@ SUBROUTINE assimilate_pdaf()
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: filtertype
+  USE PDAF, &                     ! PDAF interface definitions
+       ONLY: PDAF_assimilate_seik, PDAF_assimilate_enkf, PDAF_assimilate_lseik, &
+       PDAF_assimilate_etkf, PDAF_assimilate_letkf, PDAF_assimilate_estkf, &
+       PDAF_assimilate_lestkf
 
   IMPLICIT NONE
 

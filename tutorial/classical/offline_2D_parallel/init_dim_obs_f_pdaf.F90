@@ -32,6 +32,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        obs_f, obs_index_p, coords_obs_f
   USE mod_parallel, &
        ONLY: mype_filter
+  USE PDAF, &
+       ONLY: PDAF_gather_dim_obs_f, PDAF_gather_obs_f, PDAF_gather_obs_f2
 
   IMPLICIT NONE
 

@@ -16,6 +16,8 @@ SUBROUTINE finalize_pdaf()
 ! !USES:
   USE mod_parallel, &
        ONLY: mype_world
+  USE PDAF, &                     ! PDAF interface definitions
+       ONLY: PDAF_print_info, PDAF_deallocate
 
   IMPLICIT NONE    
   
