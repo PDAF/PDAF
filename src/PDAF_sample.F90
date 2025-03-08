@@ -55,7 +55,7 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug
 
   IMPLICIT NONE
@@ -368,7 +368,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug
   USE PDAF_analysis_utils, &
        ONLY: PDAF_seik_Omega

@@ -28,7 +28,7 @@
 !! * 2003-06 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_mod_filter
+MODULE PDAF_mod_core
   
   IMPLICIT NONE
   SAVE
@@ -134,4 +134,4 @@ MODULE PDAF_mod_filter
 
 !$OMP THREADPRIVATE(cnt_maxlag, obs_member, debug)
 
-END MODULE PDAF_mod_filter
+END MODULE PDAF_mod_core

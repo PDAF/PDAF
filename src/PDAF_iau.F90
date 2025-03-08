@@ -31,7 +31,7 @@
 MODULE PDAF_iau
 
   USE mpi
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug, screen
 
   IMPLICIT NONE
@@ -63,9 +63,9 @@ CONTAINS
 
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype_world, mype_model, filterpe, task_id, dim_ens_task
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_p
 
     IMPLICIT NONE
@@ -188,7 +188,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_reset(type_iau_in, nsteps_iau_in, flag)
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype_world
 
     IMPLICIT NONE
@@ -245,7 +245,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_set_weights(iweights, weights)
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype_world
 
     IMPLICIT NONE
@@ -314,7 +314,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_init_weights(type_iau, nsteps_iau)
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype_world, task_id, mype_model
 
     IMPLICIT NONE
@@ -416,7 +416,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_init_inc(dim_p, dim_ens_l, ens_inc, flag)
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: filterpe, task_id, dim_ens_task, mype_world
 
     IMPLICIT NONE
@@ -481,7 +481,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_update_ens(ens)
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: filterpe, task_id, dim_ens_task
 
     IMPLICIT NONE
@@ -531,9 +531,9 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_update_inc(ens_ana)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: use_pdaf_assim
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: filterpe, task_id, dim_ens_task
 
     IMPLICIT NONE
@@ -618,7 +618,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_add_inc_ens(step, dim_p, dim_ens_task, ens, U_collect_state, U_distribute_state)
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: filterpe, task_id, mype_model
 
     IMPLICIT NONE
@@ -701,9 +701,9 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_add_inc(U_collect_state, U_distribute_state)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_p, member_put=> member
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: task_id, mype_model
 
 

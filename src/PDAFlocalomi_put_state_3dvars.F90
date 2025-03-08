@@ -53,7 +53,7 @@ SUBROUTINE PDAFlocalomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
       prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -127,7 +127,7 @@ SUBROUTINE PDAFlocalomi_put_state_hyb3dvar_lestkf(collect_state_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
       prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -203,7 +203,7 @@ SUBROUTINE PDAFlocalomi_put_state_en3dvar_lestkf_nondiagR(collect_state_pdaf, &
      prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
       prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -284,7 +284,7 @@ SUBROUTINE PDAFlocalomi_put_state_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, &
      prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
       prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector

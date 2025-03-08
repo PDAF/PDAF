@@ -327,9 +327,9 @@ SUBROUTINE PDAFomi_prodRinvA_l_cb(domain_p, step, dim_obs_l, rank, obs_l, A_l, C
   USE PDAFomi, ONLY: PDAFomi_prodRinvA_l
 
   ! Include filter process rank
-  USE PDAF_mod_filterMPI, ONLY: mype_filter
+  USE PDAF_mod_parallel, ONLY: mype_filter
   ! Include verbosity information
-  USE PDAF_mod_filter, ONLY: screen
+  USE PDAF_mod_core, ONLY: screen
 #if defined (_OPENMP)
   ! Include OpenMP function to determine verbosity for OpenMP
   USE omp_lib, ONLY: omp_get_thread_num
@@ -420,9 +420,9 @@ SUBROUTINE PDAFomi_likelihood_l_cb(domain_p, step, dim_obs_l, obs_l, resid_l, lh
   USE PDAFomi, ONLY: PDAFomi_likelihood_l
 
   ! Include filter process rank
-  USE PDAF_mod_filterMPI, ONLY: mype_filter
+  USE PDAF_mod_parallel, ONLY: mype_filter
   ! Include verbosity information
-  USE PDAF_mod_filter, ONLY: screen
+  USE PDAF_mod_core, ONLY: screen
 #if defined (_OPENMP)
   ! Include OpenMP function to determine verbosity for OpenMP
   USE omp_lib, ONLY: omp_get_thread_num
@@ -512,9 +512,9 @@ SUBROUTINE PDAFomi_prodRinvA_hyb_l_cb(domain_p, step, dim_obs_l, rank, obs_l, al
   USE PDAFomi, ONLY: PDAFomi_prodRinvA_hyb_l
 
   ! Include filter process rank
-  USE PDAF_mod_filterMPI, ONLY: mype_filter
+  USE PDAF_mod_parallel, ONLY: mype_filter
   ! Include verbosity information
-  USE PDAF_mod_filter, ONLY: screen
+  USE PDAF_mod_core, ONLY: screen
 #if defined (_OPENMP)
   ! Include OpenMP function to determine verbosity for OpenMP
   USE omp_lib, ONLY: omp_get_thread_num
@@ -606,9 +606,9 @@ SUBROUTINE PDAFomi_likelihood_hyb_l_cb(domain_p, step, dim_obs_l, obs_l, resid_l
   USE PDAFomi, ONLY: PDAFomi_likelihood_hyb_l
 
   ! Include filter process rank
-  USE PDAF_mod_filterMPI, ONLY: mype_filter
+  USE PDAF_mod_parallel, ONLY: mype_filter
   ! Include verbosity information
-  USE PDAF_mod_filter, ONLY: screen
+  USE PDAF_mod_core, ONLY: screen
 #if defined (_OPENMP)
   ! Include OpenMP function to determine verbosity for OpenMP
   USE omp_lib, ONLY: omp_get_thread_num
@@ -1070,9 +1070,9 @@ SUBROUTINE PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
   USE PDAFomi, ONLY: ostats_omit
 
   ! Include filter process rank
-  USE PDAF_mod_filterMPI, ONLY: mype_filter
+  USE PDAF_mod_parallel, ONLY: mype_filter
   ! Include verbosity information
-  USE PDAF_mod_filter, ONLY: screen
+  USE PDAF_mod_core, ONLY: screen
 #if defined (_OPENMP)
   ! Include OpenMP function to determine verbosity for OpenMP
   USE omp_lib, ONLY: omp_get_thread_num
@@ -1168,7 +1168,7 @@ SUBROUTINE PDAFomi_omit_by_inno_cb(dim_obs_f, resid_f, obs_f)
   ! Include array for statistics on omitted observations
   USE PDAFomi, ONLY: ostats_omit
   ! Include verbosity information
-  USE PDAF_mod_filter, ONLY: screen
+  USE PDAF_mod_core, ONLY: screen
 
   IMPLICIT NONE
 

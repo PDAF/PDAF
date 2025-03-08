@@ -48,7 +48,7 @@ SUBROUTINE PDAF_diag_crps(dim_p, dim_ens, element, oens, obs, &
 #include "typedefs.h"
 
   USE mpi
-  USE PDAF_mod_filtermpi, & 
+  USE PDAF_mod_parallel, & 
        ONLY: COMM_filter, mype_filter, npes_filter
   USE SANGOMA_quicksort
 

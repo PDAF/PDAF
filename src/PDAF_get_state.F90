@@ -49,13 +49,13 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        ONLY: PDAF_scatter_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_p, dim_eof, dim_ens, local_dim_ens, nsteps, &
        step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
        ensemblefilter, initevol, state, ens, Ainv, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
        cnt_maxlag, cnt_steps, debug, offline_mode, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world, mype_model, task_id, statetask, filterpe, &
        modelpe, dim_eof_l, dim_ens_l
   USE PDAF_utils_filters, &

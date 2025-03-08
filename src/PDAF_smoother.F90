@@ -58,7 +58,7 @@ SUBROUTINE PDAF_smoothing(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
 
   IMPLICIT NONE
@@ -203,7 +203,7 @@ SUBROUTINE PDAF_smoothing_local(domain_p, step, dim_p, dim_l, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
 #if defined (_OPENMP)
   USE omp_lib, &
@@ -391,7 +391,7 @@ SUBROUTINE PDAF_smoother_shift(dim_p, dim_ens, dim_lag, ens_p, sens_p, cnt_maxla
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
 
   IMPLICIT NONE

@@ -54,9 +54,9 @@ SUBROUTINE PDAFlocal_assimilate_en3dvar_lestkf(U_collect_state, U_distribute_sta
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
      U_prepoststep, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
   USE PDAF_forecast, &
        ONLY: PDAF_fcst_operations
@@ -174,9 +174,9 @@ SUBROUTINE PDAFlocal_assimilate_hyb3dvar_lestkf(U_collect_state, U_distribute_st
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
      U_prepoststep, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
   USE PDAF_forecast, &
        ONLY: PDAF_fcst_operations

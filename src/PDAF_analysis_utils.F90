@@ -67,7 +67,7 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: seedset, new_seedset
 
   IMPLICIT NONE
@@ -452,7 +452,7 @@ END SUBROUTINE PDAF_generate_rndmat
   SUBROUTINE PDAF_print_domain_stats(n_domains_p)
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype, npes_filter, COMM_filter, MPIerr
 
     IMPLICIT NONE
@@ -533,7 +533,7 @@ END SUBROUTINE PDAF_generate_rndmat
   SUBROUTINE PDAF_print_local_obsstats(screen, n_domains_with_obs)
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype, npes_filter, COMM_filter, MPIerr
     USE PDAFomi, &
          ONLY: omi_n_obstypes => n_obstypes, PDAFomi_obsstats_l
@@ -822,7 +822,7 @@ END SUBROUTINE PDAF_generate_rndmat
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype
 
     IMPLICIT NONE
@@ -1715,7 +1715,7 @@ END SUBROUTINE PDAF_generate_rndmat
     USE mpi
     USE PDAF_timer, &
          ONLY: PDAF_timeit
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype, npes_filter, MPIerr, COMM_filter
 
     IMPLICIT NONE
@@ -1906,7 +1906,7 @@ END SUBROUTINE PDAF_generate_rndmat
 
     USE PDAF_timer, &
          ONLY: PDAF_timeit
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype
 #if defined (_OPENMP)
     USE omp_lib, &
@@ -2066,7 +2066,7 @@ END SUBROUTINE PDAF_generate_rndmat
          ONLY: PDAF_timeit
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype
 
     IMPLICIT NONE

@@ -53,7 +53,7 @@ CONTAINS
          ONLY: PDAF_timeit
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype
 
     IMPLICIT NONE
@@ -348,7 +348,7 @@ CONTAINS
          ONLY: PDAF_timeit
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype
 
     IMPLICIT NONE

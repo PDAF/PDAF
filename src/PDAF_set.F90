@@ -41,9 +41,9 @@ CONTAINS
 !!
 SUBROUTINE PDAF_set_comm_pdaf(in_COMM_pdaf)
 
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: isset_comm_pdaf, COMM_pdaf
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug
 
   IMPLICIT NONE
@@ -88,9 +88,9 @@ END SUBROUTINE PDAF_set_comm_pdaf
 !!
 SUBROUTINE PDAF_set_debug_flag(debugval)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, filterpe, mype_world
 
   IMPLICIT NONE
@@ -147,7 +147,7 @@ SUBROUTINE PDAF_set_ens_pointer(ens_ptr, status)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: ens
 
   IMPLICIT NONE
@@ -235,7 +235,7 @@ END SUBROUTINE PDAF_set_iparam
 !!
 SUBROUTINE PDAF_set_memberid(memberid)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: member
 
   IMPLICIT NONE
@@ -270,9 +270,9 @@ END SUBROUTINE PDAF_set_memberid
 !!
 SUBROUTINE PDAF_set_offline_mode(screen)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: offline_mode, subtype_filter
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
   USE PDAF_utils_filters, &
        ONLY: PDAF_configinfo_filters
@@ -356,7 +356,7 @@ END SUBROUTINE PDAF_set_rparam
 !!
 SUBROUTINE PDAF_set_seedset(seedset_in)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: seedset, new_seedset
 
   IMPLICIT NONE
@@ -396,7 +396,7 @@ SUBROUTINE PDAF_set_smootherens(sens_point, maxlag, status)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: sens, cnt_maxlag, dim_lag
 
   IMPLICIT NONE
@@ -488,9 +488,9 @@ END MODULE PDAF_set
 SUBROUTINE PDAF_reset_dim_ens(dim_ens_in, outflag)
 
   USE mpi
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: screen, dim_ens, dim_p, ens
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
        COMM_couple
 
@@ -574,10 +574,10 @@ END SUBROUTINE PDAF_reset_dim_ens
 SUBROUTINE PDAF_reset_dim_p(dim_p_in, outflag)
 
   USE mpi
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: screen, dim_ens, dim_p, &
        state, ens !, type_iau, ens_iau
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
        COMM_couple, dim_ens_l, dim_ens_task
   USE PDAF_iau, &

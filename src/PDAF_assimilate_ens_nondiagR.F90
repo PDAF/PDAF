@@ -69,7 +69,7 @@ SUBROUTINE PDAF3_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
            next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -163,7 +163,7 @@ END SUBROUTINE PDAF3_assimilate_local_nondiagR
 SUBROUTINE PDAF3_assimilate_global_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
      init_dim_obs_pdaf, obs_op_pdaf, prodRinvA_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
   USE PDAFassimilate_etkf, ONLY: PDAF_assimilate_etkf
@@ -247,7 +247,7 @@ SUBROUTINE PDAF3_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute_state_
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, likelihood_l_pdafomi,  &
           next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -322,7 +322,7 @@ SUBROUTINE PDAF3_assimilate_lknetf_nondiagR(collect_state_pdaf, distribute_state
           likelihood_l_pdafomi, likelihood_hyb_l_pdafomi,  &
           next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -400,7 +400,7 @@ SUBROUTINE PDAF3_assimilate_enkf_nondiagR(collect_state_pdaf, distribute_state_p
      init_dim_obs_pdafomi, obs_op_pdafomi, add_obs_error_pdafomi, init_obscovar_pdafomi, &
      prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
 
@@ -464,7 +464,7 @@ SUBROUTINE PDAF3_assimilate_lenkf_nondiagR(collect_state_pdaf, distribute_state_
      init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, localize_covar_pdafomi, &
      add_obs_error_pdafomi, init_obscovar_pdafomi, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: debug
+  USE PDAF_mod_core, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
 
@@ -522,7 +522,7 @@ SUBROUTINE PDAF3_assimilate_nonlin_nondiagR(collect_state_pdaf, distribute_state
      init_dim_obs_pdafomi, obs_op_pdafomi, likelihood_pdafomi, prepoststep_pdaf, &
      next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_netf, ONLY: PDAF_assimilate_netf
   USE PDAFassimilate_pf, ONLY: PDAF_assimilate_pf

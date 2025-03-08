@@ -50,9 +50,9 @@ SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_localize, &
      U_add_obs_error, U_init_obs_covar, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
   USE PDAF_forecast, &
        ONLY: PDAF_fcst_operations

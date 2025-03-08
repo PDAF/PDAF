@@ -19,7 +19,7 @@
 !!
 !! This module declares the parameters that are used in GENOBS. 
 !! Parameters that are specific for GENOBS are declared while some
-!! other parameters are use-included from PDAF_mod_filter. This allows
+!! other parameters are use-included from PDAF_mod_core. This allows
 !! us to only include this module in the method-specific analysis routines.
 !! In addition, subroutines are included that initialize these parameters.
 !!
@@ -32,7 +32,7 @@
 !!
 MODULE PDAF_GENOBS
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug, dim_lag
 
   IMPLICIT NONE
@@ -125,9 +125,9 @@ END SUBROUTINE PDAF_genobs_init
 !!
   SUBROUTINE PDAF_genobs_alloc(outflag)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_ens, dim_p
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: dim_ens_l
     USE PDAF_utils, &
          ONLY: PDAF_alloc
@@ -160,7 +160,7 @@ END SUBROUTINE PDAF_genobs_init
 !!
   SUBROUTINE PDAF_genobs_config(subtype, verbose)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_ens
 
     IMPLICIT NONE

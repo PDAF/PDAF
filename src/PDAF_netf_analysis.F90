@@ -49,7 +49,7 @@ SUBROUTINE PDAF_netf_ana(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_analysis_utils, &
        ONLY: PDAF_add_particle_noise, PDAF_inflate_weights
@@ -419,7 +419,7 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_diag, &
        ONLY: PDAF_diag_effsample
@@ -687,7 +687,7 @@ SUBROUTINE PDAF_smoother_netf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
 
   IMPLICIT NONE

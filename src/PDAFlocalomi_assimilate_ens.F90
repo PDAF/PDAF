@@ -52,7 +52,7 @@ SUBROUTINE PDAFlocalomi_assimilate(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
           next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -167,7 +167,7 @@ SUBROUTINE PDAFlocalomi_assimilate_nondiagR(collect_state_pdaf, distribute_state
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
            next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -264,7 +264,7 @@ SUBROUTINE PDAFlocalomi_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, likelihood_l_pdafomi,  &
           next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -339,7 +339,7 @@ SUBROUTINE PDAFlocalomi_assimilate_lknetf_nondiagR(collect_state_pdaf, distribut
           likelihood_l_pdafomi, likelihood_hyb_l_pdafomi,  &
           next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector

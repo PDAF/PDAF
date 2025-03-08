@@ -37,10 +37,10 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
   USE mpi
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: screen, state, ens, &
        Ainv, sens, bias
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, mype_model, mype_couple, filterpe, task_id, &
        COMM_couple
 
@@ -184,10 +184,10 @@ END SUBROUTINE PDAF_alloc
 SUBROUTINE PDAF_deallocate()
 
   USE mpi
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_bias_p, state, Ainv, ens, &
        sens, bias, dim_lag
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: filterpe, COMM_couple
   USE PDAF_iau, &
        ONLY: PDAF_iau_dealloc
@@ -363,10 +363,10 @@ END SUBROUTINE PDAF_correlation_function
 !!
 SUBROUTINE PDAF_force_analysis()
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: member, local_dim_ens, nsteps, cnt_steps, step_obs, &
        step, screen, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
 
   IMPLICIT NONE

@@ -52,7 +52,7 @@ SUBROUTINE PDAF_enkf_ana_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
   USE PDAFomi, &
        ONLY: omi_n_obstypes => n_obstypes, PDAFomi_gather_obsdims
@@ -556,7 +556,7 @@ SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
 
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_analysis_utils, &
        ONLY: PDAF_subtract_colmean

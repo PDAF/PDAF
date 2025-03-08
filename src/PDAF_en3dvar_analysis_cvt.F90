@@ -47,7 +47,7 @@ SUBROUTINE PDAFen3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_en
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_en3dvar_optim, &
        ONLY: PDAF_en3dvar_optim_lbfgs, PDAF_en3dvar_optim_cgplus, PDAF_en3dvar_optim_cg

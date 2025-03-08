@@ -64,7 +64,7 @@ CONTAINS
     USE mpi
     USE PDAF_timer, &
          ONLY: PDAF_timeit
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
          all_dim_ens_l, all_dis_ens_l, COMM_couple, MPIerr, &
          filter_no_model
@@ -199,11 +199,11 @@ CONTAINS
     USE mpi
     USE PDAF_timer, &
          ONLY: PDAF_timeit
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
          all_dim_ens_l, all_dis_ens_l, COMM_couple, MPIerr, &
          filter_no_model, MPIstatus, statetask
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: ensemblefilter
     USE PDAF_iau, &
          ONLY: PDAF_iau_update_inc

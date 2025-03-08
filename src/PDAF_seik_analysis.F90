@@ -47,7 +47,7 @@ SUBROUTINE PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: MPIerr, COMM_filter
   USE PDAF_analysis_utils, &
        ONLY: PDAF_seik_matrixT, PDAF_seik_Uinv
@@ -352,9 +352,9 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug
   USE PDAF_analysis_utils, &
        ONLY: PDAF_seik_Omega

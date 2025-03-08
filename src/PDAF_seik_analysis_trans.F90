@@ -52,7 +52,7 @@ SUBROUTINE PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, MPIerr, COMM_filter
   USE PDAF_analysis_utils, &
        ONLY: PDAF_seik_matrixT, PDAF_seik_TtimesA, PDAF_seik_Omega, PDAF_seik_Uinv

@@ -49,7 +49,7 @@ SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
      prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -147,7 +147,7 @@ SUBROUTINE PDAF3_put_state_global(collect_state_pdaf, &
      init_dim_obs_pdaf, obs_op_pdaf, &
      prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_seik, ONLY: PDAF_put_state_seik
   USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf

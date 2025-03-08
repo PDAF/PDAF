@@ -44,7 +44,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_lknetf, &
        ONLY: type_trans, debug
@@ -541,9 +541,9 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: obs_member, debug
   USE PDAF_diag, ONLY: PDAF_diag_effsample
 #if defined (_OPENMP)

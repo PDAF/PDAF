@@ -51,9 +51,9 @@ SUBROUTINE PDAF_assimilate_hyb3dvar_estkf(U_collect_state, U_distribute_state, &
      U_cvt_ens, U_cvt_adj_ens, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
      U_init_obsvar, U_prepoststep, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
   USE PDAF_forecast, &
        ONLY: PDAF_fcst_operations

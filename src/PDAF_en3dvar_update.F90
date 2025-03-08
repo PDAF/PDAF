@@ -55,9 +55,9 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, dim_ens_l
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_maxlag, dim_lag, sens
   USE PDAF_3dvar, &
        ONLY: debug, forget, type_opt
@@ -344,9 +344,9 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, dim_ens_l
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_maxlag, dim_lag, sens
   USE PDAF_3dvar, &
        ONLY: type_opt, localfilter, forget, debug

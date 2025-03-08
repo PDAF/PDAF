@@ -36,7 +36,7 @@ CONTAINS
 !!
 SUBROUTINE PDAF_get_assim_flag(did_assim)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: assim_flag
 
   IMPLICIT NONE
@@ -69,7 +69,7 @@ SUBROUTINE PDAF_get_ensstats(skew_ptr, kurt_ptr, status)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: skewness, kurtosis
 
   IMPLICIT NONE
@@ -112,7 +112,7 @@ END SUBROUTINE PDAF_get_ensstats
 !!
 SUBROUTINE PDAF_get_localfilter(localfilter_out)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: localfilter
 
   IMPLICIT NONE
@@ -147,7 +147,7 @@ END SUBROUTINE PDAF_get_localfilter
 !!
 SUBROUTINE PDAF_get_local_type(localtype)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: localfilter, covarloc
 
   IMPLICIT NONE
@@ -192,7 +192,7 @@ END SUBROUTINE PDAF_get_local_type
 !!
 INTEGER FUNCTION PDAF_localfilter()
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: localfilter
 
   IMPLICIT NONE
@@ -230,7 +230,7 @@ END FUNCTION PDAF_localfilter
 !!
 INTEGER FUNCTION PDAF_local_type()
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: localfilter, covarloc
 
   IMPLICIT NONE
@@ -268,7 +268,7 @@ END FUNCTION PDAF_local_type
 !!
 SUBROUTINE PDAF_get_memberid(memberid)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: member_save
 
   IMPLICIT NONE
@@ -299,7 +299,7 @@ END SUBROUTINE PDAF_get_memberid
 !!
 SUBROUTINE PDAF_get_obsmemberid(memberid)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: obs_member
 
   IMPLICIT NONE
@@ -333,7 +333,7 @@ SUBROUTINE PDAF_get_smootherens(sens_point, maxlag, status)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: sens, cnt_maxlag, dim_lag
 
   IMPLICIT NONE

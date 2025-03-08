@@ -51,9 +51,9 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
      U_likelihood_l, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
      U_g2l_state, U_l2g_state, U_g2l_obs, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
   USE PDAF_forecast, &
        ONLY: PDAF_fcst_operations

@@ -46,7 +46,7 @@ SUBROUTINE PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_
      prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
      g2l_state_pdaf, l2g_state_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
   USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
@@ -143,7 +143,7 @@ END SUBROUTINE PDAFomi_put_state_local
 SUBROUTINE PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
      prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_seik, ONLY: PDAF_put_state_seik
   USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf

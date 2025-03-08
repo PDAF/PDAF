@@ -61,11 +61,11 @@ SUBROUTINE PDAFlocal_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, 
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, Ainv, screen, flag, offline_mode
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAF_lseik_update, &
        ONLY: PDAFlseik_update
@@ -226,12 +226,12 @@ SUBROUTINE PDAFlocal_put_state_letkf(U_collect_state, U_init_dim_obs, U_obs_op, 
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, Ainv, screen, flag, &
        sens, dim_lag, cnt_maxlag, offline_mode
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
@@ -392,12 +392,12 @@ SUBROUTINE PDAFlocal_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op,
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, Ainv, screen, flag, &
        sens, dim_lag, cnt_maxlag, offline_mode
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
@@ -564,12 +564,12 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, offline_mode, &
        Ainv, screen, flag, sens, dim_lag, cnt_maxlag
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, dim_ens_l
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &   ! Project global to local state vector
@@ -719,12 +719,12 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, Ainv, screen, flag, &
        sens, dim_lag, cnt_maxlag, offline_mode
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector

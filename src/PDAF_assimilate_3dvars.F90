@@ -48,7 +48,7 @@ SUBROUTINE PDAF3_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
      cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
      prepoststep_pdaf, next_observation_pdaf, outflag)
   
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_3dvar, ONLY: PDAF_assimilate_3dvar
 
@@ -115,7 +115,7 @@ SUBROUTINE PDAF3_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_state_
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
      prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -195,7 +195,7 @@ SUBROUTINE PDAF3_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state_p
                 cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
                 prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_en3dvar_estkf, ONLY: PDAF_assimilate_en3dvar_estkf
 
@@ -263,7 +263,7 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
       prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -346,7 +346,7 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_state_
                 cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
                 obs_op_lin_pdaf, obs_op_adj_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_hyb3dvar_estkf, ONLY: PDAF_assimilate_hyb3dvar_estkf
 

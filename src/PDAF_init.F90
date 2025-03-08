@@ -45,12 +45,12 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_ini
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_ens, dim_eof, dim_p, flag, &
        screen, step, step_obs, type_filter, filterstr, &
        subtype_filter, ensemblefilter, state, Ainv, ens, &
        debug, offline_mode
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
        isset_comm_pdaf
   USE PDAF_info, &
@@ -61,7 +61,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
   IMPLICIT NONE
 
 ! *** Arguments ***
-  ! For valid and default values see PDAF_mod_filter.F90
+  ! For valid and default values see PDAF_mod_core.F90
   INTEGER, INTENT(in) :: filtertype     !< Type of filter
   INTEGER, INTENT(in) :: subtype        !< Sub-type of filter
   INTEGER, INTENT(in) :: stepnull       !< Initial time step of assimilation

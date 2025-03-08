@@ -45,7 +45,7 @@ CONTAINS
 SUBROUTINE PDAFomi_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
      cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, prepoststep_pdaf, outflag)
   
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_3dvar, ONLY: PDAF_put_state_3dvar
 
@@ -103,7 +103,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_estkf(collect_state_pdaf, &
      cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
      prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_en3dvar_estkf, ONLY: PDAF_put_state_en3dvar_estkf
 
@@ -165,7 +165,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
      g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_en3dvar_lestkf, ONLY: PDAF_put_state_en3dvar_lestkf
 
@@ -236,7 +236,7 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_estkf(collect_state_pdaf, &
      cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
      obs_op_lin_pdaf, obs_op_adj_pdaf, prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_hyb3dvar_estkf, ONLY: PDAF_put_state_hyb3dvar_estkf
 
@@ -301,7 +301,7 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_lestkf(collect_state_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
      g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_hyb3dvar_lestkf, ONLY: PDAF_put_state_hyb3dvar_lestkf
 
@@ -374,7 +374,7 @@ SUBROUTINE PDAFomi_put_state_3dvar_nondiagR(collect_state_pdaf, &
      cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
      prepoststep_pdaf, outflag)
   
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_3dvar, ONLY: PDAF_put_state_3dvar
 
@@ -438,7 +438,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_estkf_nondiagR(collect_state_pdaf, &
                 cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
                 prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_en3dvar_estkf, ONLY: PDAF_put_state_en3dvar_estkf
 
@@ -504,7 +504,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_lestkf_nondiagR(collect_state_pdaf, &
      prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
      g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_en3dvar_lestkf, ONLY: PDAF_put_state_en3dvar_lestkf
 
@@ -582,7 +582,7 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_estkf_nondiagR(collect_state_pdaf, &
      obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
      prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_hyb3dvar_estkf, ONLY: PDAF_put_state_hyb3dvar_estkf
 
@@ -652,7 +652,7 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, &
      prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
      g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_hyb3dvar_lestkf, ONLY: PDAF_put_state_hyb3dvar_lestkf
 

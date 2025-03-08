@@ -27,9 +27,10 @@
 !!
 !! __Revision history:__
 !! * 2003-02 - Lars Nerger - Initial code
+!! * 2025-03 - Lars Nerger - rename to PDAF_mod_parallel
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_mod_filterMPI
+MODULE PDAF_mod_parallel
 
   use mpi
 
@@ -326,4 +327,4 @@ CONTAINS
 
   END SUBROUTINE PDAF_init_parallel
 
-END MODULE PDAF_mod_filterMPI
+END MODULE PDAF_mod_parallel

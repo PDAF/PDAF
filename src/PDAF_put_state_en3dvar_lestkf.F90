@@ -65,11 +65,11 @@ SUBROUTINE PDAF_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_p, dim_ens, local_dim_ens, nsteps, step_obs, &
        step, member, member_save, state, ens, Ainv, &
        initevol, subtype_filter, screen, flag, offline_mode
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &

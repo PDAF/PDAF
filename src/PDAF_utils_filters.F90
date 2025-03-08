@@ -39,7 +39,7 @@ CONTAINS
        dim_preal, filterstr, ensemblefilter, fixedbasis, screen, flag)
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: MPIerr, COMM_pdaf, mype_world
     USE PDAF_DA
     USE PDAF_seik, ONLY: PDAF_seik_init
@@ -299,7 +299,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_configinfo_filters(subtype, verbose)
 
-    USE PDAF_mod_filter, ONLY: filterstr
+    USE PDAF_mod_core, ONLY: filterstr
     USE PDAF_seik, ONLY: PDAF_seik_config
     USE PDAF_lseik, ONLY: PDAF_lseik_config
     USE PDAF_enkf, ONLY: PDAF_enkf_config
@@ -376,7 +376,7 @@ CONTAINS
   SUBROUTINE PDAF_options_filters(type_filter)
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype_world, MPIerr, COMM_pdaf
     USE PDAF_DA
     USE PDAF_seik, ONLY: PDAF_seik_options
@@ -461,7 +461,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_print_info_filters(printtype)
 
-    USE PDAF_mod_filter, ONLY: filterstr
+    USE PDAF_mod_core, ONLY: filterstr
     USE PDAF_seik, ONLY: PDAF_seik_memtime
     USE PDAF_lseik, ONLY: PDAF_lseik_memtime
     USE PDAF_enkf, ONLY: PDAF_enkf_memtime
@@ -538,7 +538,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_set_iparam_filters(id, value, flag)
 
-    USE PDAF_mod_filter, ONLY: filterstr
+    USE PDAF_mod_core, ONLY: filterstr
     USE PDAF_seik, ONLY: PDAF_seik_set_iparam
     USE PDAF_enkf, ONLY: PDAF_enkf_set_iparam
     USE PDAF_lseik, ONLY: PDAF_lseik_set_iparam
@@ -617,7 +617,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_set_rparam_filters(id, value, flag)
 
-    USE PDAF_mod_filter, ONLY: filterstr
+    USE PDAF_mod_core, ONLY: filterstr
     USE PDAF_seik, ONLY: PDAF_seik_set_rparam
     USE PDAF_enkf, ONLY: PDAF_enkf_set_rparam
     USE PDAF_lseik, ONLY: PDAF_lseik_set_rparam

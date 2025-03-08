@@ -49,7 +49,7 @@ SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
           prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &             !< Project global to local state vector
@@ -160,7 +160,7 @@ END SUBROUTINE PDAF3_assimilate_local
 SUBROUTINE PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
      init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
   USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
@@ -254,7 +254,7 @@ SUBROUTINE PDAF3_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
      init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, localize_covar_pdaf, &
      next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: debug
+  USE PDAF_mod_core, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
 
@@ -312,7 +312,7 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
      init_dim_obs_f_pdaf, obs_op_f_pdaf, localize_covar_serial_pdaf, &
      prepoststep_pdaf, next_observation_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: debug
+  USE PDAF_mod_core, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_ensrf, ONLY: PDAF_assimilate_ensrf
 

@@ -82,7 +82,7 @@ CONTAINS
 !!
   SUBROUTINE PDAFlocal_set_indices(dim_l, map)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: debug
 
     IMPLICIT NONE
@@ -122,7 +122,7 @@ CONTAINS
 !!
   SUBROUTINE PDAFlocal_set_increment_weights(dim_l, weights)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: debug
 
     IMPLICIT NONE
@@ -161,7 +161,7 @@ CONTAINS
 !!
   SUBROUTINE PDAFlocal_clear_increment_weights()
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: debug
 
     IMPLICIT NONE

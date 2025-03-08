@@ -97,8 +97,8 @@
 MODULE PDAFomi_obs_l
 
   USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes, error
-  USE PDAF_mod_filter, ONLY: screen, obs_member
-  USE PDAF_mod_filtermpi, ONLY: mype, npes_filter
+  USE PDAF_mod_core, ONLY: screen, obs_member
+  USE PDAF_mod_parallel, ONLY: mype, npes_filter
 
   IMPLICIT NONE
   SAVE
@@ -2260,7 +2260,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obsdims
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
        ONLY: npes
 !     USE PDAF_analysis_utils, &
 !          ONLY: PDAF_local_weight 
@@ -2533,7 +2533,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obsdims
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
        ONLY: npes
 !     USE PDAF_analysis_utils, &
 !          ONLY: PDAF_local_weight 
@@ -4980,7 +4980,7 @@ CONTAINS
 
     USE MPI
     USE PDAFomi_obs_f, ONLY: ostats_omit
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr
 
     IMPLICIT NONE

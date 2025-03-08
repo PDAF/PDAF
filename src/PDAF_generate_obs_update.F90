@@ -45,11 +45,11 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: obs_member
   USE PDAF_genobs, &
        ONLY: seedset
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, dim_ens_l
   USE PDAFobs, &
        ONLY: type_obs_init

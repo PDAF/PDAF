@@ -37,7 +37,7 @@ CONTAINS
 SUBROUTINE PDAF_print_version()
 
   USE mpi
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: COMM_pdaf, mype_world, MPIerr
 
   IMPLICIT NONE

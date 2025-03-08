@@ -51,7 +51,7 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_3dvar, &
        ONLY: m_lbfgs_var, factr_lbfgs_var, pgtol_lbfgs_var, debug
@@ -233,7 +233,7 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, comm_filter, npes_filter, MPIerr
   USE PDAF_3dvar, &
        ONLY: method_cgplus_var, irest_cgplus_var, eps_cgplus_var, debug
@@ -462,7 +462,7 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, Comm_filter, MPI_REALTYPE, MPI_SUM, MPIerr
   USE PDAF_3dvar, &
        ONLY: maxiter_cg_var, eps_cg_var, debug
@@ -683,9 +683,9 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug
 
   IMPLICIT NONE
@@ -887,7 +887,7 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
 
   CALL PDAF_timeit(65, 'new')
   Vv_p = 0.0
-  CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
+  CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p(:,1), Vv_p)
   CALL PDAF_timeit(65, 'old')
 
   IF (debug>0) THEN
@@ -977,9 +977,9 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: debug
 
   IMPLICIT NONE
@@ -1186,7 +1186,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 
      CALL PDAF_timeit(65, 'new')
      Vv_p = 0.0
-     CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
+     CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p(:,1), Vv_p)
      CALL PDAF_timeit(65, 'old')
 
      IF (debug>0) THEN
@@ -1298,7 +1298,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 
   CALL PDAF_timeit(65, 'new')
   Vv_p = 0.0
-  CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
+  CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p(:,1), Vv_p)
   CALL PDAF_timeit(65, 'old')
 
   IF (debug>0) THEN

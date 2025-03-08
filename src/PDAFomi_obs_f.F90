@@ -95,11 +95,11 @@
 MODULE PDAFomi_obs_f
 
   USE mpi
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, npes, COMM_FILTER, MPIerr
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: screen, obs_member, filterstr, dim_p
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: obs_member
 
   IMPLICIT NONE
@@ -992,7 +992,7 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_likelihood(thisobs, resid, lhood)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: obs_member
 
     IMPLICIT NONE
@@ -1852,7 +1852,7 @@ CONTAINS
 #include "typedefs.h"
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, npes_filter, &
          all_dim_obs_p, all_dis_obs_p, dimobs_p, dimobs_f
 
@@ -1937,7 +1937,7 @@ CONTAINS
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
     IMPLICIT NONE
@@ -2043,7 +2043,7 @@ CONTAINS
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
     IMPLICIT NONE
@@ -2231,7 +2231,7 @@ CONTAINS
   SUBROUTINE PDAFomi_obsstats(screen)
 
     USE MPI
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, npes_filter
 
     IMPLICIT NONE

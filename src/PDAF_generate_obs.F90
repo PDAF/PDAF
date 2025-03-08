@@ -42,9 +42,9 @@ SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
      U_init_dim_obs_f, U_obs_op_f, U_init_obserr_f, U_get_obs_f, &
      U_prepoststep, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_steps, nsteps, assim_flag
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
   USE PDAFput_state_generate_obs, &
        ONLY: PDAF_put_state_generate_obs

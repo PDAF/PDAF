@@ -48,7 +48,7 @@ SUBROUTINE PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_analysis_utils, &
        ONLY: PDAF_estkf_AOmega, PDAF_estkf_OmegaA

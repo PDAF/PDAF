@@ -49,7 +49,7 @@ SUBROUTINE PDAFomi_put_state_local_nondiagR(collect_state_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
   USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
@@ -137,7 +137,7 @@ END SUBROUTINE PDAFomi_put_state_local_nondiagR
 SUBROUTINE PDAFomi_put_state_global_nondiagR(collect_state_pdaf, &
      init_dim_obs_pdaf, obs_op_pdaf, prodRinvA_pdaf, prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_seik, ONLY: PDAF_put_state_seik
   USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf
@@ -217,7 +217,7 @@ SUBROUTINE PDAFomi_put_state_enkf_nondiagR(collect_state_pdaf, &
      init_dim_obs_pdafomi, obs_op_pdafomi, add_obs_error_pdafomi, init_obscovar_pdafomi, &
      prepoststep_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf
 
@@ -278,7 +278,7 @@ SUBROUTINE PDAFomi_put_state_lenkf_nondiagR(collect_state_pdaf, &
      init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, localize_covar_pdafomi, &
      add_obs_error_pdafomi, init_obscovar_pdafomi, outflag)
 
-  USE PDAF_mod_filter, ONLY: debug
+  USE PDAF_mod_core, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_lenkf, ONLY: PDAF_put_state_lenkf
 
@@ -333,7 +333,7 @@ SUBROUTINE PDAFomi_put_state_nonlin_nondiagR(collect_state_pdaf, &
      init_dim_obs_pdafomi, obs_op_pdafomi, likelihood_pdafomi, prepoststep_pdaf, &
      outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_netf, ONLY: PDAF_put_state_netf
   USE PDAFput_state_pf, ONLY: PDAF_put_state_pf
@@ -398,7 +398,7 @@ SUBROUTINE PDAFomi_put_state_lnetf_nondiagR(collect_state_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, likelihood_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_lnetf, ONLY: PDAF_put_state_lnetf
 
@@ -468,7 +468,7 @@ SUBROUTINE PDAFomi_put_state_lknetf_nondiagR(collect_state_pdaf, &
           likelihood_l_pdafomi, likelihood_hyb_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           outflag)
 
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_lknetf, ONLY: PDAF_put_state_lknetf
 

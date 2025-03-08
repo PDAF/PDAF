@@ -49,7 +49,7 @@ SUBROUTINE PDAF_etkf_ana(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, MPIerr, COMM_filter
   USE PDAF_analysis_utils, &
        ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean, &

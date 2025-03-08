@@ -19,7 +19,7 @@
 !!
 !! This module declares the parameters that are used in 3DVAR. 
 !! Parameters that are specific for 3DVAR are declared while some
-!! other parameters are use-included from PDAF_mod_filter. This allows
+!! other parameters are use-included from PDAF_mod_core. This allows
 !! us to only include this module in the method-specific analysis routines.
 !! In addition, subroutines are included that initialize these parameters.
 !!
@@ -32,7 +32,7 @@
 !!
 MODULE PDAF_3DVAR
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: localfilter, debug, dim_lag
   USE PDAF_estkf, &
        ONLY: type_forget, type_trans, type_sqrt, forget
@@ -82,7 +82,7 @@ CONTAINS
   SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, &
        ensemblefilter, fixedbasis, verbose, outflag)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_ens, localfilter, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
@@ -192,9 +192,9 @@ CONTAINS
 !!
   SUBROUTINE PDAF_3dvar_alloc(subtype, outflag)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_ens, dim_p, dim_bias_p
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: dim_ens_l
     USE PDAF_utils, &
          ONLY: PDAF_alloc
@@ -237,7 +237,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_3dvar_config(subtype, verbose)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_ens, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens, type_obs_init
@@ -704,9 +704,9 @@ CONTAINS
          ONLY: PDAF_time_tot
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount_get, PDAF_memcount_get_global
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: subtype_filter, offline_mode, dim_lag
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: filterpe, mype_world, COMM_pdaf
     USE PDAFomi, &
          ONLY: omi_was_used

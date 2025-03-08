@@ -55,12 +55,12 @@ SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: dim_p, dim_ens, local_dim_ens, nsteps, &
        step_obs, step, member, member_save, subtype_filter, initevol, &
        state, ens, screen, flag, sens, &
        dim_lag, cnt_maxlag, offline_mode
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &

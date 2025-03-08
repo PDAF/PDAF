@@ -63,11 +63,11 @@ CONTAINS
 
     USE PDAF_timer, &
          ONLY: PDAF_timeit, PDAF_time_temp
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: mype
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: obs_member, localfilter
     USE PDAFomi_obs_f, &
          ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs
@@ -311,7 +311,7 @@ CONTAINS
          ONLY: PDAF_timeit, PDAF_time_temp
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: obs_member
     USE PDAFomi_obs_f, &
          ONLY: omi_omit_obs => omit_obs

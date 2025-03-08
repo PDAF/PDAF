@@ -49,11 +49,11 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_lknetf, &
        ONLY: type_trans, debug
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: obs_member
   USE PDAF_analysis_utils, &
        ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean, PDAF_set_forget, &

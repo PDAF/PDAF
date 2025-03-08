@@ -38,9 +38,9 @@ CONTAINS
   SUBROUTINE PDAF_fcst_operations(step, U_collect_state, U_distribute_state, &
        U_init_dim_obs, U_obs_op, U_init_obs, outflag)
 
-    USE PDAF_mod_filter, &
+    USE PDAF_mod_core, &
          ONLY: dim_p, ens
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: dim_ens_task
     USE PDAF_iau, &
          ONLY: PDAF_iau_add_inc_ens

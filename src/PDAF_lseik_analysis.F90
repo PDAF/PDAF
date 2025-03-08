@@ -45,7 +45,7 @@ SUBROUTINE PDAF_lseik_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_analysis_utils, &
        ONLY: PDAF_seik_matrixT, PDAF_seik_TtimesA, PDAF_seik_Uinv
@@ -377,7 +377,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_lseik, &
        ONLY: Nm1vsN, debug
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype
   USE PDAF_analysis_utils, &
        ONLY: PDAF_seik_TtimesA

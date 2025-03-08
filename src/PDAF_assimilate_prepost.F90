@@ -42,9 +42,9 @@ CONTAINS
 SUBROUTINE PDAF_assimilate_prepost(U_collect_state, U_distribute_state, &
      U_prepoststep, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
 
   IMPLICIT NONE

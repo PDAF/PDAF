@@ -59,7 +59,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: localfilter, debug, forget, type_forget, &
        type_trans, type_sqrt, inloop, forget_l, &
        member_save
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, dim_ens_l
   USE PDAF_analysis_utils, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &

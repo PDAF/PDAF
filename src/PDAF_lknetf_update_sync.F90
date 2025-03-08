@@ -62,7 +62,7 @@ SUBROUTINE  PDAFlknetf_update_sync(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: localfilter, debug, forget, type_forget, type_trans, &
        inloop, member_save, type_hyb, hyb_g, hyb_k, &
        skewness, kurtosis, store_rndmat
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
   USE PDAF_analysis_utils, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &

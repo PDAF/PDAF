@@ -43,7 +43,7 @@ SUBROUTINE  PDAFlenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, dim_ens_l
   USE PDAF_lenkf, &
        ONLY: debug, forget, rank_ana_enkf

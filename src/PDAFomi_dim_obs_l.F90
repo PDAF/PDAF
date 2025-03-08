@@ -59,7 +59,7 @@ MODULE PDAFomi_dim_obs_l
 
   USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes, error
   USE PDAFomi_obs_l, ONLY: obs_l, obs_l_all, firstobs, offset_obs_l
-  USE PDAF_mod_filtermpi, ONLY: mype, npes_filter
+  USE PDAF_mod_parallel, ONLY: mype, npes_filter
 
   IMPLICIT NONE
   SAVE

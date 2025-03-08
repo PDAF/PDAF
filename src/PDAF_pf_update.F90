@@ -46,7 +46,7 @@ SUBROUTINE  PDAFpf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, dim_ens_l
   USE PDAF_pf, &
        ONLY: debug, forget, type_forget, type_resample, &

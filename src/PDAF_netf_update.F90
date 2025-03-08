@@ -49,7 +49,7 @@ SUBROUTINE  PDAFnetf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_netf, &
        ONLY: debug, forget, type_forget, type_trans, type_winf, &
        limit_winf, type_noise, noise_amp
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype, dim_ens_l
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &

@@ -60,7 +60,7 @@ CONTAINS
 #include "typedefs.h"
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, npes_filter, &
          all_dim_obs_p, all_dis_obs_p, dimobs_p, dimobs_f
 
@@ -147,7 +147,7 @@ CONTAINS
 #include "typedefs.h"
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, mype_filter, npes_filter, &
          all_dim_obs_p, all_dis_obs_p, dimobs_p, dimobs_f
 
@@ -215,7 +215,7 @@ CONTAINS
 #include "typedefs.h"
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, mype_filter, npes_filter, &
          all_dim_obs_p, dimobs_p, dimobs_f
 
@@ -306,7 +306,7 @@ CONTAINS
 #include "typedefs.h"
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
     IMPLICIT NONE
@@ -416,7 +416,7 @@ CONTAINS
 #include "typedefs.h"
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
     IMPLICIT NONE
@@ -517,7 +517,7 @@ CONTAINS
 #include "typedefs.h"
 
     USE mpi
-    USE PDAF_mod_filtermpi, &
+    USE PDAF_mod_parallel, &
          ONLY: COMM_filter, MPIerr, npes_filter
 
     IMPLICIT NONE

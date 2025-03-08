@@ -50,9 +50,9 @@ SUBROUTINE PDAF_assimilate_ensrf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvars, U_localize_covar_serial, &
      U_prepoststep, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_core, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_parallel, &
        ONLY: mype_world
   USE PDAF_forecast, &
        ONLY: PDAF_fcst_operations
