@@ -45,7 +45,8 @@ MODULE PDAF_3DVAR
 ! *** Integer parameters ***
 
   INTEGER :: type_opt=0            !< Type of minimizer for 3DVar
-                                   !< (0) LBFGS, (1) CG+, (-1) steepest descent
+                                   !< (1) LBFGS, (2) CG+, (3) plain CG
+                                   !< (12) CG+ parallelized, (13) plain CG parallelized
   INTEGER :: dim_cvec=0            !< Size of control vector (fixed part)
   INTEGER :: dim_cvec_ens=0        !< Size of control vector (ensemble part)
   INTEGER :: m_lbfgs_var=5         !< Parameter 'm' of LBFGS
@@ -286,7 +287,9 @@ CONTAINS
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> CG+'
        ELSE IF (type_opt == 3) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> direct implementation of CG'
-       ELSE IF (type_opt == 4) THEN
+       ELSE IF (type_opt == 12) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> CG+ with decomposed control vector'
+       ELSE IF (type_opt == 13) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> direct implementation of CG with decomposed control vector'
        END IF
        IF (subtype==0 .OR. subtype>=6) &
@@ -298,7 +301,7 @@ CONTAINS
        IF (type_opt == 1) THEN
           WRITE(*, '(a, 10x, a, i3)') &
                'PDAF', 'param_int(6) solver-specific parameter: m=', m_lbfgs_var
-       ELSEIF (type_opt == 2) THEN
+       ELSEIF (type_opt == 2 .OR. type_opt == 12) THEN
           WRITE(*, '(a, 10x, a, i3)') &
                'PDAF', 'param_int(6) solver-specific parameter: CG method=', method_cgplus_var
           IF (method_cgplus_var==1) THEN
@@ -310,7 +313,7 @@ CONTAINS
           END IF
           WRITE(*, '(a, 10x, a, i7)') &
                'PDAF', 'param_int(7) solver-specific parameter: number of restarts=', irest_cgplus_var
-       ELSEIF (type_opt == 3 .OR. type_opt==4) THEN
+       ELSEIF (type_opt == 3 .OR. type_opt==13) THEN
           WRITE(*, '(a, 10x, a, i7)') &
                'PDAF', 'param_int(6) solver-specific parameter: maximum number of iterations=', maxiter_cg_var
        END IF
@@ -386,10 +389,10 @@ CONTAINS
                'PDAF', 'param_real(3) solver-specific parameter: pgtol=', pgtol_lbfgs_var
           WRITE(*, '(a, 10x, a, es10.3)') &
                'PDAF', 'param_real(4) solver-specific parameter: factr=', factr_lbfgs_var
-       ELSEIF (type_opt == 2) THEN
+       ELSEIF (type_opt == 2 .OR. type_opt == 12) THEN
           WRITE(*, '(a, 10x, a, es10.3)') &
                'PDAF', 'param_real(3) solver-specific parameter: eps=', eps_cgplus_var
-       ELSEIF (type_opt == 3 .OR. type_opt == 4) THEN
+       ELSEIF (type_opt == 3 .OR. type_opt == 13) THEN
           WRITE(*, '(a, 10x, a, es10.3)') &
                'PDAF', 'param_real(3) solver-specific parameter: eps=', eps_cg_var
        END IF
@@ -593,10 +596,11 @@ CONTAINS
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(3): type_opt'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Select optimization method (solver), required'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '0: LBFGS (default)'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '1: CG+'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '2: direct implementation of CG'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '3: direct implementation of CG with decomposed control vector'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: LBFGS (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '2: CG+'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '3: direct implementation of CG'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '12: CG+ with decomposed control vector'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '13: direct implementation of CG with decomposed control vector'
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(4): size of parameterized control vector (for 3D-Var and hybrid 3D-Var), required'
     WRITE(*, '(a, 7x, a)') &

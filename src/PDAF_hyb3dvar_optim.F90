@@ -294,8 +294,8 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
   REAL, ALLOCATABLE :: d(:), gradJ_old_p(:), w(:)
   REAL :: tlev
   LOGICAL :: finish, update_J
-  INTEGER :: ifinish_p, iupdate_J_p    ! Flags used for MPI_allreduce to determine exit status
-  INTEGER :: ifinish, iupdate_J        ! Flags used for MPI_allreduce to determine exit status
+  INTEGER :: ifinish_p, iupdate_J_p, iupdate_Jb_p  ! Flags used for MPI_allreduce to determine exit status
+  INTEGER :: ifinish, iupdate_J, iupdate_Jb        ! Flags used for MPI_allreduce to determine exit status
   INTEGER :: iter, nfun
   COMMON /cgdd/    mp,lp
   COMMON /runinf/  iter,nfun
@@ -409,6 +409,10 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
         tlev = eps*(1.0 + ABS(J_tot))
         i=0
 
+        ifinish_p = 0
+        iupdate_J_p = 0
+        iupdate_Jb_p = 0
+
         ! Process-local check
         checktest: DO
            i = i + 1
@@ -416,7 +420,7 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
               FINISH = .TRUE.
               update_J = .FALSE.
               ifinish_p = 1
-              iupdate_J_p = 1
+              iupdate_Jb_p = 1
               EXIT checktest
            ENDIF
            IF(ABS(gradJ_p(i)) > tlev) THEN
@@ -430,9 +434,13 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
         IF (npes_filter > 1) THEN
            CALL MPI_ALLREDUCE(ifinish_p, ifinish, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
            CALL MPI_ALLREDUCE(iupdate_J_p, iupdate_J, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
-           IF (ifinish>0) THEN
+           CALL MPI_ALLREDUCE(iupdate_Jb_p, iupdate_Jb, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+           IF (ifinish >= npes_filter) THEN
               FINISH = .TRUE.
               update_J = .FALSE.
+           ELSE
+              FINISH = .FALSE.
+              update_J = .TRUE.
            END IF
            IF (iupdate_J>0) THEN
               update_J = .FALSE.
