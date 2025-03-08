@@ -48,6 +48,9 @@ MODULE PDAF
        ONLY: PDAF_print_info
   USE PDAFlocal
 
+  USE PDAF_lknetf, &
+       ONLY: PDAF_lknetf_reset_gamma
+
   ! Interfaces for init and get_state
   USE PDAFinit
   USE PDAFget_state
@@ -89,8 +92,10 @@ MODULE PDAF
   USE PDAFassimilate_lseik
   USE PDAFassimilate_netf
   USE PDAFassimilate_pf
-  USE PDAFassimilate_prepost
   USE PDAFassimilate_seik
+
+  USE PDAFassimilate_prepost
+  USE PDAFprepost
 
   USE PDAFgenerate_obs
 
@@ -100,7 +105,7 @@ MODULE PDAF
   USE PDAFassimilate_hyb3dvar_estkf
   USE PDAFassimilate_hyb3dvar_lestkf
 
-  ! PDAF-3 advances interfaces
+  ! PDAF-3 advanced interfaces
   USE PDAF_assimilate_ens
   USE PDAF_put_state_ens
   USE PDAF_assimilate_ens_nondiagR
@@ -111,10 +116,10 @@ MODULE PDAF
   USE PDAF_assimilate_3dvars_nondiagR
   USE PDAF_put_state_3dvars_nondiagR
 
+
   ! PDAF-2 OMI interfaces
   USE PDAFomi_assimilate_ens
   USE PDAFomi_put_state_ens
-
   USE PDAFomi_assimilate_ens_nondiagR
   USE PDAFomi_put_state_ens_nondiagR
 
