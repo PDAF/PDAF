@@ -51,7 +51,7 @@ MODULE PDAF_init_mod
 
 CONTAINS
 
-SUBROUTINE PDAFinit(filtertype, subtype, stepnull, param_int, dim_pint, &
+SUBROUTINE PDAF_init_procedure(filtertype, subtype, stepnull, param_int, dim_pint, &
      param_real, dim_preal, COMM_model, COMM_filter, COMM_couple, &
      task_id, n_modeltasks, in_filterpe, U_init_ens, in_screen, &
      outflag)
@@ -302,6 +302,6 @@ write (*,*) 'PDAF_INIT with abstract interface for init_ens_pdaf'
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_init -- END'
 
-END SUBROUTINE PDAFinit
+END SUBROUTINE PDAF_init_procedure
 
 END MODULE PDAF_init_mod

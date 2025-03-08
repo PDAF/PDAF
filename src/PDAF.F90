@@ -53,6 +53,7 @@ MODULE PDAF
 
   ! Interfaces for init and get_state
   USE PDAFinit
+  USE PDAF_init_mod
   USE PDAFget_state
 
   ! Full put_state interfaces

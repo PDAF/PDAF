@@ -16,9 +16,9 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE PDAF, &                     ! PDAF interface definitions
+  USE PDAF , &                     ! PDAF interface definitions
        ONLY: PDAF_init, PDAF_set_iparam, PDAF_set_offline_mode, &
-       PDAF_DA_ENKF, PDAF_DA_PF
+       PDAF_DA_ENKF, PDAF_DA_PF, PDAF_init_procedure
   USE PDAFomi, &
        ONLY: PDAFomi_set_domain_limits
   USE mod_parallel_pdaf, &        ! Parallelization variables
@@ -33,6 +33,7 @@ SUBROUTINE init_pdaf()
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
+  USE init_ens
 
   IMPLICIT NONE
 
@@ -45,8 +46,7 @@ SUBROUTINE init_pdaf()
   INTEGER :: off_p             ! Process-local offset in global state vector
 
 ! *** External subroutines ***
-  PROCEDURE(init_ens_pdaf) :: init_ens_offline
-  
+!  external :: init_ens_offline
 
 ! ***************************
 ! ***   Initialize PDAF   ***
@@ -149,7 +149,7 @@ SUBROUTINE init_pdaf()
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_r(1) = forget      ! Forgetting factor
 
-     CALL PDAFinit(filtertype, subtype, 0, &
+     CALL PDAF_init_procedure(filtertype, subtype, 0, &
           filter_param_i, 2,&
           filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &

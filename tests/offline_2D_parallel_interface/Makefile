@@ -50,7 +50,8 @@ OBJ_USER_PDAFOMI = obs_A_pdafomi.o \
 		callback_obs_pdafomi.o
 
 # Interface to PDAF - model sided
-OBJ_PDAF_INT =  init_parallel_pdaf.o \
+OBJ_PDAF_INT =  init_ens_offline.o \
+		init_parallel_pdaf.o \
 		init_pdaf_offline.o \
 		init_pdaf_parse.o \
 		init_pdaf_info.o \
@@ -58,8 +59,7 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		finalize_pdaf.o
 
 # Generic user-supplied routines
-OBJ_USER_GEN  = init_ens_offline.o \
-		collect_state_pdaf_offline.o \
+OBJ_USER_GEN  = collect_state_pdaf_offline.o \
 		prepoststep_ens_offline.o
 
 
@@ -124,3 +124,6 @@ listarch:
 	@echo ---------------------------------------------------------
 	@ls -1 ../../make.arch | cut -d"." -f1
 
+
+
+init_pdaf_offline.o: init_ens_offline.o

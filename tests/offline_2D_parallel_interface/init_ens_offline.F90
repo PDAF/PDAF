@@ -18,6 +18,10 @@
 !! * 2013-02 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
+MODULE init_ens
+
+CONTAINS
+
 SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
@@ -37,8 +41,9 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
   !< (It is not necessary to initialize the array 'state_p' for ensemble filters.
   !< It is available here only for convenience and can be used freely.)
   REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) !< Array not referenced for ensemble filters
-  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)     !< PE-local state ensemble
+  REAL, INTENT(inout)   :: ens_p(dim_p, dim_ens)     !< PE-local state ensemble
   INTEGER, INTENT(inout) :: flag                   !< PDAF status flag
+
 
 ! *** local variables ***
   INTEGER :: i, j, col, member        ! Counters
@@ -49,7 +54,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
   INTEGER :: offset                   ! Row-offset according to domain decomposition
   INTEGER :: domain                   ! domain counter
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
-
+  integer :: dummy
 
 ! **********************
 ! *** INITIALIZATION ***
@@ -58,6 +63,8 @@ write (*,*) 'dim, dim_ens', dim_p, dim_ens, flag
 write (*,*) 'state_p', shape(state_p)
 write (*,*) 'Uinv_p', shape(Uinv)
 write (*,*) 'ens_p', shape(ens_p)
+
+dummy= filtertype
 
   mype0a: IF (mype_filter==0) THEN
 
@@ -157,3 +164,5 @@ write (*,*) 'ens_p', shape(ens_p)
   IF (mype_filter==0) DEALLOCATE(field, ens)
 
 END SUBROUTINE init_ens_offline
+
+END MODULE init_ens
