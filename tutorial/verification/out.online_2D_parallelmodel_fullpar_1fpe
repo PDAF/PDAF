@@ -10,20 +10,20 @@
     11              6      0      1      6        M
      6              3      1                      M
     10              5      1                      M
-     5              3      0      1      3        M
      9              5      0      1      5        M
     12              6      1                      M
+     5              3      0      1      3        M
      3              2      0      1      2        M
     15              8      0      1      8        M
-     8              4      1                      M
      4              2      1                      M
+     8              4      1                      M
     14              7      1                      M
     13              7      0      1      7        M
     18              9      1                      M
     17              9      0      1      9        M
-    16              8      1                      M
      2              1      1                      M
      1              1      0      1      1        M
+    16              8      1                      M
      0       0                    1      0        F
 
 
@@ -54,7 +54,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 2.3.1                     +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -77,13 +77,6 @@ PDAF    +++ Domain-localized implementation of the ESTKF by +++
 PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335  +++
 PDAF    +++           doi:10.1175/MWR-D-11-00102.1          +++
 PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-PDAF    LESTKF configuration
-PDAF          filter sub-type = 0
-PDAF            --> Standard LESTKF
-PDAF            --> Transform ensemble with deterministic Omega
-PDAF            --> Use fixed forgetting factor: 1.00
-PDAF            --> ensemble size:    9
  MODEL-side: INITIALIZE PARALLELIZED 2D TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
@@ -101,13 +94,28 @@ PDAF     Task     1     2     3     4     5     6     7     8     9
 PDAF     #PEs     2     2     2     2     2     2     2     2     2
 PDAF        N     1     1     1     1     1     1     1     1     1
 
-PDAF: Call routine for ensemble initialization
+PDAF: Call ensemble initialization
 
          Initialize state ensemble
          --- read ensemble from files
          --- Ensemble size:      9
 
 PDAF: Initialization completed
+
+PDAF    LESTKF configuration
+PDAF          ensemble size:    9
+PDAF          filter sub-type= 0
+PDAF            --> Standard LESTKF
+PDAF          param_int(5) type_forget=  0
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF          param_int(6) type_trans=  0
+PDAF            --> Transform ensemble with deterministic Omega (default)
+PDAF          param_int(7) type_sqrt=  0
+PDAF            --> symmetric square root (default)
+PDAF          param_int(8) observe_ens
+PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
+PDAF          param_int(9) type_obs_init=  1
+PDAF            --> Initialize observations after PDAF prestep
 
 
 PDAF ----------------------------------------------------------------
@@ -127,19 +135,23 @@ PDAF     --- Distribute sub-ensembles
  PDAF-side: START INTEGRATION
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF       2   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF       2   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -156,6 +168,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -169,19 +182,23 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step           3
  step           4
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       4
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.6883E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF       4   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF       4   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -198,6 +215,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -211,19 +229,23 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step           5
  step           6
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       6
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.6119E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF       6   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF       6   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -240,6 +262,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -253,19 +276,23 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step           7
  step           8
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       8
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5793E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF       8   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF       8   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -282,6 +309,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -295,19 +323,23 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step           9
  step          10
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      10
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5609E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF      10   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF      10   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -324,6 +356,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -337,19 +370,23 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step          11
  step          12
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      12
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5473E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF      12   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF      12   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -366,6 +403,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -379,19 +417,23 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step          13
  step          14
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      14
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5387E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF      14   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF      14   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -408,6 +450,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -421,19 +464,23 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step          15
  step          16
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      16
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5309E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF      16   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF      16   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -450,6 +497,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -463,19 +511,23 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step          17
  step          18
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5259E-01
         --- write ensemble and state estimate
-PDAF Analysis -------------------------------------------------------
-PDAF      18   Local ESTKF analysis
-PDAF     --- local analysis domains:      648
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAF Analysis -------------------------------------------------------
+PDAF      18   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- apply multiplicative inflation with fixed forget   1.00
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     1 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
@@ -492,6 +544,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -503,26 +556,26 @@ PDAF Forecast -------------------------------------------------------
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                 Globally allocated memory  (MiB)
-PDAF              state and A:        0.010 MiB (persistent)
+PDAF              state and A:        0.005 MiB (persistent)
 PDAF           ensemble array:        0.089 MiB (persistent)
-PDAF            analysis step:        0.020 MiB (temporary)
+PDAF            analysis step:        0.039 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.017 s
-PDAF            init_ens_pdaf:                       0.004 s
-PDAF          Ensemble forecast:                   0.342 s
-PDAF            MPI communication in PDAF:           0.341 s
+PDAF          Initialize PDAF:                     0.008 s
+PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Ensemble forecast:                   0.063 s
+PDAF            MPI communication in PDAF:           0.063 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.028 s
-PDAF            PDAF-internal operations:            0.010 s
+PDAF          LESTKF analysis:                     0.014 s
+PDAF            PDAF-internal operations:            0.083 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.001 s
+PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.008 s
+PDAF              init_dim_obs_pdafomi:              0.003 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.005 s
-PDAF          prepoststep_pdaf:                    0.238 s
+PDAF              init_dim_obs_l_pdafomi:            0.002 s
+PDAF          prepoststep_pdaf:                    0.081 s

@@ -6,7 +6,7 @@ export DA_SPECS_3DVar="-dim_ens 1 -dim_cvec 9 -filtertype 200 -subtype 0"
 export DA_SPECS_3DEnVar="-dim_ens 9 -filtertype 200"
 export DA_SPECS_hyb3DVar="-dim_ens 9 -filtertype 200"
 
-COMPILEPDAF=0
+COMPILEPDAF=1
 COMPILE=1
 RUN_OFFLINE=1
 RUN_ONLINE_SERIAL=1
@@ -178,9 +178,9 @@ then
     mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_3DEnVar -subtype 4 -type_opt 2 > \
 	../out.online_2D_serialmodel_3denvar_opt2
     cd ..
-#echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-5"
-#python ../verification/check_online_envar2.py 1.e-5 online_2D_serialmodel online_2D_serialmodel_ESTKF
-#echo "   -> compare to ESTKF case online_2D_serialmodel_envar_cg_ESTKF - expect accuracy < 1.e-9"
+#    echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-4"
+#    python ../verification/check_online_envar2.py 1.e-4 online_2D_serialmodel online_2D_serialmodel_ESTKF
+    echo "   -> compare to ESTKF case online_2D_serialmodel_envar_cg_ESTKF - expect accuracy < 1.e-9"
     python ../verification/check_online_envar2.py 1.e-9 online_2D_serialmodel online_2D_serialmodel_envar_cg_ESTKF
 
     echo "------------ online_2D_serialmodel 3D-EnVar/LESTKF plain CG --------------"
@@ -215,8 +215,8 @@ then
     mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_3DEnVar -subtype 4 -type_opt 3 > ../out.online_2D_serialmodel_3denvar_opt3
     cd ..
     python ../verification/check_online_envar2.py 1.e-5 online_2D_serialmodel online_2D_serialmodel_envar_plaincg_ESTKF
-#echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-9"
-#python ../verification/check_online_envar2.py 1.e-9 online_2D_serialmodel online_2D_serialmodel_ESTKF
+    echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-9"
+    python ../verification/check_online_envar2.py 1.e-9 online_2D_serialmodel online_2D_serialmodel_ESTKF
 fi
 
 
@@ -266,9 +266,9 @@ then
     make cleandataq
     mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_3DEnVar -subtype 4 -type_opt 12 > ../out.online_2D_parallelmodel_3denvar_opt12
     cd ..
-#echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-5"
-#python ../verification/check_online_envar2.py 1.e-5 online_2D_parallelmodel online_2D_serialmodel_ESTKF
-#echo "   -> compare to ESTKF case offline_2D_parallel_ESTKF - expect accuracy < 1.e-9"
+#    echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-4"
+#    python ../verification/check_online_envar2.py 1.e-4 online_2D_parallelmodel online_2D_serialmodel_ESTKF
+    echo "   -> compare to ESTKF case offline_2D_parallel_ESTKF - expect accuracy < 1.e-9"
     python ../verification/check_online_envar2.py 1.e-9 online_2D_parallelmodel online_2D_serialmodel_envar_cg_ESTKF
 
     echo "------------ online_2D_parallelmodel hybrid 3D-Var/LESTKF CG+ parallel -------------------"

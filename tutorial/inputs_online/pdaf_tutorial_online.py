@@ -72,6 +72,13 @@ if dowrite==1:
       np.savetxt('ens_'+str(k+1)+'.txt', ens[:,:,k])
 
 
+# Compute ensemble mean = initial state estimate
+
+state = np.mean(ens,axis=2)
+if dowrite==1:
+   np.savetxt('state_ini.txt', state[:,:])
+
+
 # Ensemble states - inverted
 
 ensB = np.zeros((dim_y, dim_x, dim_ens))
@@ -83,6 +90,13 @@ for k in range(dim_ens):
 if dowrite==1:
    for k in range(dim_ens):
       np.savetxt('ensB_'+str(k+1)+'.txt', ensB[:,:,k])
+
+
+# Compute ensemble mean = initial state estimate
+
+stateB = np.mean(ensB,axis=2)
+if dowrite==1:
+   np.savetxt('stateB_ini.txt', stateB[:,:])
 
 
 

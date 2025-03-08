@@ -35,7 +35,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 2.3.1                     +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -58,11 +58,6 @@ PDAF    +++      Bannister, Q. J. Royal Meteorol. Soc.,     +++
 PDAF    +++     143 (2017) 607-633, doi:10.1002/qj.2982     +++
 PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-PDAF    3DVAR configuration
-PDAF         filter sub-type = 0
-PDAF            --> 3DVAR incremental with control variable transform
-PDAF            --> size of control vector      9
-
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
 PDAF                 Total number of PEs:      1
@@ -73,7 +68,7 @@ PDAF     Task     1
 PDAF     #PEs     1
 PDAF        N     1
 
-PDAF: Call routine for ensemble initialization
+PDAF: Call ensemble initialization
 
          Initialize state and B^1/2 for 3D-Var
          --- read ensemble from files
@@ -81,8 +76,21 @@ PDAF: Call routine for ensemble initialization
          Initialize B^1/2
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
+
 PDAF    Activate PDAF offline mode
+
+PDAF    3DVAR configuration
+PDAF          filter sub-type= 0
+PDAF            --> 3DVAR incremental with control variable transform
+PDAF            --> size of control vector      9
+PDAF          param_int(3) Solver: type_opt=  3
+PDAF            --> direct implementation of CG
+PDAF          param_int(4) dim_cvec=  9
+PDAF          param_int(6) solver-specific parameter: maximum number of iterations=    200
+PDAF          param_int(9) type_obs_init=  1
+PDAF            --> Initialize observations after PDAF prestep
+PDAF          param_real(3) solver-specific parameter: eps= 1.000E-06
 
   PDAF offline mode: START ASSIMILATION
 
@@ -90,29 +98,33 @@ PDAF    Activate PDAF offline mode
 PDAF ----------------------------------------------------------------
 PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state for 3D-Var
             RMS error according to sampled variance:   3.2465E-01
 PDAF     --- duration of prestep:     0.000 s
-PDAF Analysis -------------------------------------------------------
-PDAF       0   Assimilating observations - 3DVAR incremental, transformed
-PDAF     --- solver: plain CG
+PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
         --- number of full observations    28
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
+PDAF     --- duration of observation preparation:     0.000 s
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - 3DVAR incremental, transformed
+PDAF     --- solver: plain CG
 PDAF     --- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
-PDAF                4   0.000E+00   3.635E+01
+PDAF                4   0.000E+00   3.100E+01
 
 PDAF     --- update duration:     0.001 s
+PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   3.2465E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.002 s
+PDAF     --- duration of poststep:     0.001 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -123,13 +135,13 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.005 MiB (persistent)
-PDAF            analysis step:      0.011 MiB (temporary)
+PDAF            analysis step:      0.012 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          3DVAR analysis:                      0.001 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
@@ -137,10 +149,10 @@ PDAF            Solver:                              0.000 s
 PDAF            cvt_pdaf:                            0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF          prepoststep_pdaf:                    0.002 s
+PDAF          Prepoststep (5):                     0.001 s
 
  PDAF offline mode: END

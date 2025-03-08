@@ -62,6 +62,13 @@ if dowrite==1:
       np.savetxt('ens_'+str(k+1)+'.txt', ens[:,:,k])
 
 
+# Compute ensemble mean = initial state estimate
+
+state = np.mean(ens,axis=2)
+if dowrite==1:
+   np.savetxt('state_ini.txt', state[:,:])
+
+
 
 # Observations
 
