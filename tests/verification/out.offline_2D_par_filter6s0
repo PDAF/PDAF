@@ -1,0 +1,182 @@
+
+        +++++ PDAF offline mode +++++
+
+         Data assimilation with PDAF
+
+                     Running on   3 PEs
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     0       0      1      0      1      0       T
+
+
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      2D Offline Test case for verification
+                        Grid size:    36 x     18
+     Global model state dimension:      648
+
+  -- Domain decomposition over  3 PEs
+  -- local domain sizes (nx_p x ny):  12 x 18
+     task   1 PE(model)   0 dim_local(state):       216
+     task   1 PE(model)   1 dim_local(state):       216
+     task   1 PE(model)   2 dim_local(state):       216
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=         8
+  PARSER: filtertype=         6
+  PARSER: subtype=         0
+  PARSER: forget=  8.0000E-01
+  PARSER: cradius=  5.0000E+00
+                     Filter: ESTKF
+      -- Standard mode
+              ensemble size:    8
+      Assimilation interval:    0
+          forgetting factor: 0.80
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                       PDAF                         +++
+PDAF    +++       Parallel Data Assimilation Framework         +++
+PDAF    +++                                                    +++
+PDAF    +++                   Version 3.0                      +++
+PDAF    +++                                                    +++
+PDAF    +++                   Please cite                      +++
+PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
+PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++
+PDAF    +++   when publishing work resulting from using PDAF   +++
+PDAF    +++                                                    +++
+PDAF    +++          PDAF itself can also be cited as          +++
+PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++
+PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++ Error Subspace Transform Kalman Filter (ESTKF) +++
+PDAF    +++                                                +++
+PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335 +++
+PDAF    +++           doi:10.1175/MWR-D-11-00102.1         +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      3
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      3
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     3
+PDAF        N     8
+
+PDAF: Call ensemble initialization
+
+         Initialize state ensemble
+         --- read ensemble from files
+         --- Ensemble size:      8
+
+PDAF: Initialization completed
+
+PDAF    Activate PDAF offline mode
+
+PDAF    ESTKF configuration
+PDAF          ensemble size:    8
+PDAF          filter sub-type= 0
+PDAF            --> Standard ESTKF
+PDAF          param_int(5) type_forget=  0
+PDAF            --> Use fixed forgetting factor: 0.80
+PDAF          param_int(6) type_trans=  0
+PDAF            --> Deterministic ensemble transformation (default)
+PDAF          param_int(7) type_sqrt=  0
+PDAF            --> symmetric square root (default)
+PDAF          param_int(8) observe_ens
+PDAF            --> 0: Apply H to ensemble mean to compute innovation
+PDAF          param_int(9) type_obs_init=  1
+PDAF            --> Initialize observations after PDAF prestep
+PDAF          param_real(1) forget=     0.800
+
+  PDAF offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF Prepoststep ----------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analyze forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.9288E-01
+PDAF Prepare observations -------------------------------------------
+        Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      18
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - ESTKF
+PDAF     --- apply multiplicative inflation with fixed forget   0.80
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF Prepoststep ----------------------------------------------------
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   9.3426E-02
+        --- write ensemble and state estimate
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            0
+
+ PDAF offline mode: EXITED ASSIMILATION
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.002 MiB (persistent)
+PDAF           ensemble array:      0.013 MiB (persistent)
+PDAF            analysis step:      0.018 MiB (temporary)
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          ESTKF analysis:                      0.005 s
+PDAF            PDAF-internal operations:            0.002 s
+PDAF            OMI-internal routines:               0.000 s
+PDAF            Time in OMI observation module routines 
+PDAF              init_dim_obs_pdafomi:              0.003 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.004 s
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF                     Initialize PDAF (1):      0.002 s
+PDAF                      ESTKF analysis (3):      0.005 s
+PDAF                        get mean state (9):      0.000 s
+PDAF                  prepare observations (6):      0.003 s
+PDAF                        init residual (10):      0.000 s
+PDAF                         compute Ainv (11):      0.001 s
+PDAF              get state weight vector (12):      0.001 s
+PDAF             prepare ensemble weights (20):      0.000 s
+PDAF                             SQRT(Ainv) (32):      0.000 s
+PDAF                             init Omega (33):      0.000 s
+PDAF                     compute C^T OmegaT (34):      0.000 s
+PDAF                       complete weights (35):      0.000 s
+PDAF                   transform ensemble (21):      0.000 s
+PDAF                         Prepoststep (5):      0.004 s
+
+ PDAF offline mode: END
