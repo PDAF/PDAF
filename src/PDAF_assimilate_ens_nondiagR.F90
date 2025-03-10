@@ -421,6 +421,7 @@ SUBROUTINE PDAF3_assimilate_enkf_nondiagR(collect_state_pdaf, distribute_state_p
        add_obs_error_pdafomi           !< Add observation error covariance matrix
   EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
        PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
+       PDAFomi_localize_covar_cb, &    !< Apply localization to HP and HPH^T
        PDAFomi_likelihood_cb           !< Compute likelihood
 
 
@@ -434,7 +435,13 @@ SUBROUTINE PDAF3_assimilate_enkf_nondiagR(collect_state_pdaf, distribute_state_p
   IF (TRIM(filterstr) == 'ENKF') THEN
      CALL PDAF_assimilate_enkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          add_obs_error_pdafomi, init_obscovar_pdafomi, next_observation_pdaf, outflag)
+          add_obs_error_pdafomi, init_obscovar_pdafomi, &
+          next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'LENKF') THEN
+     CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_localize_covar_cb, add_obs_error_pdafomi, init_obscovar_pdafomi, &
+          next_observation_pdaf, outflag)
   ELSE
      WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAF3_assimilate_enkf_nondiagR'
      outflag=200
@@ -451,64 +458,6 @@ SUBROUTINE PDAF3_assimilate_enkf_nondiagR(collect_state_pdaf, distribute_state_p
        WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAF3_assimilate_enkf_nondiagR -- END'
 
 END SUBROUTINE PDAF3_assimilate_enkf_nondiagR
-
-
-!-------------------------------------------------------------------------------
-!> Interface to transfer state to PDAF
-!!
-!! __Revision history:__
-!! 2024-08 - Lars Nerger - Initial code
-!! Other revisions - see repository log
-!!
-SUBROUTINE PDAF3_assimilate_lenkf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-     init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, localize_covar_pdafomi, &
-     add_obs_error_pdafomi, init_obscovar_pdafomi, next_observation_pdaf, outflag)
-
-  USE PDAF_mod_core, ONLY: debug
-  USE PDAFomi, ONLY: PDAFomi_dealloc
-  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
-
-  IMPLICIT NONE
-  
-! *** Arguments ***
-  INTEGER, INTENT(out) :: outflag      !< Status flag
-  
-! *** External subroutines ***
-  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
-       distribute_state_pdaf, &        !< Routine to distribute a state vector
-       next_observation_pdaf, &        !< Provide time step, time and dimension of next observation
-       prepoststep_pdaf                !< User supplied pre/poststep routine
-  EXTERNAL :: init_dim_obs_pdafomi, &  !< Initialize dimension of observation vector
-       obs_op_pdafomi, &               !< Observation operator
-       localize_covar_pdafomi, &       !< Apply localization to HP and HPH^T
-       init_obscovar_pdafomi, &        !< Initialize mean observation error variance
-       add_obs_error_pdafomi           !< Provide product R^-1 A
-  EXTERNAL :: PDAFomi_init_obs_f_cb    !< Initialize observation vector
-
-
-! **************************************************
-! *** Call the full put_state interface routine  ***
-! **************************************************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAF3_assimilate_lenkf_nondiagR -- START'
-
-  CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
-       init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-       localize_covar_pdafomi, add_obs_error_pdafomi, init_obscovar_pdafomi, &
-       next_observation_pdaf, outflag)
-
-
-! *******************************************
-! *** Deallocate and re-init observations ***
-! *******************************************
-
-  CALL PDAFomi_dealloc()
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAF3_assimilate_lenkf_nondiagR -- END'
-
-END SUBROUTINE PDAF3_assimilate_lenkf_nondiagR
 
 
 !-------------------------------------------------------------------------------

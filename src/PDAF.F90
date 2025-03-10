@@ -30,6 +30,7 @@
 MODULE PDAF
 
   USE PDAF_DA
+  USE PDAF_cb_procedures
   USE PDAF_set
   USE PDAF_get
   USe PDAF_utils

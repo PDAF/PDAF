@@ -281,6 +281,8 @@ CONTAINS
        END IF
        IF (dim_lag > 0) &
             WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+       WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(1) forget=', forget
 
     END IF writeout
 

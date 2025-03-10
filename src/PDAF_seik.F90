@@ -271,6 +271,8 @@ CONTAINS
        ELSE IF (type_obs_init==1) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
+       WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(1) forget=', forget
        IF (dim_lag > 0) &
             WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
 

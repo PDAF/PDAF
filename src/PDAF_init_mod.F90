@@ -33,22 +33,6 @@
 !!
 MODULE PDAF_init_mod
 
-  IMPLICIT NONE
-
-  ABSTRACT INTERFACE 
-     SUBROUTINE init_ens(filtertype, dim_p, dim_ens, &
-     state_p, Uinv, ens_p, flag)
-       IMPLICIT NONE
-       INTEGER, INTENT(in) :: filtertype      !< Type of filter to initialize
-       INTEGER, INTENT(in) :: dim_p           !< PE-local state dimension
-       INTEGER, INTENT(in) :: dim_ens         !< Size of ensemble
-       REAL, INTENT(inout) :: state_p(dim_p)      !< PE-local model state
-       REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1)       !< Array not referenced for ensemble filters
-       REAL, INTENT(inout)   :: ens_p(dim_p, dim_ens)     !< PE-local state ensemble
-       INTEGER, INTENT(inout) :: flag         !< PDAF status flag
-     END SUBROUTINE init_ens
-  END INTERFACE
-
 CONTAINS
 
 SUBROUTINE PDAF_init_procedure(filtertype, subtype, stepnull, param_int, dim_pint, &
@@ -57,6 +41,7 @@ SUBROUTINE PDAF_init_procedure(filtertype, subtype, stepnull, param_int, dim_pin
      outflag)
 
   USE mpi
+  USE PDAF_cb_procedures
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
@@ -109,9 +94,7 @@ SUBROUTINE PDAF_init_procedure(filtertype, subtype, stepnull, param_int, dim_pin
 
 ! *** External subroutines ***
 ! (PDAF-internal names, real names are defined in the call to PDAF)
-  PROCEDURE(init_ens) :: U_init_ens
-
-!  EXTERNAL :: U_init_ens  !< User-supplied routine for ensemble initialization
+  PROCEDURE(init_ens_cb) :: U_init_ens  !< User-supplied routine for ensemble initialization
 
 ! *** local variables ***
   INTEGER :: i                     ! Counter
