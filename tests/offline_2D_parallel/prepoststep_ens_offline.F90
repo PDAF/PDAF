@@ -40,6 +40,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: nx, ny, dim_state, local_dims
+  USE PDAF 
 
   IMPLICIT NONE
 
@@ -59,16 +60,13 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 ! *** local variables ***
   INTEGER :: i, j, member, domain     ! Counters
+  INTEGER :: pdaf_status              ! Status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
-  REAL :: invdim_ens                  ! Inverse ensemble size
-  REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
-  REAL :: rmserror_est                ! estimated RMS error
-  REAL, ALLOCATABLE :: variance_p(:)  ! model state variances
+  REAL :: ens_stddev                  ! ensemble STDDEV = estimated RMS error
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   ! Variables for parallelization - global fields
   INTEGER :: offset   ! Row-offset according to domain decomposition
-  REAL, ALLOCATABLE :: variance(:)    ! local variance
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
@@ -86,93 +84,14 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
      END IF
   END IF
-  ! Allocate fields
-  ALLOCATE(variance_p(dim_p))
-  ALLOCATE(variance(dim_state))
-
-  ! Initialize numbers
-  rmserror_est  = 0.0
-  invdim_ens    = 1.0 / REAL(dim_ens)  
-  invdim_ensm1  = 1.0 / REAL(dim_ens - 1)
-
-
-! **************************************************************
-! *** Perform prepoststep for SEIK with re-inititialization. ***
-! *** The state and error information is completely in the   ***
-! *** ensemble.                                              ***
-! *** Also performed for SEIK without re-init at the initial ***
-! *** time.                                                  ***
-! **************************************************************
-
-  ! *** Compute mean state
-  IF (mype_filter == 0) WRITE (*, '(8x, a)') '--- compute ensemble mean'
-
-  state_p = 0.0
-  DO member = 1, dim_ens
-     DO i = 1, dim_p
-        state_p(i) = state_p(i) + ens_p(i, member)
-     END DO
-  END DO
-  state_p(:) = invdim_ens * state_p(:)
-
-  ! *** Compute sampled variances ***
-  variance_p(:) = 0.0
-  DO member = 1, dim_ens
-     DO j = 1, dim_p
-        variance_p(j) = variance_p(j) &
-             + (ens_p(j, member) - state_p(j)) &
-             * (ens_p(j, member) - state_p(j))
-     END DO
-  END DO
-  variance_p(:) = invdim_ensm1 * variance_p(:)
-
-
-! ******************************************************
-! *** Assemble global variance vector on filter PE 0 ***
-! ******************************************************
-
-  PE0_a: IF (mype_filter /= 0) THEN
-
-     ! send sub-fields from PEs /=0
-     CALL MPI_send(variance_p(1 : dim_p), dim_p, &
-          MPI_DOUBLE_PRECISION,0, mype_filter, COMM_filter, MPIerr)
-
-  ELSE PE0_a
-     ! receive and assemble variance field
-
-     ! On PE 0 init variance directly
-     variance(1 : dim_p) = variance_p(1 : dim_p)
-
-     ! Receive part of variance field from PEs > 0 into 
-     ! correct part of global variance
-
-     offset = 0
-
-     DO i = 2, npes_filter
-        ! Increment offset
-        offset = offset + local_dims(i - 1)
-
-        ! Receive variance part
-        CALL MPI_recv(variance(1 + offset), local_dims(i), &
-             MPI_DOUBLE_PRECISION, i - 1, i - 1, COMM_filter, MPIstatus, MPIerr)
-     END DO
-      
-  END IF PE0_a
-
-  DEALLOCATE(variance_p)
-
 
 ! ************************************************************
-! *** Compute RMS errors according to sampled covar matrix ***
+! *** Compute ensemble mean and standard deviation         ***
+! *** (=RMS errors according to sampled covar matrix)      ***
 ! ************************************************************
 
-  ! total estimated RMS error
-  DO i = 1, dim_state
-     rmserror_est = rmserror_est + variance(i)
-  ENDDO
-  rmserror_est = SQRT(rmserror_est / dim_state)
-
-  DEALLOCATE(variance)
+  CALL PDAF_diag_stddev_parallel(dim_p, dim_ens, state_p, ens_p, &
+        ens_stddev, 1, COMM_filter, pdaf_status)
 
 
 ! *****************
@@ -182,7 +101,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ! Output RMS errors given by sampled covar matrix
   IF (mype_filter == 0) THEN
      WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', rmserror_est
+       'RMS error according to sampled variance: ', ens_stddev
   END IF
 
  
