@@ -140,7 +140,4 @@ MODULE PDAF
   USE PDAFlocal_assimilate_3dvars
   USE PDAFlocal_put_state_3dvars
 
-  ! PDAF-OMI interfaces
-  USE PDAFomi
-
 END MODULE PDAF
