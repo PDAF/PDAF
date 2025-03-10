@@ -20,6 +20,433 @@ MODULE PDAF_diag
 
 CONTAINS
 
+!--------------------------------------------------------------------------
+!> Compute mean ensemble state
+!!
+!! This routine computes the ensemble mean state
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!!
+SUBROUTINE PDAF_diag_ensmean(dim, dim_ens, state, ens, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim               !< state dimension
+  INTEGER, INTENT(in) :: dim_ens           !< Ensemble size
+  REAL, INTENT(inout) :: state(dim)        !< State vector
+  REAL, INTENT(in)    :: ens(dim, dim_ens) !< State ensemble
+  INTEGER, INTENT(out) :: status           !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: member, row            ! Counters
+  REAL :: invdimens                 ! Inverse ensemble size
+
+
+! **************************
+! *** Compute mean state ***
+! **************************
+
+  invdimens = 1.0 / REAL(dim_ens)
+
+  state = 0.0
+  DO member = 1, dim_ens
+     DO row = 1, dim
+        state(row) = state(row) + invdimens * ens(row, member)
+     END DO
+  END DO
+
+  ! Set status flag for success
+  status = 0
+
+END SUBROUTINE PDAF_diag_ensmean
+
+
+!--------------------------------------------------------------------------
+!> Compute mean ensemble standard deviation of ensemble
+!!
+!! This routine computes the mean standard deviation of the ensemble
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!!
+SUBROUTINE PDAF_diag_stddev(dim, dim_ens, &
+     state, ens, stddev, do_mean, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim               !< state dimension
+  INTEGER, INTENT(in) :: dim_ens           !< Ensemble size
+  REAL, INTENT(inout) :: state(dim)        !< State vector
+  REAL, INTENT(in)    :: ens(dim, dim_ens) !< State ensemble
+  REAL, INTENT(out)   :: stddev            !< Standard deviation of ensemble
+  INTEGER, INTENT(in) :: do_mean           !< Whether to compute ensemble mean
+  INTEGER, INTENT(out) :: status           !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: member, row            ! Counters
+  REAL :: invdimensm1               ! Inverse of ensmebl size minus 1
+  INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
+  REAL, ALLOCATABLE :: var_blk(:)   ! Block of variance field
+
+
+! **************************
+! *** Compute mean state ***
+! **************************
+
+  IF (do_mean==1) THEN
+     CALL PDAF_diag_ensmean(dim, dim_ens, state, ens, status)
+  END IF
+
+
+! ************************************************
+! *** Compute mean ensemble standard deviation ***
+! ************************************************
+
+  invdimensm1 = 1.0 / REAL(dim_ens-1)
+
+  stddev = 0.0
+
+  ! We compute the variance vector blockwise. This should
+  ! be faster than computing each row separately
+  maxblksize = 500
+  ALLOCATE(var_blk(maxblksize))
+
+  ! Blocked computation
+  blocking: DO blklower = 1, dim, maxblksize
+
+     var_blk(1:maxblksize) = 0.0
+
+     blkupper = MIN(blklower + maxblksize - 1, dim)
+
+     ! Compute block of variance field
+     DO member = 1, dim_ens
+        DO row = 1 , blkupper - blklower + 1
+           var_blk(row) = var_blk(row) &
+                + (ens(row + blklower - 1, member) - state(row + blklower - 1)) &
+                * (ens(row + blklower - 1, member) - state(row + blklower - 1))
+        END DO
+     END DO
+     var_blk(:) = invdimensm1 * var_blk(:)
+
+     ! Increment standard devation
+     DO row = 1 , blkupper - blklower + 1
+        stddev = stddev + var_blk(row)
+     END DO
+
+  END DO blocking
+
+  ! Complete computation of standard devation
+  stddev = SQRT(stddev / REAL(dim))
+
+  DEALLOCATE(var_blk)
+
+  ! Set status flag for success
+  status = 0
+
+END SUBROUTINE PDAF_diag_stddev
+
+
+!--------------------------------------------------------------------------
+!> Compute mean ensemble standard deviation of ensemble
+!!
+!! This routine computes the mean standard deviation of the ensemble
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!!
+SUBROUTINE PDAF_diag_stddev_parallel(dim_p, dim_ens, &
+     state_p, ens_p, stddev_g, do_mean, COMM_filter, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  USE MPI
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p                 !< state dimension
+  INTEGER, INTENT(in) :: dim_ens               !< Ensemble size
+  REAL, INTENT(inout) :: state_p(dim_p)        !< State vector
+  REAL, INTENT(in)    :: ens_p(dim_p, dim_ens) !< State ensemble
+  REAL, INTENT(out)   :: stddev_g              !< Global mean standard deviation of ensemble
+  INTEGER, INTENT(in) :: do_mean               !< Whether to compute ensemble mean
+  INTEGER, INTENT(in) :: COMM_filter           !< Filter communicator
+  INTEGER, INTENT(out) :: status               !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: member, row            ! Counters
+  REAL :: invdimensm1               ! Inverse of ensmebl size minus 1
+  INTEGER :: dim_g                  ! Global state dimension
+  REAL :: stddev_p                  ! PE-local part of standard deviation
+  INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
+  REAL, ALLOCATABLE :: var_blk(:)   ! Block of variance field
+  INTEGER :: MPIerr                 ! MPI error flag
+
+
+! **************************
+! *** Compute mean state ***
+! **************************
+
+  IF (do_mean==1) THEN
+     CALL PDAF_diag_ensmean(dim_p, dim_ens, state_p, ens_p, status)
+  END IF
+
+
+! ************************************************
+! *** Compute mean ensemble standard deviation ***
+! ************************************************
+
+  invdimensm1 = 1.0 / REAL(dim_ens-1)
+
+  stddev_p = 0.0
+
+  ! We compute the variance vector blockwise. This should
+  ! be faster than computing each row separately
+  maxblksize = 500
+  ALLOCATE(var_blk(maxblksize))
+
+  ! Blocked computation
+  blocking: DO blklower = 1, dim_p, maxblksize
+
+     var_blk(1:maxblksize) = 0.0
+
+     blkupper = MIN(blklower + maxblksize - 1, dim_p)
+
+     ! Compute block of variance field
+     DO member = 1, dim_ens
+        DO row = 1 , blkupper - blklower + 1
+           var_blk(row) = var_blk(row) &
+                + (ens_p(row + blklower - 1, member) - state_p(row + blklower - 1)) &
+                * (ens_p(row + blklower - 1, member) - state_p(row + blklower - 1))
+        END DO
+     END DO
+     var_blk(:) = invdimensm1 * var_blk(:)
+
+     ! Increment standard devation
+     DO row = 1 , blkupper - blklower + 1
+        stddev_p = stddev_p + var_blk(row)
+     END DO
+
+  END DO blocking
+
+  DEALLOCATE(var_blk)
+
+! *******************************************************
+! *** Compute glboal mean ensemble standard deviation ***
+! *******************************************************
+
+  ! Get global state dimension
+  CALL MPI_Allreduce(dim_p, dim_g, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+
+  ! Complete computation of standard devation
+  stddev_p = stddev_p / REAL(dim_g)
+
+  ! Get global stddev
+  CALL MPI_Allreduce(stddev_p, stddev_g, 1, MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
+
+  stddev_g = SQRT(stddev_g)
+
+
+  ! Set status flag for success
+  status = 0
+
+END SUBROUTINE PDAF_diag_stddev_parallel
+
+
+!--------------------------------------------------------------------------
+!> Compute ensemble variance field
+!!
+!! This routine computes the ensemble variance field and mean 
+!! ensmeble standard deviation.
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!!
+SUBROUTINE PDAF_diag_variance(dim, dim_ens, &
+     state, ens, variance, stddev, &
+     do_mean, do_stddev, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim               !< state dimension
+  INTEGER, INTENT(in) :: dim_ens           !< Ensemble size
+  REAL, INTENT(inout) :: state(dim)        !< State vector
+  REAL, INTENT(in)    :: ens(dim, dim_ens) !< State ensemble
+  REAL, INTENT(out)   :: variance(dim)     !< Variance state vector
+  REAL, INTENT(out)   :: stddev            !< Standard deviation of ensemble
+  INTEGER, INTENT(in) :: do_mean           !< Whether to compute ensemble mean
+  INTEGER, INTENT(in) :: do_stddev         !< Whether to compute the ensemble mean standard deviation
+  INTEGER, INTENT(out) :: status           !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: member, row     ! Counters
+  REAL :: invdimensm1        ! Inverse of ensmebl size minus 1
+
+
+! **************************
+! *** Compute mean state ***
+! **************************
+
+  IF (do_mean==1) THEN
+     CALL PDAF_diag_ensmean(dim, dim_ens, state, ens, status)
+  END IF
+
+
+! *******************************
+! *** Compute variance vector ***
+! *******************************
+
+  invdimensm1 = 1.0 / REAL(dim_ens-1)
+
+  variance(1:dim) = 0.0
+  DO member = 1, dim_ens
+     DO row = 1, dim
+        variance(row) = variance(row) &
+             + (ens(row, member) - state(row)) &
+             * (ens(row, member) - state(row))
+     END DO
+  END DO
+  variance(1:dim) = invdimensm1 * variance(1:dim)
+
+
+! ************************************************
+! *** Compute mean ensemble standard deviation ***
+! ************************************************
+
+  IF (do_stddev==1) THEN
+
+     stddev = 0.0
+     DO row = 1, dim
+        stddev = stddev + variance(row)
+     ENDDO
+     stddev = SQRT(stddev / REAL(dim))
+
+  END IF
+
+  ! Set status flag for success
+  status = 0
+
+END SUBROUTINE PDAF_diag_variance
+
+
+!--------------------------------------------------------------------------
+!> Compute ensemble variance field for domain decomposition
+!!
+!! This routine computes the ensemble variance field and mean 
+!! ensmeble standard deviation. This variant is for
+!! domain decomposed states where a global mean ensemble
+!! standard deviation is computed using MPI.
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!!
+SUBROUTINE PDAF_diag_variance_parallel(dim_p, dim_ens, &
+     state_p, ens_p, variance_p, stddev_g, &
+     do_mean, do_stddev, COMM_filter, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  USE MPI
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p                 !< state dimension
+  INTEGER, INTENT(in) :: dim_ens               !< Ensemble size
+  REAL, INTENT(inout) :: state_p(dim_p)        !< State vector
+  REAL, INTENT(in)    :: ens_p(dim_p, dim_ens) !< State ensemble
+  REAL, INTENT(out)   :: variance_p(dim_p)     !< Variance state vector
+  REAL, INTENT(out)   :: stddev_g              !< Global standard deviation of ensemble
+  INTEGER, INTENT(in) :: do_mean               !< Whether to compute ensemble mean
+  INTEGER, INTENT(in) :: do_stddev             !< Whether to compute the ensemble mean standard deviation
+  INTEGER, INTENT(in) :: COMM_filter           !< Filter communicator
+  INTEGER, INTENT(out) :: status               !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: member, row     ! Counters
+  REAL :: invdimensm1        ! Inverse of ensmebl size minus 1
+  INTEGER :: dim_g           ! Global state dimension
+  REAL :: stddev_p           ! PE-local part of standard deviation
+  INTEGER :: MPIerr          ! MPI error flag
+
+
+! **************************
+! *** Compute mean state ***
+! **************************
+
+  IF (do_mean==1) THEN
+     CALL PDAF_diag_ensmean(dim_p, dim_ens, state_p, ens_p, status)
+  END IF
+
+
+! *******************************
+! *** Compute variance vector ***
+! *******************************
+
+  invdimensm1 = 1.0 / REAL(dim_ens-1)
+
+  variance_p(1:dim_p) = 0.0
+  DO member = 1, dim_ens
+     DO row = 1, dim_p
+        variance_p(row) = variance_p(row) &
+             + (ens_p(row, member) - state_p(row)) &
+             * (ens_p(row, member) - state_p(row))
+     END DO
+  END DO
+  variance_p(1:dim_p) = invdimensm1 * variance_p(1:dim_p)
+
+
+! ************************************************
+! *** Compute mean ensemble standard deviation ***
+! ************************************************
+
+  IF (do_stddev==1) THEN
+
+     ! Compute PE-local sum of variance variance
+     stddev_p = 0.0
+     DO row = 1, dim_p
+        stddev_p = stddev_p + variance_p(row)
+     ENDDO
+
+     ! Get global state dimension
+     CALL MPI_Allreduce(dim_p, dim_g, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+
+     ! Compute local part of standard deviation
+     stddev_p = stddev_p / REAL(dim_g)
+
+     ! Get global stddev
+     CALL MPI_Allreduce(stddev_p, stddev_g, 1, MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
+
+     stddev_g = SQRT(stddev_g)
+
+  END IF
+
+  ! Set status flag for success
+  status = 0
+
+END SUBROUTINE PDAF_diag_variance_parallel
+
+
 
 !--------------------------------------------------------------------------
 !> Computation of CRPS
@@ -548,16 +975,16 @@ SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
      m2 = 0.0
      m3 = 0.0
      m4 = 0.0
-     do i=1,dim_ens
+     DO i=1,dim_ens
         m2 = m2 + (ens(element, i) - state(element))**2
         m3 = m3 + (ens(element, i) - state(element))**3
         m4 = m4 + (ens(element, i) - state(element))**4 
-     end do
-     m2 = m2 / real(dim_ens)
-     m3 = m3 / real(dim_ens)
-     m4 = m4 / real(dim_ens)
+     END DO
+     m2 = m2 / REAL(dim_ens)
+     m3 = m3 / REAL(dim_ens)
+     m4 = m4 / REAL(dim_ens)
 
-     skewness = m3 / sqrt(m2)**3
+     skewness = m3 / SQRT(m2)**3
      kurtosis = m4 / m2**2 -3.0
 
      ! Set status flag for success
@@ -572,16 +999,16 @@ SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
         m2 = 0.0
         m3 = 0.0
         m4 = 0.0
-        do i=1,dim_ens
+        DO i=1,dim_ens
            m2 = m2 + (ens(elem, i) - state(elem))**2
            m3 = m3 + (ens(elem, i) - state(elem))**3
            m4 = m4 + (ens(elem, i) - state(elem))**4 
-        end do
-        m2 = m2 / real(dim_ens)
-        m3 = m3 / real(dim_ens)
-        m4 = m4 / real(dim_ens)
+        END DO
+        m2 = m2 / REAL(dim_ens)
+        m3 = m3 / REAL(dim_ens)
+        m4 = m4 / REAL(dim_ens)
 
-        skewness = skewness + m3 / sqrt(m2)**3
+        skewness = skewness + m3 / SQRT(m2)**3
         kurtosis = kurtosis + m4 / m2**2 -3.0
 
      END DO
