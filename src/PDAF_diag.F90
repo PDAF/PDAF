@@ -75,7 +75,7 @@ END SUBROUTINE PDAF_diag_ensmean
 !! __Revision history:__
 !! * 2025-03 - Lars Nerger - Initial code
 !!
-SUBROUTINE PDAF_diag_stddev(dim, dim_ens, &
+SUBROUTINE PDAF_diag_stddev_nopmi(dim, dim_ens, &
      state, ens, stddev, do_mean, status)
 
 ! Include definitions for real type of different precision
@@ -154,7 +154,7 @@ SUBROUTINE PDAF_diag_stddev(dim, dim_ens, &
   ! Set status flag for success
   status = 0
 
-END SUBROUTINE PDAF_diag_stddev
+END SUBROUTINE PDAF_diag_stddev_nopmi
 
 
 !--------------------------------------------------------------------------
@@ -165,7 +165,7 @@ END SUBROUTINE PDAF_diag_stddev
 !! __Revision history:__
 !! * 2025-03 - Lars Nerger - Initial code
 !!
-SUBROUTINE PDAF_diag_stddev_parallel(dim_p, dim_ens, &
+SUBROUTINE PDAF_diag_stddev(dim_p, dim_ens, &
      state_p, ens_p, stddev_g, do_mean, COMM_filter, status)
 
 ! Include definitions for real type of different precision
@@ -263,7 +263,7 @@ SUBROUTINE PDAF_diag_stddev_parallel(dim_p, dim_ens, &
   ! Set status flag for success
   status = 0
 
-END SUBROUTINE PDAF_diag_stddev_parallel
+END SUBROUTINE PDAF_diag_stddev
 
 
 !--------------------------------------------------------------------------
@@ -275,7 +275,7 @@ END SUBROUTINE PDAF_diag_stddev_parallel
 !! __Revision history:__
 !! * 2025-03 - Lars Nerger - Initial code
 !!
-SUBROUTINE PDAF_diag_variance(dim, dim_ens, &
+SUBROUTINE PDAF_diag_variance_nompi(dim, dim_ens, &
      state, ens, variance, stddev, &
      do_mean, do_stddev, status)
 
@@ -344,7 +344,7 @@ SUBROUTINE PDAF_diag_variance(dim, dim_ens, &
   ! Set status flag for success
   status = 0
 
-END SUBROUTINE PDAF_diag_variance
+END SUBROUTINE PDAF_diag_variance_nompi
 
 
 !--------------------------------------------------------------------------
@@ -358,7 +358,7 @@ END SUBROUTINE PDAF_diag_variance
 !! __Revision history:__
 !! * 2025-03 - Lars Nerger - Initial code
 !!
-SUBROUTINE PDAF_diag_variance_parallel(dim_p, dim_ens, &
+SUBROUTINE PDAF_diag_variance(dim_p, dim_ens, &
      state_p, ens_p, variance_p, stddev_g, &
      do_mean, do_stddev, COMM_filter, status)
 
@@ -444,7 +444,7 @@ SUBROUTINE PDAF_diag_variance_parallel(dim_p, dim_ens, &
   ! Set status flag for success
   status = 0
 
-END SUBROUTINE PDAF_diag_variance_parallel
+END SUBROUTINE PDAF_diag_variance
 
 
 

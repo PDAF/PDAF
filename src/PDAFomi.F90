@@ -33,6 +33,7 @@ MODULE PDAFomi
   USE PDAFomi_obs_l
   USE PDAFomi_dim_obs_l
   USE PDAFomi_obs_op
+  USE PDAFomi_obs_diag
 
 END MODULE PDAFomi
 

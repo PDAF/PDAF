@@ -469,7 +469,7 @@ CONTAINS
          ONLY: rank_ana_enkf
     USE PDAF_mod_parallel, &
          ONLY: filterpe, mype_world, COMM_pdaf
-    USE PDAFomi, &
+    USE PDAFomi_obs_f, &
          ONLY: omi_was_used
 
     IMPLICIT NONE

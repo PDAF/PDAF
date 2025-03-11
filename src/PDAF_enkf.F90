@@ -476,7 +476,7 @@ CONTAINS
          ONLY: subtype_filter, offline_mode, dim_lag
     USE PDAF_mod_parallel, &
          ONLY: filterpe, mype_world, COMM_pdaf
-    USE PDAFomi, &
+    USE PDAFomi_obs_f, &
          ONLY: omi_was_used
 
     IMPLICIT NONE
@@ -835,7 +835,7 @@ CONTAINS
          ONLY: mype, npes_filter, MPIerr, COMM_filter
     USE PDAF_mod_core, &
          ONLY: debug
-    USE PDAFomi, &
+    USE PDAFomi_obs_f, &
          ONLY: omi_n_obstypes => n_obstypes, map_obs_id
 
     IMPLICIT NONE

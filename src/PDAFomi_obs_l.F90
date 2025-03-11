@@ -96,7 +96,8 @@
 !!
 MODULE PDAFomi_obs_l
 
-  USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes, error
+  USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes, &
+       error, obs_diag
   USE PDAF_mod_core, ONLY: screen, obs_member
   USE PDAF_mod_parallel, ONLY: mype, npes_filter
 
@@ -195,8 +196,6 @@ CONTAINS
     END IF
 
   END SUBROUTINE PDAFomi_set_debug_flag
-
-
 
 
 !-------------------------------------------------------------------------------
@@ -4832,7 +4831,8 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id
+         offset_obs_g, obsdims, map_obs_id, have_obsmean_diag, &
+         have_obsens_diag
 
     IMPLICIT NONE
 
@@ -4849,6 +4849,12 @@ CONTAINS
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
 
+    IF (ALLOCATED(thisobs%obs_diag_p)) DEALLOCATE(thisobs%obs_diag_p)
+    IF (ALLOCATED(thisobs%ocoord_diag_p)) DEALLOCATE(thisobs%ocoord_diag_p)
+    IF (ALLOCATED(thisobs%ivar_obs_diag_p)) DEALLOCATE(thisobs%ivar_obs_diag_p)
+    IF (ALLOCATED(thisobs%hx_diag_p)) DEALLOCATE(thisobs%hx_diag_p)
+    IF (ALLOCATED(thisobs%hxmean_diag_p)) DEALLOCATE(thisobs%hxmean_diag_p)
+
     ! Reset assim flag
     thisobs%doassim = 0
 
@@ -4864,6 +4870,10 @@ CONTAINS
 
     ! Reset flag for first call to local observations
     firstobs = 0
+
+    ! Reset observation diagnostics flags
+    have_obsmean_diag = 0
+    have_obsens_diag = 0
 
   END SUBROUTINE PDAFomi_deallocate_obs
 

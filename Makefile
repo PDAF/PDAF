@@ -50,22 +50,15 @@ EXTDIR:=external
 # Modules used in PDAF
 SRC_MOD_PDAF =  PDAF_timer.F90 \
 		PDAF_memcount.F90 \
-		PDAF_mod_filtermpi.F90 \
-		PDAF_mod_filter.F90 \
+		PDAF_mod_parallel.F90 \
+		PDAF_mod_core.F90 \
 		PDAFobs.F90
 
-# Module file with interface definitions
-SRC_MOD_INTERFACE = PDAF_da.F90 \
+# Generic routines in PDAF
+SRC_PDAF_GEN =  PDAF_da.F90 \
 		PDAF.F90 \
 		PDAF_forecast.F90 \
 		PDAF_iau.F90 \
-		PDAF_assimilate_ens.F90 \
-		PDAF_put_state_ens.F90 \
-		PDAF_assimilate_ens_nondiagR.F90 \
-		PDAF_put_state_ens_nondiagR.F90
-
-# Generic routines in PDAF
-SRC_PDAF_GEN = 	PDAF_init_mod.F90 \
 		PDAF_init.F90 \
 		PDAF_utils.F90 \
 		PDAF_get.F90 \
@@ -74,16 +67,24 @@ SRC_PDAF_GEN = 	PDAF_init_mod.F90 \
 		PDAF_utils_filters.F90 \
 		PDAF_analysis_utils.F90 \
 		PDAF_communicate_ens.F90 \
-		PDAF_get_state_mod.F90 \
 		PDAF_get_state.F90 \
 		PDAF_smoother.F90 \
-		PDAF_put_state_prepost.F90 \
-		PDAF_assimilate_prepost.F90 \
 		PDAF_prepost.F90 \
 		PDAF_sample.F90 \
 		PDAF_diag.F90 \
 		PDAF_comm_obs.F90 \
-		PDAFlocal.F90 \
+		PDAF_assimilate_ens.F90 \
+		PDAF_put_state_ens.F90 \
+		PDAF_assimilate_ens_nondiagR.F90 \
+		PDAF_put_state_ens_nondiagR.F90 \
+		PDAF_put_state_prepost.F90 \
+		PDAF_assimilate_prepost.F90 \
+		PDAF_cb_procedures.F90 \
+		PDAF_init_mod.F90 \
+		PDAF_get_state_mod.F90
+
+# Routines for PDAFlocal
+SRC_PDAFLOCAL =	PDAFlocal.F90 \
 		PDAFlocal_callback.F90 \
 		PDAFlocal_assimilate_ens.F90 \
 		PDAFlocal_put_state_ens.F90 \
@@ -190,7 +191,6 @@ SRC_LKNETF =	PDAF_lknetf.F90 \
 		PDAF_lknetf_update_step.F90 \
 		PDAF_lknetf_analysis_sync.F90 \
 		PDAF_lknetf_update_sync.F90 \
-		PDAF_lknetf_reset_gamma.F90 \
 		PDAF_put_state_lknetf.F90 \
 		PDAF_assimilate_lknetf.F90
 
@@ -238,6 +238,7 @@ SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
 		PDAFomi_obs_l.F90 \
 		PDAFomi_dim_obs_l.F90 \
 		PDAFomi_obs_op.F90 \
+		PDAFomi_obs_diag.F90 \
 		PDAFomi.F90 \
 		PDAFomi_callback.F90 \
 		PDAFomi_assimilate_ens.F90 \
@@ -251,14 +252,12 @@ SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
 		PDAFlocalomi_assimilate_3dvars.F90 \
 		PDAFlocalomi_put_state_3dvars.F90
 
-
 # collect all PDAF sources
-SRC_PDAF =  $(SRC_PDAFOMI) $(SRC_PDAF_GEN) \
-	    $(SRC_SEIK) $(SRC_LSEIK) \
-	    $(SRC_ENKF) $(SRC_ETKF) $(SRC_LETKF) \
-	    $(SRC_ESTKF) $(SRC_LESTKF) $(SRC_LENKF) $(SRC_NETF) $(SRC_LNETF) \
-	    $(SRC_LKNETF) $(SRC_PF) $(SRC_ENSRF) $(SRC_GENOBS) $(SRC_3DVAR) \
-	    $(SRC_MOD_PDAF) $(SRC_MOD_INTERFACE)
+SRC_PDAF =  	$(SRC_MOD_PDAF) $(SRC_PDAFOMI) $(SRC_PDAFLOCAL) $(SRC_PDAF_GEN) \
+		$(SRC_ESTKF) $(SRC_LESTKF) $(SRC_ETKF) $(SRC_LETKF) \
+		$(SRC_SEIK) $(SRC_LSEIK) $(SRC_ENKF) $(SRC_LENKF) \
+		$(SRC_NETF) $(SRC_LNETF) $(SRC_LKNETF) $(SRC_PF) \
+		$(SRC_ENSRF) $(SRC_GENOBS) $(SRC_3DVAR)
 
 # external sources
 SRC_SANGOMA = $(EXTDIR)/SANGOMA/SANGOMA_quicksort.F90

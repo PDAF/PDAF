@@ -535,8 +535,10 @@ END SUBROUTINE PDAF_generate_rndmat
     USE mpi
     USE PDAF_mod_parallel, &
          ONLY: mype, npes_filter, COMM_filter, MPIerr
-    USE PDAFomi, &
-         ONLY: omi_n_obstypes => n_obstypes, PDAFomi_obsstats_l
+    USE PDAFomi_obs_f, &
+         ONLY: omi_n_obstypes => n_obstypes
+    USE PDAFomi_obs_l, &
+         ONLY: PDAFomi_obsstats_l
 
     IMPLICIT NONE
 

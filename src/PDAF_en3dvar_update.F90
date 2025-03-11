@@ -350,7 +350,7 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: cnt_maxlag, dim_lag, sens
   USE PDAF_3dvar, &
        ONLY: type_opt, localfilter, forget, debug
-  USE PDAFomi, &
+  USE PDAFomi_obs_l, &
        ONLY: PDAFomi_dealloc
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &

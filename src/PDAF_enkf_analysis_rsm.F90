@@ -54,7 +54,7 @@ SUBROUTINE PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        ONLY: PDAF_memcount
   USE PDAF_mod_parallel, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
-  USE PDAFomi, &
+  USE PDAFomi_obs_f, &
        ONLY: omi_n_obstypes => n_obstypes, PDAFomi_gather_obsdims
   USE PDAF_enkf, &
        ONLY: PDAF_enkf_gather_resid, PDAF_enkf_obs_ensemble

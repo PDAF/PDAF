@@ -550,7 +550,7 @@ CONTAINS
          ONLY: subtype_filter, offline_mode, dim_lag
     USE PDAF_mod_parallel, &
          ONLY: filterpe, mype_world, COMM_pdaf
-    USE PDAFomi, &
+    USE PDAFomi_obs_f, &
          ONLY: omi_was_used
 
     IMPLICIT NONE

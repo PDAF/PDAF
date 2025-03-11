@@ -98,7 +98,7 @@ MODULE PDAFomi_obs_f
   USE PDAF_mod_parallel, &
        ONLY: mype, npes, COMM_FILTER, MPIerr
   USE PDAF_mod_core, &
-       ONLY: screen, obs_member, filterstr, dim_p
+       ONLY: screen, obs_member, filterstr, dim_p, dim_ens
   USE PDAF_mod_core, &
        ONLY: obs_member
 
@@ -106,12 +106,13 @@ MODULE PDAFomi_obs_f
   SAVE
 
 ! *** Module internal variables
-  INTEGER :: debug=0                    !< Debugging flag
-  INTEGER :: error=0                    !< Error flag
+  INTEGER :: debug=0                      !< Debugging flag
+  INTEGER :: error=0                      !< Error flag
+  INTEGER :: obs_diag=1                   !< Whether to store observation diagnostics
 
-  REAL, ALLOCATABLE :: domain_limits(:) !< Limiting coordinates (NSWE) for process domain
-  REAL, PARAMETER :: r_earth=6.3675e6   !< Earth radius in meters
-  REAL, PARAMETER :: pi=3.141592653589793   !< Pi
+  REAL, ALLOCATABLE :: domain_limits(:)   !< Limiting coordinates (NSWE) for process domain
+  REAL, PARAMETER :: r_earth=6.3675e6     !< Earth radius in meters
+  REAL, PARAMETER :: pi=3.141592653589793 !< Pi
 
 ! *** Data type to define the full observations by internally shared variables of the module
   TYPE obs_f
@@ -129,6 +130,7 @@ MODULE PDAFomi_obs_f
      ! ---- Optional variables - they can be set in INIT_DIM_OBS ----
      REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
      REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
+     CHARACTER(len=20) :: name=""         !< Name of observation type (optional)
 
      ! ---- Variables with predefined values - they can be changed in INIT_DIM_OBS  ----
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
@@ -151,6 +153,13 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
 
+     ! ----  The following variables are used internally for observation diagnostics ---
+     REAL, ALLOCATABLE :: obs_diag_p(:)        !< Full observed field
+     REAL, ALLOCATABLE :: ocoord_diag_p(:,:)   !< Coordinates of full observation vector
+     REAL, ALLOCATABLE :: ivar_obs_diag_p(:)   !< Inverse variance of full observations
+     REAL, ALLOCATABLE :: HX_diag_p(:,:)       !< Ensemble of observed model states
+     REAL, ALLOCATABLE :: HXmean_diag_p(:)     !< Observed ensemble meanstate
+
      ! ----  The following variables can be set in the routine PDAFomi_set_localize_covar ---
      INTEGER :: nradii                    !< Length of CRADIUS and SRADIUS
      INTEGER, ALLOCATABLE :: locweight(:) !< localization weight type (single value or vector for factorized localization)
@@ -167,13 +176,15 @@ MODULE PDAFomi_obs_f
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
   LOGICAL :: omit_obs = .FALSE.           ! Flag whether observations are omitted for large innovation
   LOGICAL :: omi_was_used = .FALSE.       ! Flag whether OMI was used 
+  INTEGER :: have_obsmean_diag=0          ! Flag whether the observed ensemble mean is initialized for obs. diagnostics
+  INTEGER :: have_obsens_diag=0           ! Flag whether the observed ensemble is initialized for obs. diagnostics
   INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
   INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index
 
   INTEGER :: ncoords_state                ! Number of grid point coordinate directions
   REAL, ALLOCATABLE :: coords_p(:,:)      ! Grid point coordinates of state vector for LEnKF and ENSRF/EAKF
 
-  ! Variables that can be set in initialization of a DA method
+  ! Variables that can be set in initialization routine of a DA method
   INTEGER :: globalobs = 0                ! Whether the chosen filter needs global observations (1: yes)
 
   INTEGER :: ostats_omit(7)               ! PE-local statistics
@@ -264,6 +275,38 @@ CONTAINS
 
     IF (mype == 0 .AND. screen > 0) &
          WRITE (*, '(a, 5x, a, 1x, i3)') 'PDAFomi', '--- Initialize observation type ID', thisobs%obsid
+
+
+! *****************************************************
+! *** Initialize arrays for observation diagnostics ***
+! *****************************************************
+
+    IF (obs_diag > 0) THEN
+       IF (dim_obs_p > 0) THEN
+
+          ALLOCATE(thisobs%obs_diag_p(dim_obs_p))
+          ALLOCATE(thisobs%ivar_obs_diag_p(dim_obs_p))
+          ALLOCATE(thisobs%ocoord_diag_p(ncoord, dim_obs_p))
+          ALLOCATE(thisobs%hxmean_diag_p(dim_obs_p))
+
+          thisobs%obs_diag_p(:) = obs_p(:)
+          thisobs%ivar_obs_diag_p(:) = ivar_obs_p(:)
+          thisobs%ocoord_diag_p(:,:) = ocoord_p(:,:)
+          thisobs%hxmean_diag_p(:) = 0.0
+
+          ! Observed ensemble array is only used for obs_diag>1
+          IF (obs_diag > 1) THEN
+             ALLOCATE(thisobs%hx_diag_p(dim_obs_p, dim_ens))
+             thisobs%hx_diag_p(:,:) = 0.0
+          END IF
+       ELSE
+          ALLOCATE(thisobs%obs_diag_p(1))
+          ALLOCATE(thisobs%ivar_obs_diag_p(1))
+          ALLOCATE(thisobs%ocoord_diag_p(ncoord, 1))
+          ALLOCATE(thisobs%hx_diag_p(1, dim_ens))
+          ALLOCATE(thisobs%hxmean_diag_p(1))
+       END IF
+    END IF
 
 
 ! **************************************
@@ -564,7 +607,7 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
 
-    USE PDAF_get, ONLY: PDAF_get_localfilter
+    USE PDAF_get, ONLY: PDAF_get_localfilter, PDAF_get_obsmemberid
 
     IMPLICIT NONE
 
@@ -577,7 +620,7 @@ CONTAINS
     INTEGER :: status                      ! Status flag for PDAF gather operation
     INTEGER :: localfilter                 ! Whether the filter is domain-localized
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
-
+    INTEGER :: obsmember                   ! Ensemble member index for which the routine is called
 
 ! **************************************
 ! *** Gather full observation arrays ***
@@ -654,7 +697,11 @@ CONTAINS
             'obsstate_f', obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_p)
     END IF
 
-    ! Initialize pointer array
+
+! **************************************
+! *** Initialize pointer array       ***
+! **************************************
+
     IF (obscnt == 0) THEN
        IF (.NOT.ALLOCATED(obs_f_all)) ALLOCATE(obs_f_all(n_obstypes))
        obscnt = 1
@@ -667,6 +714,30 @@ CONTAINS
 
     ! Set pointer to current observation
     obs_f_all(thisobs%obsid)%ptr => thisobs
+
+
+! **************************************
+! *** Store PE-local observed state  ***
+! **************************************
+
+    IF (obs_diag > 0) THEN
+
+       CALL PDAF_get_obsmemberid(obsmember)
+       write (*,*) 'PDAFomi_gather_obsstate called for member', obsmember
+
+       ! Store observed ensemble mean
+       IF (obsmember == 0) THEN
+          thisobs%hxmean_diag_p(1:thisobs%dim_obs_p) = obsstate_p(1:thisobs%dim_obs_p)
+          have_obsmean_diag = 1
+       END IF
+
+       IF (obs_diag>1 .AND. obsmember>0) THEN
+          thisobs%hx_diag_p(1:thisobs%dim_obs_p, obsmember) = obsstate_p(1:thisobs%dim_obs_p)
+          have_obsmean_diag = have_obsmean_diag + 1
+       END IF
+
+    END IF
+
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_gather_obsstate -- END'
