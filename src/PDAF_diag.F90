@@ -193,7 +193,7 @@ SUBROUTINE PDAF_diag_stddev(dim_p, dim_ens, &
   REAL :: stddev_p                  ! PE-local part of standard deviation
   INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
   REAL, ALLOCATABLE :: var_blk(:)   ! Block of variance field
-  INTEGER :: MPIerr                 ! MPI error flag
+  INTEGER :: MPIerr                 ! MPI status flag
 
 
 ! **************************
@@ -251,12 +251,13 @@ SUBROUTINE PDAF_diag_stddev(dim_p, dim_ens, &
   ! Get global state dimension
   CALL MPI_Allreduce(dim_p, dim_g, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
 
-  ! Complete computation of standard devation
+  ! normalize PE-local stddev
   stddev_p = stddev_p / REAL(dim_g)
 
   ! Get global stddev
   CALL MPI_Allreduce(stddev_p, stddev_g, 1, MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
 
+  ! Complete computation of global stddev
   stddev_g = SQRT(stddev_g)
 
 

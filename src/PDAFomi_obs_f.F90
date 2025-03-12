@@ -176,8 +176,14 @@ MODULE PDAFomi_obs_f
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
   LOGICAL :: omit_obs = .FALSE.           ! Flag whether observations are omitted for large innovation
   LOGICAL :: omi_was_used = .FALSE.       ! Flag whether OMI was used 
+
+  ! Variables for observation diagnostics
   INTEGER :: have_obsmean_diag=0          ! Flag whether the observed ensemble mean is initialized for obs. diagnostics
   INTEGER :: have_obsens_diag=0           ! Flag whether the observed ensemble is initialized for obs. diagnostics
+  INTEGER, TARGET, ALLOCATABLE :: dim_obs_diag_p(:)     ! Array of observation dimensions
+  REAL, TARGET, ALLOCATABLE :: rmsd(:)    ! Vector of observation-model RMSDs
+  REAL, TARGET, ALLOCATABLE :: obsstats(:,:) ! Array of observation statistics
+
   INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
   INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index
 
@@ -288,17 +294,14 @@ CONTAINS
           ALLOCATE(thisobs%ivar_obs_diag_p(dim_obs_p))
           ALLOCATE(thisobs%ocoord_diag_p(ncoord, dim_obs_p))
           ALLOCATE(thisobs%hxmean_diag_p(dim_obs_p))
+          ALLOCATE(thisobs%hx_diag_p(dim_obs_p, dim_ens))
 
           thisobs%obs_diag_p(:) = obs_p(:)
           thisobs%ivar_obs_diag_p(:) = ivar_obs_p(:)
           thisobs%ocoord_diag_p(:,:) = ocoord_p(:,:)
           thisobs%hxmean_diag_p(:) = 0.0
+          thisobs%hx_diag_p(:,:) = 0.0
 
-          ! Observed ensemble array is only used for obs_diag>1
-          IF (obs_diag > 1) THEN
-             ALLOCATE(thisobs%hx_diag_p(dim_obs_p, dim_ens))
-             thisobs%hx_diag_p(:,:) = 0.0
-          END IF
        ELSE
           ALLOCATE(thisobs%obs_diag_p(1))
           ALLOCATE(thisobs%ivar_obs_diag_p(1))
@@ -723,7 +726,6 @@ CONTAINS
     IF (obs_diag > 0) THEN
 
        CALL PDAF_get_obsmemberid(obsmember)
-       write (*,*) 'PDAFomi_gather_obsstate called for member', obsmember
 
        ! Store observed ensemble mean
        IF (obsmember == 0) THEN
@@ -731,9 +733,9 @@ CONTAINS
           have_obsmean_diag = 1
        END IF
 
-       IF (obs_diag>1 .AND. obsmember>0) THEN
+       IF (obsmember>0) THEN
           thisobs%hx_diag_p(1:thisobs%dim_obs_p, obsmember) = obsstate_p(1:thisobs%dim_obs_p)
-          have_obsmean_diag = have_obsmean_diag + 1
+          have_obsens_diag = have_obsens_diag + 1
        END IF
 
     END IF
