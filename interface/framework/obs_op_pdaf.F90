@@ -71,6 +71,10 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 #if defined CLMSA
    USE enkf_clm_mod, & 
         ONLY : clm_varsize, clm_paramarr, clmupdate_swc, clmupdate_T, clmcrns_bd
+#ifdef CLMFIVE
+   USE clm_instMod, &
+     ONLY : soilstate_inst
+#endif
 #endif
   IMPLICIT NONE
 
@@ -211,6 +215,7 @@ endif
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
+#ifdef CLMFIVE
  if (crns_flag.EQ.2) then
    lpointobs = .false.
    ! CRNS implementation based on Schrön et al. 2017 using
@@ -293,6 +298,7 @@ endif
      ! end loop over observations
    END DO
  end if
+#endif
 #endif
 #endif
 
