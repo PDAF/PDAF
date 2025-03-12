@@ -69,6 +69,8 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
+  USE PDAFomi_obs_f, &
+       ONLY: omi_n_obstypes => n_obstypes, omi_obs_diag => obs_diag
   USE PDAF_lseik_analysis, &
        ONLY: PDAF_lseik_ana, PDAF_lseik_resample
   USE PDAF_lseik_analysis_trans, &
@@ -573,12 +575,30 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
 ! *** Clean up from local analysis update ***
   DEALLOCATE(OmegaT)
+
+
+! ******************************************************
+! *** Initialize analysis observed ensemble and mean ***
+! ******************************************************
+
+  IF (omi_n_obstypes>0 .AND. omi_obs_diag>0) THEN
+     ! This call initializes HX_p, HXbar_p in the module PDAFobs
+     ! for the analysis ensemble
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .false., .true., .true., .false.)
+  END IF
+
 #else
   WRITE (*,'(/5x,a/)') &
        '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'
 #endif
 
+
+! **************************************
 ! *** Poststep for analysis ensemble ***
+! **************************************
+
   CALL PDAF_timeit(5, 'new')
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)

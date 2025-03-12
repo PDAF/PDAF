@@ -56,6 +56,8 @@ SUBROUTINE  PDAFpf_update(step, dim_p, dim_obs_p, dim_ens, &
        HX_p, obs_p
   USE PDAF_analysis_utils, &
        ONLY: PDAF_inflate_ens
+  USE PDAFomi_obs_f, &
+       ONLY: omi_n_obstypes => n_obstypes, omi_obs_diag => obs_diag
   USE PDAF_pf_analysis, &
        ONLY: PDAF_pf_ana, PDAF_pf_resampling
 
@@ -297,12 +299,29 @@ SUBROUTINE  PDAFpf_update(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(34, 'old')
   ENDIF
 
+
+! ******************************************************
+! *** Initialize analysis observed ensemble and mean ***
+! ******************************************************
+
+  IF (omi_n_obstypes>0 .AND. omi_obs_diag>0) THEN
+     ! This call initializes HX_p, HXbar_p in the module PDAFobs
+     ! for the analysis ensemble
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .false., .true., .true., .false.)
+  END IF
+
 #else
   WRITE (*,'(/5x,a/)') &
        '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'
 #endif
     
+
+! **************************************
 ! *** Poststep for analysis ensemble ***
+! **************************************
+
   CALL PDAF_timeit(5, 'new')
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)

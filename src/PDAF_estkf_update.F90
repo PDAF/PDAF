@@ -63,6 +63,8 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_estkf_ana_fixed
   USE PDAF_smoother, &
        ONLY: PDAF_smoothing
+  USE PDAFomi_obs_f, &
+       ONLY: omi_n_obstypes => n_obstypes, omi_obs_diag => obs_diag
 
   IMPLICIT NONE
 
@@ -312,13 +314,30 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   DEALLOCATE(TA)
 
+
+! ******************************************************
+! *** Initialize analysis observed ensemble and mean ***
+! ******************************************************
+
+  IF (envar_mode<2 .AND. omi_n_obstypes>0 .AND. omi_obs_diag>0) THEN
+     ! This call initializes HX_p, HXbar_p in the module PDAFobs
+     ! for the analysis ensemble
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .false., .true., .true., .false.)
+  END IF
+
 #else
   WRITE (*,'(/5x,a/)') &
        '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'
 #endif
 
+
+! **************************************
 ! *** Poststep for analysis ensemble ***
-  IF (envar_mode < 2) THEN
+! **************************************
+
+  IF (envar_mode < 1) THEN
      ! Do prepoststep only if ESTKF is not used in hybrid 3D-Var (envar_mode==2)
 
      CALL PDAF_timeit(5, 'new')

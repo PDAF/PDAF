@@ -71,6 +71,8 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        HX_l, HXbar_l, obs_l
   USE PDAF_smoother, &
        ONLY: PDAF_smoothing_local
+  USE PDAFomi_obs_f, &
+       ONLY: omi_n_obstypes => n_obstypes, omi_obs_diag => obs_diag
   USE PDAF_lestkf_analysis, &
        ONLY: PDAF_lestkf_ana
   USE PDAF_lestkf_analysis_fixed, &
@@ -591,12 +593,30 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
 ! *** Clean up from local analysis update ***
   DEALLOCATE(OmegaT)
+
+
+! ******************************************************
+! *** Initialize analysis observed ensemble and mean ***
+! ******************************************************
+
+  IF (envar_mode<2 .AND. omi_n_obstypes>0 .AND. omi_obs_diag>0) THEN
+     ! This call initializes HX_p, HXbar_p in the module PDAFobs
+     ! for the analysis ensemble
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .false., .true., .true., .false.)
+  END IF
+
 #else
   WRITE (*,'(/5x,a/)') &
        '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'
 #endif
 
+
+! **************************************
 ! *** Poststep for analysis ensemble ***
+! **************************************
+
   IF (envar_mode < 1) THEN
      ! Do prepoststep only if LESTKF is not used in hybrid 3D-Var (envar_mode==1)
 
