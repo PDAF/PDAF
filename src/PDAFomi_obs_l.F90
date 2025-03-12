@@ -1687,105 +1687,109 @@ CONTAINS
 ! *** observation error variance.             ***
 ! ***********************************************
 
-       ! *** Initialize weight array
+       have_lobs: IF (thisobs_l%dim_obs_l > 0) THEN
 
-       ALLOCATE(weight(thisobs_l%dim_obs_l))
-       ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
+          ! *** Initialize weight array
 
-       resid_obs(:,1) = resid_l(:)
+          ALLOCATE(weight(thisobs_l%dim_obs_l))
+          ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
 
-       CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%cradius_l, thisobs_l%sradius_l, &
-            resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+          resid_obs(:,1) = resid_l(:)
 
-       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
-       IF (thisobs_l%locweight_v>0) then
+          CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
+               thisobs_l%cradius_l, thisobs_l%sradius_l, &
+               resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
-          IF (verbose == 1) THEN
-             WRITE (*, '(a, 8x, a)') &
-                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+          IF (thisobs_l%locweight_v > 0) then
+
+             IF (verbose == 1) THEN
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- initialize also weight function for vertical direction'
+             END IF
+
+             ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+             CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight_v, &
+                  thisobs_l%cradius(3), thisobs_l%sradius(3), &
+                  resid_obs, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+             DO i = 1, thisobs_l%dim_obs_l
+                weight(i) = weight(i) * weight_v(i)
+             END DO
+
+             DEALLOCATE(weight_v)
           END IF
 
-          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+          DEALLOCATE(resid_obs)
 
-          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight_v, &
-               thisobs_l%cradius(3), thisobs_l%sradius(3), &
-               resid_obs, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          ! *** Handling of special weighting types ***
+
+          lw2: IF (thisobs_l%locweight == 26) THEN
+             ! Use square-root of 5th-order polynomial on A
+
+             DO i = 1, thisobs_l%dim_obs_l
+                ! Check if weight >0 (Could be <0 due to numerical precision)
+                IF (weight(i) > 0.0) THEN
+                   weight(i) = SQRT(weight(i))
+                ELSE
+                   weight(i) = 0.0
+                END IF
+             END DO
+          END IF lw2
+
+
+          ! *** Apply weight
+
+          ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
 
           DO i = 1, thisobs_l%dim_obs_l
-             weight(i) = weight(i) * weight_v(i)
+             Rinvresid_l(i) = thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(thisobs_l%off_obs_l+i)
           END DO
-
-          DEALLOCATE(weight_v)
-       END IF
-
-       DEALLOCATE(resid_obs)
-
-
-       ! *** Handling of special weighting types ***
-
-       lw2: IF (thisobs_l%locweight == 26) THEN
-          ! Use square-root of 5th-order polynomial on A
-
-          DO i = 1, thisobs_l%dim_obs_l
-             ! Check if weight >0 (Could be <0 due to numerical precision)
-             IF (weight(i) > 0.0) THEN
-                weight(i) = SQRT(weight(i))
-             ELSE
-                weight(i) = 0.0
-             END IF
-          END DO
-       END IF lw2
-
-
-       ! *** Apply weight
-
-       ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
-
-       DO i = 1, thisobs_l%dim_obs_l
-          Rinvresid_l(i) = thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(thisobs_l%off_obs_l+i)
-       END DO
 
 
 ! ********************************
 ! *** Compute local likelihood ***
 ! ********************************
 
-       IF (thisobs%obs_err_type == 0) THEN
+          IF (thisobs%obs_err_type == 0) THEN
 
-          ! Gaussian errors
-          ! Calculate exp(-0.5*resid^T*R^-1*resid)
+             ! Gaussian errors
+             ! Calculate exp(-0.5*resid^T*R^-1*resid)
 
-          ! Transform back to log likelihood to increment its values
-          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
+             ! Transform back to log likelihood to increment its values
+             IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
 
-          lhood_one = 0.0
-          DO i = 1, thisobs_l%dim_obs_l
-             lhood_one = lhood_one + 0.5*resid_l(thisobs_l%off_obs_l+i)*Rinvresid_l(i)
-          END DO
+             lhood_one = 0.0
+             DO i = 1, thisobs_l%dim_obs_l
+                lhood_one = lhood_one + 0.5*resid_l(thisobs_l%off_obs_l+i)*Rinvresid_l(i)
+             END DO
 
-          lhood_l = EXP(-(lhood_l + lhood_one))
+             lhood_l = EXP(-(lhood_l + lhood_one))
 
-       ELSE
+          ELSE
 
-          ! Double-exponential errors
-          ! Calculate exp(-SUM(ABS(resid)))
+             ! Double-exponential errors
+             ! Calculate exp(-SUM(ABS(resid)))
 
-          ! Transform pack to log likelihood to increment its values
-          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
+             ! Transform pack to log likelihood to increment its values
+             IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
 
-          lhood_one = 0.0
-          DO i = 1, thisobs_l%dim_obs_l
-             lhood_one = lhood_one + ABS(Rinvresid_l(i))
-          END DO
+             lhood_one = 0.0
+             DO i = 1, thisobs_l%dim_obs_l
+                lhood_one = lhood_one + ABS(Rinvresid_l(i))
+             END DO
 
-          lhood_l = EXP(-(lhood_l + lhood_one))
+             lhood_l = EXP(-(lhood_l + lhood_one))
 
-       END IF
+          END IF
 
-       ! *** Clean up ***
+          ! *** Clean up ***
 
-       DEALLOCATE(weight, Rinvresid_l)
+          DEALLOCATE(weight, Rinvresid_l)
+
+       END IF have_lobs
 
        ! Screen output
        IF (debug>0) THEN
@@ -1901,103 +1905,107 @@ CONTAINS
 ! *** observation error variance.             ***
 ! ***********************************************
 
-       ! *** Initialize weight array
+       have_lobs: IF (thisobs_l%dim_obs_l > 0) THEN
 
-       ALLOCATE(weight(thisobs_l%dim_obs_l))
-       ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
+          ! *** Initialize weight array
 
-       resid_obs(:,1) = resid_l(:)
+          ALLOCATE(weight(thisobs_l%dim_obs_l))
+          ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
 
-       CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%cradius_l, thisobs_l%sradius_l, &
-            resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+          resid_obs(:,1) = resid_l(:)
 
-       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
-       IF (thisobs_l%locweight_v>0) then
+          CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
+               thisobs_l%cradius_l, thisobs_l%sradius_l, &
+               resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
-          IF (verbose == 1) THEN
-             WRITE (*, '(a, 8x, a)') &
-                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+          IF (thisobs_l%locweight_v>0) then
+
+             IF (verbose == 1) THEN
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- initialize also weight function for vertical direction'
+             END IF
+
+             ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+             CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight_v, &
+                  thisobs_l%cradius(3), thisobs_l%sradius(3), &
+                  resid_obs, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+             DO i = 1, thisobs_l%dim_obs_l
+                weight(i) = weight(i) * weight_v(i)
+             END DO
+
+             DEALLOCATE(weight_v)
           END IF
 
-          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+          DEALLOCATE(resid_obs)
 
-          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight_v, &
-               thisobs_l%cradius(3), thisobs_l%sradius(3), &
-               resid_obs, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          ! *** Handling of special weighting types ***
+
+          lw2: IF (thisobs_l%locweight == 26) THEN
+             ! Use square-root of 5th-order polynomial on A
+
+             DO i = 1, thisobs_l%dim_obs_l
+                ! Check if weight >0 (Could be <0 due to numerical precision)
+                IF (weight(i) > 0.0) THEN
+                   weight(i) = SQRT(weight(i))
+                ELSE
+                   weight(i) = 0.0
+                END IF
+             END DO
+          END IF lw2
+
+
+          ! *** Apply weight
+
+          ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
 
           DO i = 1, thisobs_l%dim_obs_l
-             weight(i) = weight(i) * weight_v(i)
+             Rinvresid_l(i) = (1.0-gamma) * thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(i)
           END DO
-
-          DEALLOCATE(weight_v)
-       END IF
-
-       DEALLOCATE(resid_obs)
-
-
-       ! *** Handling of special weighting types ***
-
-       lw2: IF (thisobs_l%locweight == 26) THEN
-          ! Use square-root of 5th-order polynomial on A
-
-          DO i = 1, thisobs_l%dim_obs_l
-             ! Check if weight >0 (Could be <0 due to numerical precision)
-             IF (weight(i) > 0.0) THEN
-                weight(i) = SQRT(weight(i))
-             ELSE
-                weight(i) = 0.0
-             END IF
-          END DO
-       END IF lw2
-
-
-       ! *** Apply weight
-
-       ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
-
-       DO i = 1, thisobs_l%dim_obs_l
-          Rinvresid_l(i) = (1.0-gamma) * thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(i)
-       END DO
 
 
 ! ********************************
 ! *** Compute local likelihood ***
 ! ********************************
 
-       IF (thisobs%obs_err_type == 0) THEN
+          IF (thisobs%obs_err_type == 0) THEN
 
-          ! Gaussian errors
-          ! Calculate exp(-0.5*resid^T*R^-1*resid)
+             ! Gaussian errors
+             ! Calculate exp(-0.5*resid^T*R^-1*resid)
 
-          ! Transform pack to log likelihood to increment its values
-          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
+             ! Transform pack to log likelihood to increment its values
+             IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
 
-          CALL dgemv('t', thisobs_l%dim_obs_l, 1, 0.5, resid_l, &
-               thisobs_l%dim_obs_l, Rinvresid_l, 1, 0.0, lhood_one, 1)
+             CALL dgemv('t', thisobs_l%dim_obs_l, 1, 0.5, resid_l, &
+                  thisobs_l%dim_obs_l, Rinvresid_l, 1, 0.0, lhood_one, 1)
 
-          lhood_l = EXP(-(lhood_l + lhood_one))
+             lhood_l = EXP(-(lhood_l + lhood_one))
 
-       ELSE
+          ELSE
 
-          ! Double-exponential errors
-          ! Calculate exp(-SUM(ABS(resid)))
+             ! Double-exponential errors
+             ! Calculate exp(-SUM(ABS(resid)))
 
-          ! Transform pack to log likelihood to increment its values
-          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
+             ! Transform pack to log likelihood to increment its values
+             IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
 
-          lhood_one = 0.0
-          DO i = 1, thisobs_l%dim_obs_l
-             lhood_one = lhood_one + ABS(Rinvresid_l(i))
-          END DO
+             lhood_one = 0.0
+             DO i = 1, thisobs_l%dim_obs_l
+                lhood_one = lhood_one + ABS(Rinvresid_l(i))
+             END DO
 
-          lhood_l = EXP(-(lhood_l + lhood_one))
+             lhood_l = EXP(-(lhood_l + lhood_one))
 
-       END IF
+          END IF
 
-       ! *** Clean up ***
+          ! *** Clean up ***
 
-       DEALLOCATE(weight, Rinvresid_l)
+          DEALLOCATE(weight, Rinvresid_l)
+
+       END IF have_lobs
 
        ! Screen output
        IF (debug>0) THEN
@@ -4832,7 +4840,7 @@ CONTAINS
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
          offset_obs_g, obsdims, map_obs_id, have_obsmean_diag, &
-         have_obsens_diag
+         have_obsens_diag, rmsd, dim_obs_diag_p
 
     IMPLICIT NONE
 
@@ -4861,6 +4869,8 @@ CONTAINS
     IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
     IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
     IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
+    IF (ALLOCATED(rmsd)) DEALLOCATE(rmsd)
+    IF (ALLOCATED(dim_obs_diag_p)) DEALLOCATE(dim_obs_diag_p)
 
     ! Reset counters over all observation types
     n_obstypes = 0
