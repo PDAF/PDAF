@@ -289,7 +289,7 @@ CONTAINS
 
     IF (obs_diag > 0) THEN
        IF (dim_obs_p > 0) THEN
-write (*,*) 'OMI-diag allocate'
+
           ALLOCATE(thisobs%obs_diag_p(dim_obs_p))
           ALLOCATE(thisobs%ivar_obs_diag_p(dim_obs_p))
           ALLOCATE(thisobs%ocoord_diag_p(ncoord, dim_obs_p))

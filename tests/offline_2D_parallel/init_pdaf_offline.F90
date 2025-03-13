@@ -20,7 +20,7 @@ SUBROUTINE init_pdaf()
        ONLY: PDAF_init, PDAF_set_iparam, PDAF_set_offline_mode, &
        PDAF_DA_ENKF, PDAF_DA_PF
   USE PDAFomi, &
-       ONLY: PDAFomi_set_domain_limits
+       ONLY: PDAFomi_set_domain_limits, PDAFomi_set_obs_diag
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, mype_filter, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
@@ -28,7 +28,8 @@ SUBROUTINE init_pdaf()
        ONLY: nx_p, ny, ndim, dim_state_p, local_dims, coords_p, &
        screen, filtertype, subtype, dim_ens, incremental, &
        type_forget, forget, rank_ana_enkf, locweight, cradius, sradius, &
-       type_trans, type_sqrt, pf_res_type, pf_noise_type, pf_noise_amp
+       type_trans, type_sqrt, pf_res_type, pf_noise_type, pf_noise_amp, &
+       observe_ens, type_obs_init, do_omi_obsstats
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -124,6 +125,9 @@ SUBROUTINE init_pdaf()
 
   call init_pdaf_parse()
 
+! *** Activate PDAF-OMI observation statistics ***
+
+  IF (do_omi_obsstats) CALL PDAFomi_set_obs_diag(1)
 
 ! *** Initial Screen output ***
 ! *** This is optional      ***
@@ -162,7 +166,8 @@ SUBROUTINE init_pdaf()
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)
   CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)
-
+  CALL PDAF_set_iparam(8, observe_ens, status_pdaf)
+  CALL PDAF_set_iparam(9, type_obs_init, status_pdaf)
 
 ! *** Check whether initialization of PDAF was successful ***
   IF (status_pdaf /= 0) THEN

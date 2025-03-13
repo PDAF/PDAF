@@ -36,10 +36,13 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_model, &          ! Model variables
        ONLY: nx, ny, nx_p
   USE mod_assimilation, &   ! Assimilation variables
-       ONLY: dim_state
+       ONLY: dim_state, do_omi_obsstats
   USE mod_parallel_pdaf, &  ! Assimilation parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
-  USE PDAF 
+  USE PDAF, &               ! Diagnostic routines 
+       ONLY: PDAF_diag_stddev
+  USE PDAFomi, &            ! Observation diagnostics
+       ONLY: PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
 
   IMPLICIT NONE
 
@@ -71,6 +74,9 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
+  INTEGER :: nobs                     ! Number of observations in diagnostics
+  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
+  REAL, POINTER :: obsstats(:,:)      ! Array of observation statistics
 
 
 ! **********************
@@ -97,8 +103,18 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** (=RMS errors according to sampled covar matrix)      ***
 ! ************************************************************
 
-  CALL PDAF_diag_stddev_parallel(dim_p, dim_ens, state_p, ens_p, &
+  CALL PDAF_diag_stddev(dim_p, dim_ens, state_p, ens_p, &
         ens_stddev, 1, COMM_filter, pdaf_status)
+
+ 
+! **************************************
+! *** Compute observation statistics ***
+! **************************************
+
+  IF (do_omi_obsstats) THEN
+     CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1/(mype_filter+1))
+     CALL PDAFomi_diag_stats(nobs, obsstats, 1/(mype_filter+1))
+  END IF
 
 
 ! *****************

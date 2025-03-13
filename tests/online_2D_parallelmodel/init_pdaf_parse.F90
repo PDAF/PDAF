@@ -22,7 +22,7 @@ SUBROUTINE init_pdaf_parse()
        sradius, type_trans, type_sqrt, dim_lag, type_hyb, &
        hyb_gamma, hyb_kappa, type_winf, limit_winf, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
-       ensgroup, steps_iau
+       ensgroup, steps_iau, observe_ens, type_obs_init, do_omi_obsstats
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B
@@ -57,6 +57,12 @@ SUBROUTINE init_pdaf_parse()
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
   CALL parse(handle, delt_obs)
+  handle = 'observe_ens'             ! (0) apply H also to ensemble mean; (1) apply H only to ensemble states
+  CALL parse(handle, observe_ens)
+  handle = 'type_obs_init'           ! init obs. (0) before or (1) after call to prepostsstep
+  CALL parse(handle, type_obs_init)
+  handle = 'do_omi_obsstats'         ! Whether to let PDAF-OMI compute observation statistics
+  CALL parse(handle, do_omi_obsstats)
 
   ! Settings for model and time stepping
   handle = 'model_error'             ! Control application of model error

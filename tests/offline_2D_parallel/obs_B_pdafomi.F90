@@ -189,6 +189,17 @@ CONTAINS
     ! The distance compution starts from the first row
     thisobs%ncoord = 2
 
+    ! Specify the overall domain size
+    ! ONLY REQUIRED FOR THISOBS%USE_GLOBAL_OBS = 0
+    ! OR THISOBS%DISTTYPE = 1 (periodicity)
+    ALLOCATE(thisobs%domainsize(2))
+    thisobs%domainsize(1) = REAL(nx)
+    thisobs%domainsize(2) = REAL(ny)
+
+    ! Specify whether to (1) use global observations for local filters,
+    ! or (0) restrict the full observations to those relevant for a process domain
+    thisobs%use_global_obs = 0
+
 
 ! **********************************
 ! *** Read PE-local observations ***

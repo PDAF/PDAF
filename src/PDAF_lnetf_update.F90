@@ -299,7 +299,7 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
      CALL PDAF_timeit(3, 'old')
   END IF
-write (*,*) 'after PDAFobs_init'
+
 
 ! **************************************
 ! *** Preparation for local analysis ***
@@ -615,7 +615,7 @@ write (*,*) 'after PDAFobs_init'
 
         CALL U_l2g_state(step, domain_p, dim_l, ens_l(:, member), dim_p, ens_p(:,member))
      END DO
-    
+
      CALL PDAF_timeit(14, 'old')
 
      ! *** Perform smoothing of past ensembles ***

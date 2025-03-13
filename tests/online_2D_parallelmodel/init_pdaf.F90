@@ -19,6 +19,8 @@ SUBROUTINE init_pdaf()
   USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAF_init, PDAF_get_state, PDAF_iau_init, PDAF_set_iparam, &
        PDAF_DA_ENKF, PDAF_DA_PF
+  USE PDAFomi, &
+       ONLY: PDAFomi_set_domain_limits, PDAFomi_set_obs_diag
   USE mod_parallel_model, &       ! Parallelization variables for model
        ONLY: mype_world, COMM_model, abort_parallel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
@@ -28,7 +30,8 @@ SUBROUTINE init_pdaf()
        dim_ens, type_iau, type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, delt_obs, steps_iau, &
-       pf_res_type, pf_noise_type, pf_noise_amp
+       pf_res_type, pf_noise_type, pf_noise_amp, &
+       observe_ens, type_obs_init, do_omi_obsstats
   USE mod_model, &                ! Model variables
        ONLY: nx, ny, nx_p, ndim, coords_p
   USE obs_A_pdafomi, &            ! Variables for observation type A
@@ -143,6 +146,9 @@ SUBROUTINE init_pdaf()
 
   call init_pdaf_parse()
 
+! *** Activate PDAF-OMI observation statistics ***
+
+  IF (do_omi_obsstats) CALL PDAFomi_set_obs_diag(1)
 
 ! *** Initial Screen output ***
 ! *** This is optional      ***
@@ -181,6 +187,8 @@ SUBROUTINE init_pdaf()
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)
   CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)
+  CALL PDAF_set_iparam(8, observe_ens, status_pdaf)
+  CALL PDAF_set_iparam(9, type_obs_init, status_pdaf)
 
 ! *** Check whether initialization of PDAF was successful ***
   IF (status_pdaf /= 0) THEN

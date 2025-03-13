@@ -39,8 +39,11 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
-       ONLY: nx, ny, dim_state, local_dims
-  USE PDAF 
+       ONLY: nx, ny, dim_state, local_dims, do_omi_obsstats
+  USE PDAF, & 
+       ONLY: PDAF_diag_stddev, PDAF_set_debug_flag
+  USE PDAFomi, &
+       ONLY: PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
 
   IMPLICIT NONE
 
@@ -69,8 +72,11 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER :: offset   ! Row-offset according to domain decomposition
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
-  REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
-  REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
+  REAL, ALLOCATABLE :: ens_p_tmp(:,:) ! Temporary ensemble for some PE-domain
+  REAL, ALLOCATABLE :: state_p_tmp(:) ! Temporary state for some PE-domain
+  INTEGER :: nobs                     ! Number of observations in diagnostics
+  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
+  REAL, POINTER :: obsstats(:,:)      ! Array of observation statistics
 
 
 ! **********************
@@ -90,8 +96,18 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** (=RMS errors according to sampled covar matrix)      ***
 ! ************************************************************
 
-  CALL PDAF_diag_stddev_parallel(dim_p, dim_ens, state_p, ens_p, &
+  CALL PDAF_diag_stddev(dim_p, dim_ens, state_p, ens_p, &
         ens_stddev, 1, COMM_filter, pdaf_status)
+
+ 
+! **************************************
+! *** Compute observation statistics ***
+! **************************************
+
+  IF (do_omi_obsstats) THEN
+     CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1/(mype_filter+1))
+     CALL PDAFomi_diag_stats(nobs, obsstats, 1/(mype_filter+1))
+  END IF
 
 
 ! *****************

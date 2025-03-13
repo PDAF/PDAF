@@ -1623,14 +1623,14 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood_l(thisobs_l, thisobs, resid_l, lhood_l, verbose)
+  SUBROUTINE PDAFomi_likelihood_l(thisobs_l, thisobs, resid_l_all, lhood_l, verbose)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(inout) :: resid_l(:)        !< Input vector of residuum
+    REAL, INTENT(inout) :: resid_l_all(:)        !< Input vector of residuum
     REAL, INTENT(inout) :: lhood_l           !< Output vector - log likelihood
     INTEGER, INTENT(in) :: verbose           !< Verbosity flag
 
@@ -1694,7 +1694,8 @@ CONTAINS
           ALLOCATE(weight(thisobs_l%dim_obs_l))
           ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
 
-          resid_obs(:,1) = resid_l(:)
+          resid_obs(1:thisobs_l%dim_obs_l, 1) &
+               = resid_l_all(1+thisobs_l%off_obs_l : thisobs_l%off_obs_l+thisobs_l%dim_obs_l)
 
           CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
                thisobs_l%cradius_l, thisobs_l%sradius_l, &
@@ -1745,7 +1746,7 @@ CONTAINS
           ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
 
           DO i = 1, thisobs_l%dim_obs_l
-             Rinvresid_l(i) = thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(thisobs_l%off_obs_l+i)
+             Rinvresid_l(i) = thisobs_l%ivar_obs_l(i) * weight(i) * resid_l_all(thisobs_l%off_obs_l+i)
           END DO
 
 
@@ -1763,7 +1764,7 @@ CONTAINS
 
              lhood_one = 0.0
              DO i = 1, thisobs_l%dim_obs_l
-                lhood_one = lhood_one + 0.5*resid_l(thisobs_l%off_obs_l+i)*Rinvresid_l(i)
+                lhood_one = lhood_one + 0.5*resid_l_all(thisobs_l%off_obs_l+i)*Rinvresid_l(i)
              END DO
 
              lhood_l = EXP(-(lhood_l + lhood_one))
@@ -1838,14 +1839,14 @@ CONTAINS
 !! * 2022-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood_hyb_l(thisobs_l, thisobs, resid_l, gamma, lhood_l, verbose)
+  SUBROUTINE PDAFomi_likelihood_hyb_l(thisobs_l, thisobs, resid_l_all, gamma, lhood_l, verbose)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(inout) :: resid_l(:)        !< Input vector of residuum
+    REAL, INTENT(inout) :: resid_l_all(:)        !< Input vector of residuum
     REAL, INTENT(inout) :: lhood_l           !< Output vector - log likelihood
     REAL, INTENT(in)    :: gamma             !< Hybrid weight
     INTEGER, INTENT(in) :: verbose           !< Verbosity flag
@@ -1855,7 +1856,7 @@ CONTAINS
     INTEGER :: i                          ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)        ! Localization weights
     REAL, ALLOCATABLE :: weight_v(:)      ! Localization weights for vertical (for locweight_v>0)
-    REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l
+    REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l_all
     REAL, ALLOCATABLE :: Rinvresid_l(:)   ! R^-1 times residual
     REAL :: lhood_one                     ! Likelihood for this observation
 
@@ -1912,7 +1913,8 @@ CONTAINS
           ALLOCATE(weight(thisobs_l%dim_obs_l))
           ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
 
-          resid_obs(:,1) = resid_l(:)
+          resid_obs(1:thisobs_l%dim_obs_l, 1) &
+               = resid_l_all(1+thisobs_l%off_obs_l : thisobs_l%off_obs_l+thisobs_l%dim_obs_l)
 
           CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
                thisobs_l%cradius_l, thisobs_l%sradius_l, &
@@ -1963,7 +1965,7 @@ CONTAINS
           ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
 
           DO i = 1, thisobs_l%dim_obs_l
-             Rinvresid_l(i) = (1.0-gamma) * thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(i)
+             Rinvresid_l(i) = (1.0-gamma) * thisobs_l%ivar_obs_l(i) * weight(i) * resid_l_all(i)
           END DO
 
 
@@ -1979,7 +1981,7 @@ CONTAINS
              ! Transform pack to log likelihood to increment its values
              IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
 
-             CALL dgemv('t', thisobs_l%dim_obs_l, 1, 0.5, resid_l, &
+             CALL dgemv('t', thisobs_l%dim_obs_l, 1, 0.5, resid_l_all, &
                   thisobs_l%dim_obs_l, Rinvresid_l, 1, 0.0, lhood_one, 1)
 
              lhood_l = EXP(-(lhood_l + lhood_one))
