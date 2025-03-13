@@ -4857,21 +4857,12 @@ CONTAINS
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
 
-    IF (ALLOCATED(thisobs%obs_diag_p)) DEALLOCATE(thisobs%obs_diag_p)
-    IF (ALLOCATED(thisobs%ocoord_diag_p)) DEALLOCATE(thisobs%ocoord_diag_p)
-    IF (ALLOCATED(thisobs%ivar_obs_diag_p)) DEALLOCATE(thisobs%ivar_obs_diag_p)
-    IF (ALLOCATED(thisobs%hx_diag_p)) DEALLOCATE(thisobs%hx_diag_p)
-    IF (ALLOCATED(thisobs%hxmean_diag_p)) DEALLOCATE(thisobs%hxmean_diag_p)
-
     ! Reset assim flag
     thisobs%doassim = 0
 
     IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
     IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
     IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
-    IF (ALLOCATED(rmsd)) DEALLOCATE(rmsd)
-    IF (ALLOCATED(dim_obs_diag_p)) DEALLOCATE(dim_obs_diag_p)
-    IF (ALLOCATED(obsstats)) DEALLOCATE(obsstats)
 
     ! Reset counters over all observation types
     n_obstypes = 0
@@ -4881,10 +4872,6 @@ CONTAINS
 
     ! Reset flag for first call to local observations
     firstobs = 0
-
-    ! Reset observation diagnostics flags
-    have_obsmean_diag = 0
-    have_obsens_diag = 0
 
   END SUBROUTINE PDAFomi_deallocate_obs
 
@@ -5071,7 +5058,9 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id, coords_p
+         offset_obs_g, obsdims, map_obs_id, coords_p, &
+         have_obsmean_diag, have_obsens_diag, rmsd, dim_obs_diag_p, obsstats
+
 
 ! *** Local variables
     INTEGER :: i
@@ -5085,13 +5074,20 @@ CONTAINS
           IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_p)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_p)
           IF (ALLOCATED(obs_f_all(i)%ptr%ivar_obs_f)) DEALLOCATE(obs_f_all(i)%ptr%ivar_obs_f)
           IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
-          IF (ALLOCATED(obs_f_all(i)%ptr%ivar_obs_f)) DEALLOCATE(obs_f_all(i)%ptr%ivar_obs_f)
-          IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
           IF (ALLOCATED(obs_f_all(i)%ptr%domainsize)) DEALLOCATE(obs_f_all(i)%ptr%domainsize)
           IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_f_lim)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_f_lim)
+
+          ! Localization
           IF (ALLOCATED(obs_f_all(i)%ptr%cradius)) DEALLOCATE(obs_f_all(i)%ptr%cradius)
           IF (ALLOCATED(obs_f_all(i)%ptr%sradius)) DEALLOCATE(obs_f_all(i)%ptr%sradius)
           IF (ALLOCATED(obs_f_all(i)%ptr%locweight)) DEALLOCATE(obs_f_all(i)%ptr%locweight)
+
+          ! Observation diagnostics arrays
+          IF (ALLOCATED(obs_f_all(i)%ptr%obs_diag_p)) DEALLOCATE(obs_f_all(i)%ptr%obs_diag_p)
+          IF (ALLOCATED(obs_f_all(i)%ptr%ivar_obs_diag_p)) DEALLOCATE(obs_f_all(i)%ptr%ivar_obs_diag_p)
+          IF (ALLOCATED(obs_f_all(i)%ptr%ocoord_diag_p)) DEALLOCATE(obs_f_all(i)%ptr%ocoord_diag_p)
+          IF (ALLOCATED(obs_f_all(i)%ptr%hxmean_diag_p)) DEALLOCATE(obs_f_all(i)%ptr%hxmean_diag_p)
+          IF (ALLOCATED(obs_f_all(i)%ptr%hx_diag_p)) DEALLOCATE(obs_f_all(i)%ptr%hx_diag_p)
 
           ! Reset assim flag
           obs_f_all(i)%ptr%doassim = 0
@@ -5100,7 +5096,14 @@ CONTAINS
        IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
        IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
        IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
-       IF (ALLOCATED(coords_p)) DEALLOCATE(coordS_p)
+
+       ! localization
+       IF (ALLOCATED(coords_p)) DEALLOCATE(coords_p)
+
+        ! Obsevation diagnostics array targets
+       IF (ALLOCATED(rmsd)) DEALLOCATE(rmsd)
+       IF (ALLOCATED(dim_obs_diag_p)) DEALLOCATE(dim_obs_diag_p)
+       IF (ALLOCATED(obsstats)) DEALLOCATE(obsstats)
 
        ! Reset counters over all observation types
        n_obstypes = 0
@@ -5110,6 +5113,10 @@ CONTAINS
 
        ! Reset flag for first call to local observations
        firstobs = 0
+
+       ! Reset observation diagnostics flags
+       have_obsmean_diag = 0
+       have_obsens_diag = 0
     END IF 
    
   END SUBROUTINE PDAFomi_dealloc
