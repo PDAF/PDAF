@@ -13,7 +13,7 @@ SUBROUTINE assimilate_pdaf()
 
   USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAF3_assimilate_local, PDAF3_assimilate_global, &
-       PDAF3_assimilate_lenkf, PDAF_localfilter
+       PDAF_localfilter
   USE mod_parallel_model, &       ! Parallelization
        ONLY: mype_world, abort_parallel
 

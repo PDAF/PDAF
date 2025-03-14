@@ -68,15 +68,15 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   REAL :: ens_stddev                  ! ensemble STDDEV = estimated RMS error
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
+  INTEGER :: nobs                     ! Number of observations in diagnostics
+  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
+  REAL, POINTER :: obsstats(:,:)      ! Array of observation statistics
   ! Variables for parallelization - global fields
   INTEGER :: offset   ! Row-offset according to domain decomposition
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL, ALLOCATABLE :: ens_p_tmp(:,:) ! Temporary ensemble for some PE-domain
   REAL, ALLOCATABLE :: state_p_tmp(:) ! Temporary state for some PE-domain
-  INTEGER :: nobs                     ! Number of observations in diagnostics
-  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
-  REAL, POINTER :: obsstats(:,:)      ! Array of observation statistics
 
 
 ! **********************

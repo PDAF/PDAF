@@ -16,9 +16,9 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF_init, PDAF_set_iparam, PDAF_set_offline_mode, &
-       PDAF_DA_ENKF, PDAF_DA_PF
+  USE PDAF, &                     ! PDAF interfaces and parameters
+       ONLY: PDAF_init, PDAF_set_iparam, PDAF_set_rparam, &
+       PDAF_set_offline_mode, PDAF_DA_ENKF, PDAF_DA_PF
   USE PDAFomi, &
        ONLY: PDAFomi_set_domain_limits, PDAFomi_set_obs_diag
   USE mod_parallel_pdaf, &        ! Parallelization variables
@@ -153,21 +153,26 @@ SUBROUTINE init_pdaf()
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_r(1) = forget      ! Forgetting factor
 
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 2,&
-          filter_param_r, 1, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_offline, &
-          screen, status_pdaf)
+  CALL PDAF_init(filtertype, subtype, 0, &
+       filter_param_i, 2,&
+       filter_param_r, 1, &
+       COMM_model, COMM_filter, COMM_couple, &
+       task_id, n_modeltasks, filterpe, init_ens_offline, &
+       screen, status_pdaf)
 
-  ! Additional parameter specifications
-  IF (filtertype==PDAF_DA_ENKF) CALL PDAF_set_iparam(3, rank_ana_enkf, status_pdaf)
-  if (filtertype==PDAF_DA_PF) CALL PDAF_set_iparam(3, pf_res_type, status_pdaf)
+  ! *** Additional parameter specifications ***
+
+  ! Generic settings for all filters
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)
   CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)
   CALL PDAF_set_iparam(8, observe_ens, status_pdaf)
   CALL PDAF_set_iparam(9, type_obs_init, status_pdaf)
+
+  ! Specific settings
+  IF (filtertype==PDAF_DA_ENKF) CALL PDAF_set_iparam(4, rank_ana_enkf, status_pdaf)
+  if (filtertype==PDAF_DA_PF) CALL PDAF_set_iparam(6, pf_res_type, status_pdaf)
+  if (filtertype==PDAF_DA_PF) CALL PDAF_set_rparam(3, pf_noise_amp, status_pdaf)
 
 ! *** Check whether initialization of PDAF was successful ***
   IF (status_pdaf /= 0) THEN

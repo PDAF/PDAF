@@ -17,8 +17,6 @@ SUBROUTINE assimilate_pdaf_offline()
   USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAF3_put_state_local, PDAF3_put_state_global, &
        PDAF3_put_state_lenkf, PDAF3_put_state_ensrf, PDAF_localfilter
-  USE PDAF, &                     ! Interface definitions for PDAFlocal
-       ONLY: PDAFlocalomi_put_state
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
 

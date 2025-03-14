@@ -60,10 +60,10 @@ MODULE mod_assimilation
   REAL    :: model_err_amp !< Amplitude for model error
 
 ! Settings for observations - available as command line options
-  INTEGER :: delt_obs        !< time step interval between assimilation steps
-  LOGICAL :: twin_experiment !< Whether to run an twin experiment with synthetic observations
-  INTEGER :: observe_ens     !< (0) apply H also to ensemble mean; (1) apply H only to ensemble states
-  INTEGER :: type_obs_init   !< init obs. (0) before or (1) after call to prepostsstep
+  INTEGER :: delt_obs          !< time step interval between assimilation steps
+  LOGICAL :: twin_experiment   !< Whether to run an twin experiment with synthetic observations
+  INTEGER :: observe_ens=0     !< (0) apply H also to ensemble mean; (1) apply H only to ensemble states
+  INTEGER :: type_obs_init=1   !< init obs. (0) before or (1) after call to prepostsstep
   LOGICAL :: do_omi_obsstats=.false. !< Whether to let OMI compute observation statistics
 
 ! General control of PDAF - available as command line options
