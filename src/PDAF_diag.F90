@@ -75,7 +75,7 @@ END SUBROUTINE PDAF_diag_ensmean
 !! __Revision history:__
 !! * 2025-03 - Lars Nerger - Initial code
 !!
-SUBROUTINE PDAF_diag_stddev_nopmi(dim, dim_ens, &
+SUBROUTINE PDAF_diag_stddev_nompi(dim, dim_ens, &
      state, ens, stddev, do_mean, status)
 
 ! Include definitions for real type of different precision
@@ -154,7 +154,7 @@ SUBROUTINE PDAF_diag_stddev_nopmi(dim, dim_ens, &
   ! Set status flag for success
   status = 0
 
-END SUBROUTINE PDAF_diag_stddev_nopmi
+END SUBROUTINE PDAF_diag_stddev_nompi
 
 
 !--------------------------------------------------------------------------
