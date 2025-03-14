@@ -35,5 +35,13 @@ MODULE PDAFomi
   USE PDAFomi_obs_op
   USE PDAFomi_obs_diag
 
+  USE PDAFomi_assimilate_ens
+  USE PDAFomi_assimilate_ens_nondiagR
+  USE PDAFomi_assimilate_3dvars
+
+  USE PDAFomi_put_state_ens
+  USE PDAFomi_put_state_ens_nondiagR
+  USE PDAFomi_put_state_3dvars
+
 END MODULE PDAFomi
 

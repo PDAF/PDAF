@@ -48,7 +48,7 @@ SUBROUTINE PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
-  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFomi_obs_l, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_lseik, ONLY: PDAF_assimilate_lseik
   USE PDAFassimilate_letkf, ONLY: PDAF_assimilate_letkf
   USE PDAFassimilate_lestkf, ONLY: PDAF_assimilate_lestkf
@@ -159,7 +159,7 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
      init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
-  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFomi_obs_l, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
   USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
   USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
@@ -253,7 +253,7 @@ SUBROUTINE PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
      next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: debug
-  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFomi_obs_l, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
 
   IMPLICIT NONE
@@ -312,7 +312,7 @@ SUBROUTINE PDAFomi_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
      next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: debug
-  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFomi_obs_l, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_ensrf, ONLY: PDAF_assimilate_ensrf
 
   IMPLICIT NONE
@@ -383,7 +383,7 @@ SUBROUTINE PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_f_pdaf, obs_op_f_pdaf, get_obs_f_pdaf, prepoststep_pdaf, &
        next_observation_pdaf, outflag)
 
-  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFomi_obs_l, ONLY: PDAFomi_dealloc
   USE PDAFgenerate_obs, ONLY: PDAF_generate_obs
 
   IMPLICIT NONE

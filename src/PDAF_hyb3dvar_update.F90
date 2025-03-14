@@ -378,11 +378,11 @@ SUBROUTINE  PDAFhyb3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: cnt_maxlag, dim_lag, sens
   USE PDAF_3dvar, &
        ONLY: type_opt, beta_3dvar, localfilter, forget, debug
-  USE PDAFomi, &
-       ONLY: PDAFomi_dealloc
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HXbar_p, obs_p
+  USE PDAFomi_obs_l, &
+       ONLY: PDAFomi_dealloc
   USE PDAFomi_obs_f, &
        ONLY: omi_n_obstypes => n_obstypes, omi_obs_diag => obs_diag
   USE PDAF_hyb3dvar_analysis_cvt, &
