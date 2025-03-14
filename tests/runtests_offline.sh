@@ -3,13 +3,17 @@
 # ARCH specifies PDAF_ARCH without and with PDAF
 export ARCH=linux_gfortran_openmpi
 DA_SPECS=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 5.0"
+DA_SPECS_PF=" -dim_ens 8 -forget 1.0 -pf_noise_amp 0.8 -screen 1 -cradius 5.0"
+DA_SPECS_2OBS="$DA_SPECS -assim_B T"
+DA_SPECS_PF_2OBS="$DA_SPECS_PF -assim_B T"
 RUNSTR="mpirun -np 1 ./PDAF_offline"
 RUNPAR="mpirun -np 3 ./PDAF_offline"
 
 
-COMPILEPDAF=1
-COMPILE=1
+COMPILEPDAF=0
+COMPILE=0
 TEST_SUBTYPES=1
+TEST_SUBTYPES_2OBS=1
 TEST_OPTIONS=1
 TEST_PARALLEL=1
 
@@ -297,8 +301,8 @@ then
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_filter${FTYPE}s${STYPE}
+    echo $RUNSTR $DA_SPECS_PF -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_PF  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
@@ -330,6 +334,296 @@ then
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
 fi
+
+#--------- OFFLINE 2 observation types -------------
+
+if [ $TEST_SUBTYPES_2OBS -eq 1 ]
+then
+
+    # SEIK ##############
+
+    echo "     +++++++++++++ SEIK offline serial obsAB +++++++++++++"
+
+    FTYPE=1
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE 
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    FTYPE=1
+    STYPE=1
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    FTYPE=1
+    STYPE=4
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    # LSEIK ##############
+
+    echo "     +++++++++++++ LSEIK offline serial obsAB +++++++++++++"
+
+    FTYPE=3
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    # EnKF ##############
+
+    echo "     +++++++++++++ EnKF offline serial obsAB +++++++++++++"
+
+    FTYPE=2
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    FTYPE=2
+    STYPE=1
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # LEnKF ##############
+
+    echo "     +++++++++++++ LEnKF offline serial obsAB +++++++++++++"
+
+    FTYPE=8
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # ETKF ##############
+
+    echo "     +++++++++++++ ETKF offline serial obsAB +++++++++++++"
+
+    FTYPE=4
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    FTYPE=4
+    STYPE=1
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # LETKF ##############
+
+    echo "     +++++++++++++ LETKF offline serial obsAB +++++++++++++"
+
+    FTYPE=5
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # ESTKF ##############
+
+    echo "     +++++++++++++ ESTKF offline serial obsAB +++++++++++++"
+
+    FTYPE=6
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # LESTKF ##############
+
+    echo "     +++++++++++++ LESTKF offline serial obsAB +++++++++++++"
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # NETF ##############
+
+    echo "     +++++++++++++ NETF offline serial obsAB +++++++++++++"
+
+    FTYPE=9
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # LNETF ##############
+
+    echo "     +++++++++++++ LNETF offline serial obsAB +++++++++++++"
+
+    FTYPE=10
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # LKNETF ##############
+
+    echo "     +++++++++++++ LKNETF offline serial obsAB +++++++++++++"
+
+    FTYPE=11
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    FTYPE=11
+    STYPE=1
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    FTYPE=11
+    STYPE=4
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # PF ##############
+
+    echo "     +++++++++++++ PF offline serial obsAB +++++++++++++"
+
+    FTYPE=12
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_PF_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_PF_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    # ENSRF/EAKF ##############
+
+    echo "     +++++++++++++ ENSRF offline serial obsAB ++++++++++++"
+
+    FTYPE=13
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    FTYPE=13
+    STYPE=1
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+fi
+
 
 if [ $TEST_OPTIONS -eq 1 ]
 then

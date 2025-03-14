@@ -165,7 +165,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE #> ../out.offline_2D_grid2_MPI4_filter${FTYPE}s${STYPE}
+    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_grid2_MPI4_filter${FTYPE}s${STYPE}
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
