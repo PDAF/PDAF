@@ -218,7 +218,7 @@ CONTAINS
           WRITE (*, '(a, 14x, a)') 'PDAF', '--> local EnKF (analysis for small observation dimension)'
        END IF
        WRITE(*, '(a, 10x, a, i3)') &
-            'PDAF', 'param_int(3) rank_ana_enkf=', rank_ana_enkf
+            'PDAF', 'param_int(4) rank_ana_enkf=', rank_ana_enkf
        IF (rank_ana_enkf == 0) THEN
           WRITE (*, '(a, 12x, a)') &
                'PDAF', '---> analysis with direct inversion'
@@ -284,6 +284,8 @@ CONTAINS
     CASE(2)
        CALL PDAF_reset_dim_ens(value, flag)
     CASE(3)
+       ! Not used
+    CASE(4)
        IF (value==0 .AND. value < dim_ens) THEN
           rank_ana_enkf = value
        ELSE
@@ -292,8 +294,6 @@ CONTAINS
           flag = 8
           rank_ana_enkf = 0 ! Just for safety: Fall back to default
        END IF
-    CASE(4)
-       ! Not used
     CASE(5)
        ! Not used
     CASE(6)
@@ -402,11 +402,11 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): rank_ana_enkf'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): not used'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): rank_ana_enkf'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'maximum rank for inversion of HPH^T, optional, default=0'
     WRITE(*, '(a, 12x, a)') 'PDAF', 'for =0, HPH is inverted by solving the representer equation'
     WRITE(*, '(a, 12x, a)') 'PDAF', 'allowed range is 0 to ensemble size - 1'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(6): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(7): not used'

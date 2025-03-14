@@ -216,8 +216,10 @@ CONTAINS
        ELSE IF (subtype == 1) THEN
           WRITE (*, '(a, 14x, a)') 'PDAF', '--> EnKF with analysis for small observation dimension'
        END IF
+       IF (dim_lag > 0) &
+            WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'param_int(3) Apply smoother up to dim_lag=',dim_lag
        WRITE(*, '(a, 10x, a, i3)') &
-            'PDAF', 'param_int(3) rank_ana_enkf=', rank_ana_enkf
+            'PDAF', 'param_int(4) rank_ana_enkf=', rank_ana_enkf
        IF (rank_ana_enkf == 0) THEN
           WRITE (*, '(a, 12x, a)') &
                'PDAF', '---> analysis with direct inversion'
@@ -225,8 +227,6 @@ CONTAINS
           WRITE (*, '(a, 12x, a, i5)') &
                'PDAF', '--->analysis with pseudo-inverse of HPH, rank=', rank_ana_enkf
        END IF
-       IF (dim_lag > 0) &
-            WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'Apply smoother up to lag:',dim_lag
        WRITE (*, '(a, 10x, a, f5.2)') 'PDAF' ,'Use fixed forgetting factor:', forget
        WRITE(*, '(a, 10x, a, l)') &
             'PDAF', 'param_int(8) observe_ens'
@@ -285,23 +285,23 @@ CONTAINS
     CASE(2)
        CALL PDAF_reset_dim_ens(value, flag)
     CASE(3)
-       IF (value==0 .AND. value < dim_ens) THEN
-          rank_ana_enkf = value
-       ELSE
-          WRITE (*,'(/5x, a/)') &
-             'PDAF-ERROR(8): Invalid setting of param_int(3)/rank_ana_enkf!'
-          flag = 8
-          rank_ana_enkf = 0 ! Just for safety: Fall back to default
-       END IF
-    CASE(4)
-       ! Not used
-    CASE(5)
        dim_lag = value
        IF (dim_lag<0) THEN
           WRITE (*,'(/5x, a/)') &
                'PDAF-ERROR(8): Invalid value for smoother lag - param_int(3)!'
           flag = 8
        END IF
+    CASE(4)
+       IF (value==0 .AND. value < dim_ens) THEN
+          rank_ana_enkf = value
+       ELSE
+          WRITE (*,'(/5x, a/)') &
+             'PDAF-ERROR(8): Invalid setting of param_int(4)/rank_ana_enkf!'
+          flag = 8
+          rank_ana_enkf = 0 ! Just for safety: Fall back to default
+       END IF
+    CASE(5)
+       ! Not used
     CASE(6)
        ! Not used
     CASE(7)
@@ -406,15 +406,15 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): rank_ana_enkf'
-    WRITE(*, '(a, 11x, a)') 'PDAF', 'maximum rank for inversion of HPH^T, optional, default=0'
-    WRITE(*, '(a, 12x, a)') 'PDAF', 'for =0, HPH is inverted by solving the representer equation'
-    WRITE(*, '(a, 12x, a)') 'PDAF', 'allowed range is 0 to ensemble size - 1'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): not used'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): dim_lag'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): dim_lag'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Size of smoothing lag (>=0), optional'
     WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
     WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): rank_ana_enkf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'maximum rank for inversion of HPH^T, optional, default=0'
+    WRITE(*, '(a, 12x, a)') 'PDAF', 'for =0, HPH is inverted by solving the representer equation'
+    WRITE(*, '(a, 12x, a)') 'PDAF', 'allowed range is 0 to ensemble size - 1'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(6): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(7): not used'
     WRITE(*, '(a, 7x, a)') &

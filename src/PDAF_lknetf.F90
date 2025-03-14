@@ -242,6 +242,21 @@ CONTAINS
        IF (dim_lag > 0) &
             WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
        WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(4) type_hyb=', type_hyb
+       IF (type_hyb == 0) THEN
+          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_fix: fixed hybrid weight', hyb_g
+       ELSEIF (type_hyb == 1) THEN
+          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_lin (default): (1 - N_eff/N_e)*', hyb_g
+       ELSEIF (type_hyb == 2) THEN
+          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_alpha: hybrid weight from N_eff/N>=', hyb_g
+       ELSEIF (type_hyb == 3) THEN
+          WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
+               'PDAF', '--> use gamma_ska: 1 - min(s,k)/sqrt(', hyb_k, ') with N_eff/N>=', hyb_g
+       ELSEIF (type_hyb == 4) THEN
+          WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
+               'PDAF', '--> use gamma_sklin: 1 - min(s,k)/sqrt(', hyb_k, ') >= 1-N_eff/N>=', hyb_g
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
             'PDAF', 'param_int(5) type_forget=', type_forget
        IF (type_forget == 0) THEN
           WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation (default), forgetting factor:', forget
@@ -262,21 +277,6 @@ CONTAINS
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix (default)'
        ELSE IF (type_trans == 1) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
-       END IF
-       WRITE(*, '(a, 10x, a, i3)') &
-            'PDAF', 'param_int(7) type_hyb=', type_hyb
-       IF (type_hyb == 0) THEN
-          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_fix: fixed hybrid weight', hyb_g
-       ELSEIF (type_hyb == 1) THEN
-          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_lin (default): (1 - N_eff/N_e)*', hyb_g
-       ELSEIF (type_hyb == 2) THEN
-          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_alpha: hybrid weight from N_eff/N>=', hyb_g
-       ELSEIF (type_hyb == 3) THEN
-          WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
-               'PDAF', '--> use gamma_ska: 1 - min(s,k)/sqrt(', hyb_k, ') with N_eff/N>=', hyb_g
-       ELSEIF (type_hyb == 4) THEN
-          WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
-               'PDAF', '--> use gamma_sklin: 1 - min(s,k)/sqrt(', hyb_k, ') >= 1-N_eff/N>=', hyb_g
        END IF
        WRITE(*, '(a, 10x, a, l)') &
             'PDAF', 'param_int(8) observe_ens'
@@ -339,7 +339,12 @@ CONTAINS
     CASE(3)
        ! Not used
     CASE(4)
-       ! Not used
+       type_hyb = value
+       IF (type_hyb<0 .OR. type_hyb>4) THEN
+          WRITE (*,'(/5x, a/)') &
+               'PDAF-ERROR(8): Invalid setting for type of hybrid weight - param_int(7)!'
+          flag = 8
+       END IF
     CASE(5)
        type_forget = value
        IF (type_forget<0 .OR. type_forget>6 .OR. type_forget==4) THEN
@@ -354,12 +359,7 @@ CONTAINS
           flag = 8
        END IF
     CASE(7)
-       type_hyb = value
-       IF (type_hyb<0 .OR. type_hyb>4) THEN
-          WRITE (*,'(/5x, a/)') &
-               'PDAF-ERROR(8): Invalid setting for type of hybrid weight - param_int(7)!'
-          flag = 8
-       END IF
+       ! Not used
     CASE(8)
        if (value==0) THEN
           observe_ens = .false. ! Apply H to ensemble mean to compute residual
@@ -475,7 +475,13 @@ CONTAINS
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): not used'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(4): not used'
+         'PDAF', 'param_int(4): type_hyb'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of hybrid weight; optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: fixed value'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: gamma_lin: (1 - N_eff/N_e)*param_real(2) (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '2: gamma_alpha: hybrid weight from N_eff/N>=param_real(2)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '3: gamma_ska: 1 - min(s,k)/sqrt(param_real(3)) with N_eff/N>=param_real(2)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '4: gamma_sklin: 1 - min(s,k)/sqrt(param_real(3)) >= 1-N_eff/N>=param_real(2)'
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(5): type_forget'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
@@ -491,13 +497,7 @@ CONTAINS
     WRITE(*, '(a, 12x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T (default)'
     WRITE(*, '(a, 12x, a)') 'PDAF', '1: deterministic transformation'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(7): type_hyb'
-    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of hybrid weight; optional'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '0: fixed value'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '1: gamma_lin: (1 - N_eff/N_e)*param_real(2) (default)'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '2: gamma_alpha: hybrid weight from N_eff/N>=param_real(2)'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '3: gamma_ska: 1 - min(s,k)/sqrt(param_real(3)) with N_eff/N>=param_real(2)'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '4: gamma_sklin: 1 - min(s,k)/sqrt(param_real(3)) >= 1-N_eff/N>=param_real(2)'
+         'PDAF', 'param_int(7): not used'
 
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'

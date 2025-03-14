@@ -253,7 +253,7 @@ CONTAINS
           WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
        ENDIF
        WRITE(*, '(a, 10x, a, i3)') &
-            'PDAF', 'param_int(6) type_winf=', type_winf
+            'PDAF', 'param_int(7) type_winf=', type_winf
        IF (type_winf == 0) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> no inflation of particle weights relating to N_eff (default)'
        ELSE IF (type_winf == 1) THEN
@@ -274,11 +274,11 @@ CONTAINS
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
        WRITE(*, '(a, 10x, a, f10.3)') &
-            'PDAF', 'param_real(1) noise_amp=', noise_amp
+            'PDAF', 'param_real(1) forget=', forget
        WRITE(*, '(a, 10x, a, f10.3)') &
-            'PDAF', 'param_real(2) forget=', forget
+            'PDAF', 'param_real(2) limit_winf=', limit_winf
        WRITE(*, '(a, 10x, a, f10.3)') &
-            'PDAF', 'param_real(3) limit_winf=', limit_winf
+            'PDAF', 'param_real(3) noise_amp=', noise_amp
 
     END IF writeout
 
@@ -337,13 +337,13 @@ CONTAINS
           flag = 8
        END IF
     CASE(6)
+       ! Not used
+    CASE(7)
        type_winf = value
        IF (.NOT.(type_winf == 0 .OR. type_winf == 1)) THEN
           WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type weights inflation - param_int(6)!'
           flag = 8
        END IF
-    CASE(7)
-       ! Not used
     CASE(8)
        if (value==0) THEN
           observe_ens = .false. ! Apply H to ensemble mean to compute residual
@@ -391,24 +391,24 @@ CONTAINS
 
     SELECT CASE(id) 
     CASE(1)
-       noise_amp = value
-       IF(noise_amp<0.0) THEN
-          WRITE (*,'(/5x,a/)') &
-               'PDAF-ERROR(8): Noise amplitude cannot be negative - param_real(1)!'
-          flag = 8
-       END IF
-    CASE(2)
        forget = value
        IF (forget <= 0.0) THEN
           WRITE (*,'(/5x,a/)') &
                'PDAF-ERROR(7): Invalid value of forgetting factor - param_real(2)!'
           flag = 7
        END IF
-    CASE(3)
+    CASE(2)
        limit_winf = value
        IF (limit_winf < 0.0) THEN
           WRITE (*,'(/5x,a/)') &
                'PDAF-ERROR(8): Invalid limit for weight inflation - param_real(3)!'
+          flag = 8
+       END IF
+    CASE(3)
+       noise_amp = value
+       IF(noise_amp<0.0) THEN
+          WRITE (*,'(/5x,a/)') &
+               'PDAF-ERROR(8): Noise amplitude cannot be negative - param_real(1)!'
           flag = 8
        END IF
     CASE DEFAULT
@@ -469,12 +469,12 @@ CONTAINS
     WRITE(*, '(a, 12x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
     WRITE(*, '(a, 12x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(6): type_winf'
+         'PDAF', 'param_int(6): not used'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(7): type_winf'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of weights inflation; optional'
     WRITE(*, '(a, 12x, a)') 'PDAF', '0: no weights inflation (default)'
     WRITE(*, '(a, 12x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
-    WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(7): not used'
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(8): observe_ens'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
@@ -491,14 +491,14 @@ CONTAINS
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_real(1): noise_amp'
-    WRITE(*, '(a, 11x, a)') 'PDAF', 'Ensemble perturbation level (>0), required, only used if param_int(4)>0'
-    WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_real(2): forget'
+         'PDAF', 'param_real(1): forget'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Forgetting factor (usually >0 and <=1), required'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_real(3): limit_winf'
+         'PDAF', 'param_real(2): limit_winf'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(3): noise_amp'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Ensemble perturbation level (>0), required, only used if param_int(4)>0'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
