@@ -132,7 +132,9 @@ MODULE PDAFomi_obs_l
   INTEGER :: firstobs = 0                 ! Flag for very first call to init_dim_obs_l
   INTEGER :: offset_obs_l = 0             ! offset of current observation in overall local obs. vector
 
-!$OMP THREADPRIVATE(obs_l_all, firstobs, offset_obs_l)
+  REAL, ALLOCATABLE :: oc_all(:,:)        ! Obs. coordinate array for serial localization
+
+!$OMP THREADPRIVATE(obs_l_all, firstobs, offset_obs_l, oc_all)
 
   INTERFACE PDAFomi_init_dim_obs_l_old
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_iso_old
@@ -2842,7 +2844,6 @@ CONTAINS
     INTEGER :: wtype                    ! Type of weight function
     INTEGER :: rtype                    ! Type of weight regulation
     REAL, ALLOCATABLE :: co(:), oc(:)   ! Coordinates of single point
-    REAL, SAVE, ALLOCATABLE :: oc_all(:,:)    ! Observation coordinates for all obs. types
 
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -3103,7 +3104,6 @@ CONTAINS
     INTEGER :: rtype                       ! Type of weight regulation
     REAL :: srad, crad                     ! localization cut-off radius
     REAL, ALLOCATABLE :: co(:), oc(:)      ! Coordinates of single point
-    REAL, SAVE, ALLOCATABLE :: oc_all(:,:) ! Observation coordinates for all obs. types
     LOGICAL :: checkdist                   ! Flag whether distance is not larger than cut-off radius
     REAL :: dists(thisobs%ncoord)          ! Distance vector in each direction
     TYPE(obs_l) :: thisobs_l               ! local observation
@@ -5101,6 +5101,7 @@ CONTAINS
 
        ! localization
        IF (ALLOCATED(coords_p)) DEALLOCATE(coords_p)
+       IF (ALLOCATED(oc_all)) DEALLOCATE(oc_all)
 
         ! Obsevation diagnostics array targets
        IF (ALLOCATED(rmsd)) DEALLOCATE(rmsd)
