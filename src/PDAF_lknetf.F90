@@ -339,6 +339,7 @@ CONTAINS
     CASE(3)
        ! Not used
     CASE(4)
+write (*,*) 'TYPE_HYB', type_hyb
        type_hyb = value
        IF (type_hyb<0 .OR. type_hyb>4) THEN
           WRITE (*,'(/5x, a/)') &

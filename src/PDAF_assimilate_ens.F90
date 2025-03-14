@@ -358,4 +358,58 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
 
 END SUBROUTINE PDAF3_assimilate_ensrf
 
+
+!-------------------------------------------------------------------------------
+!> Interface to transfer state to PDAF
+!!
+!! Variant for generating observations with domain
+!! decomposition.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2019-01 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF3_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
+       init_dim_obs_f_pdaf, obs_op_f_pdaf, get_obs_f_pdaf, prepoststep_pdaf, &
+       next_observation_pdaf, outflag)
+
+  USE PDAFomi_obs_l, ONLY: PDAFomi_dealloc
+  USE PDAFgenerate_obs, ONLY: PDAF_generate_obs
+
+  IMPLICIT NONE
+  
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: outflag !< Status flag
+  
+! *** Names of external subroutines ***
+  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
+       distribute_state_pdaf, &        !< Routine to distribute a state vector
+       prepoststep_pdaf, &             !< User supplied pre/poststep routine
+       next_observation_pdaf           !< Provide time step, time and dimension of next observation
+  EXTERNAL :: init_dim_obs_f_pdaf, &   !< Initialize dimension of observation vector
+       obs_op_f_pdaf, &                !< Observation operator
+       get_obs_f_pdaf                  !< Initialize observation vector
+  EXTERNAL :: PDAFomi_init_obserr_f_cb !< Initialize mean observation error variance
+
+
+! **************************************************
+! *** Call the full put_state interface routine  ***
+! **************************************************
+
+  CALL PDAF_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
+       init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obserr_f_cb, get_obs_f_pdaf, &
+       prepoststep_pdaf, next_observation_pdaf, outflag)
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
+
+END SUBROUTINE PDAF3_generate_obs
+
 END MODULE PDAF_assimilate_ens

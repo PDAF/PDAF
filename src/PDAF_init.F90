@@ -162,7 +162,6 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      step           = step_obs + 1 ! stepping index
      filterpe       = in_filterpe  ! Whether my PE is a PE of the filter
      screen         = in_screen    ! Control verbosity
-     if (subtype==5) offline_mode = .true.   ! Set offline mode
 
      dim_p          = param_int(1) ! PE-local state dimension
      IF (param_int(1) < 1) THEN

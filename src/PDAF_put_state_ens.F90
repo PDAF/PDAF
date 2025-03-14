@@ -312,4 +312,48 @@ SUBROUTINE PDAF3_put_state_ensrf(collect_state_pdaf, &
 
 END SUBROUTINE PDAF3_put_state_ensrf
 
+
+!-------------------------------------------------------------------------------
+!> Interface to transfer state to PDAF
+!!
+!! __Revision history:__
+!! * 2020-06 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF3_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf, &
+     obs_op_f_pdaf, get_obs_f_pdaf, prepoststep_pdaf, outflag)
+
+  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFput_state_generate_obs, ONLY: PDAF_put_state_generate_obs
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag  !< Status flag
+
+! *** External subroutines ***
+  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
+       prepoststep_pdaf                !< User supplied pre/poststep routine
+  EXTERNAL :: init_dim_obs_f_pdaf, &   !< Initialize dimension of observation vector
+       obs_op_f_pdaf, &                !< Observation operator
+       get_obs_f_pdaf                  !< Initialize observation vector
+  EXTERNAL :: PDAFomi_init_obserr_f_cb !< Initialize mean observation error variance
+
+
+! **************************************************
+! *** Call the full put_state interface routine  ***
+! **************************************************
+
+  CALL PDAF_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       PDAFomi_init_obserr_f_cb, get_obs_f_pdaf, prepoststep_pdaf, outflag)
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
+
+END SUBROUTINE PDAF3_put_state_generate_obs
+
 END MODULE PDAF_put_state_ens
