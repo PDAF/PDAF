@@ -15,8 +15,8 @@
 SUBROUTINE assimilate_pdaf_offline()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAFomi_put_state_global, PDAFomi_put_state_lenkf, &
-       PDAF_get_localfilter, PDAFlocalomi_put_state
+       ONLY: PDAF3_put_state_local, PDAF3_put_state_global, &
+       PDAF_localfilter
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
@@ -63,25 +63,17 @@ SUBROUTINE assimilate_pdaf_offline()
 ! *** The functionality of PDAF_get_state is deactivated ***
 ! *** for the offline mode.                              ***
 
-  ! Check  whether the filter is domain-localized
-  CALL PDAF_get_localfilter(localfilter)
-
   ! Call assimilate routine for global or local filter
-  IF (localfilter == 1) THEN
+  IF (PDAF_localfilter() == 1) THEN
      ! Call generic OMI interface routine for domain-localized filters
-     CALL PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_pdafomi, &
-          obs_op_pdafomi, prepoststep_ens_offline, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdafomi, status_pdaf)
+     CALL PDAF3_put_state_local(collect_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+          prepoststep_ens_offline, status_pdaf)
   ELSE
-     IF (filtertype /= 8) THEN
-        ! Call generic OMI interface routine for global filters
-        CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
-             obs_op_pdafomi, prepoststep_ens_offline, status_pdaf)
-     ELSE
-        ! LEnKF has its own OMI interface routine
-        CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
-             obs_op_pdafomi, prepoststep_ens_offline, localize_covar_pdafomi, status_pdaf)
-     END IF
+     ! Call generic OMI interface routine for global filters
+     CALL PDAF3_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
+          obs_op_pdafomi, prepoststep_ens_offline, status_pdaf)
   END IF
 
 
