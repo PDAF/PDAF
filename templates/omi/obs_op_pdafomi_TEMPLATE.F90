@@ -9,7 +9,7 @@
 !!
 MODULE obs_op_pdafomi_TEMPLATE
 
-  USE PDAFomi_obs_f, ONLY: obs_f, PDAFomi_gather_obsstate, debug
+  USE PDAFomi, ONLY: obs_f, PDAFomi_gather_obsstate, debug
 
 CONTAINS
 

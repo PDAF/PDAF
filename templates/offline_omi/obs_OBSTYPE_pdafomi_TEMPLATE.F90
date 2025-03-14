@@ -154,10 +154,12 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_OBSTYPE(step, dim_obs)
 
+    USE PDAF, &
+         ONLY: PDAF_local_type
     USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs
+         ONLY: PDAFomi_gather_obs, PDAFomi_set_localize_covar
     USE mod_assimilation, &
-         ONLY: filtertype, cradius
+         ONLY: filtertype, cradius, sradius, locweight !, coords_p
 
     IMPLICIT NONE
 
@@ -337,6 +339,29 @@ CONTAINS
          thisobs%ncoord, cradius, dim_obs)
 
 
+! ************************************************************
+! *** Provide localization information for LEnKF and ENSRF ***
+! ************************************************************
+
+    ! If one uses the LEnKF or ENSRF methods, one has to set the
+    ! localization information. The three localization variables
+    ! (locweight, cradius, sradius) can be different for each
+    ! observation type.
+    ! One also need to initialize of coordinate array (coords_p)
+    ! for the state vector. 
+
+    ! For cradius and sradius:
+    ! If these are defined as scalar values, isotropic localization is used.
+    ! If these are vectors, nonisotropic localization is used
+    !   (their length has to be equal to thisobs%ncoord)
+
+
+!     IF (PDAF_local_type() > 1) THEN
+!        CALL PDAFomi_set_localize_covar(thisobs, dim_state_p, ndim, coords_p, &
+!             locweight, cradius, sradius)
+!     END IF
+
+
 ! *********************************************************
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
@@ -459,59 +484,5 @@ CONTAINS
          locweight, cradius, sradius, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_OBSTYPE
-
-
-
-!-------------------------------------------------------------------------------
-!> Perform covariance localization for local EnKF on the module-type observation
-!!
-!! The routine is called in the analysis step of the localized
-!! EnKF. It has to apply localization to the two matrices
-!! HP and HPH of the analysis step for the module-type
-!! observation.
-!!
-!! This routine calls the routine PDAFomi_localize_covar
-!! for each observation type. The call allows to specify a
-!! different localization radius and localization functions
-!! for each observation type.
-!!
-  SUBROUTINE localize_covar_OBSTYPE(dim_p, dim_obs, HP_p, HPH, coords_p)
-
-    ! Include PDAFomi function
-    USE PDAFomi, ONLY: PDAFomi_localize_covar
-
-    ! Include localization radius and local coordinates
-    USE mod_assimilation, &   
-         ONLY: cradius, locweight, sradius
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
-    INTEGER, INTENT(in) :: dim_obs               !< Dimension of observation vector
-    REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< PE local part of matrix HP
-    REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
-    REAL, INTENT(in)    :: coords_p(:,:)         !< Coordinates of state vector elements
-
-
-    ! Template reminder - delete when implementing functionality
-    WRITE (*,*) 'TEMPLATE init_OBSTYPE_pdafomi_TEMPLATE.F90: Apply covariance localization'
-
-! *************************************
-! *** Apply covariance localization ***
-! *************************************
-
-    ! Here one has to specify the three localization variables
-    ! which can be different for each observation type.
-
-    ! For cradius and sradius:
-    ! If these are defined as scalar values, isotropic localization is used.
-    ! If these are vectors, nonisotropic localization is used
-    !   (their length has to be equal to thisobs%ncoord)
-
-    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, cradius, sradius, &
-         coords_p, HP_p, HPH)
-
-  END SUBROUTINE localize_covar_OBSTYPE
 
 END MODULE obs_OBSTYPE_pdafomi

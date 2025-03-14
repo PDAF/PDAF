@@ -18,15 +18,15 @@
 !!
 PROGRAM MAIN
 
-  USE mpi                        ! MPI
-  USE mod_parallel_pdaf, &       ! Parallelization
+  USE mpi                      ! MPI
+  USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: init_parallel, finalize_parallel, &
        n_modeltasks, mype_world
-  USE mod_assimilation, &        ! Assimilation variables
+  USE mod_assimilation, &      ! Assimilation variables
        ONLY: time
-  USE mod_model, &               ! Module provided by model code
+  USE mod_model, &             ! Module provided by model code
        ONLY: dt
-  USE pdaf_interfaces_module, &  ! Interface definitions to PDAF core routines
+  USE PDAF , &                 ! Interface definitions to PDAF core routines
        ONLY: PDAF_get_state
 
   IMPLICIT NONE
