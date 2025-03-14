@@ -32,7 +32,7 @@
 !! * 2025-02 - Lars Nerger - Initial code by collecting files into a module
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_assimilate_ens
+MODULE PDAF3_assimilate_ens
 
 CONTAINS
 
@@ -412,4 +412,4 @@ SUBROUTINE PDAF3_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
 
 END SUBROUTINE PDAF3_generate_obs
 
-END MODULE PDAF_assimilate_ens
+END MODULE PDAF3_assimilate_ens

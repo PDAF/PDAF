@@ -32,7 +32,7 @@
 !! * 2025-02 - Lars Nerger - Initial code by collecting files into a module
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_put_state_ens
+MODULE PDAF3_put_state_ens
 
 CONTAINS
 
@@ -356,4 +356,4 @@ SUBROUTINE PDAF3_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf,
 
 END SUBROUTINE PDAF3_put_state_generate_obs
 
-END MODULE PDAF_put_state_ens
+END MODULE PDAF3_put_state_ens

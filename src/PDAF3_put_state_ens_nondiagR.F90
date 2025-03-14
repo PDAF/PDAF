@@ -37,7 +37,7 @@
 !! * 2025-03 - Lars Nerger - Initial code by collecting files into a module
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_put_state_ens_nondiagR
+MODULE PDAF3_put_state_ens_nondiagR
 
 CONTAINS
 
@@ -543,4 +543,4 @@ SUBROUTINE PDAF3_put_state_nonlin_nondiagR(collect_state_pdaf, &
 
 END SUBROUTINE PDAF3_put_state_nonlin_nondiagR
 
-END MODULE PDAF_put_state_ens_nondiagR
+END MODULE PDAF3_put_state_ens_nondiagR

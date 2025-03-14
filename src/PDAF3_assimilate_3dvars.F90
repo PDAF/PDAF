@@ -32,7 +32,7 @@
 !! * 2025-03 - Lars Nerger - Initial code by collecting files into a module
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_assimilate_3dvars
+MODULE PDAF3_assimilate_3dvars
 
 CONTAINS
 
@@ -405,4 +405,4 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_state_
 
 END SUBROUTINE PDAF3_assimilate_hyb3dvar_estkf
 
-END MODULE PDAF_assimilate_3dvars
+END MODULE PDAF3_assimilate_3dvars

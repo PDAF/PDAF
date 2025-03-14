@@ -7,6 +7,7 @@ export DA_SPECS2="-filtertype 6 -screen 1"
 
 echo "------------------ COMPILING ----------------"
 
+COMPILEPDAF=0
 COMPILE=1
 
 if [ $COMPILE -eq 1 ]
@@ -17,7 +18,13 @@ then
 
     echo "------------ offline_2D_serial --------------"
     cd offline_2D_serial
-    make cleanall
+    if [ $COMPILEPDAF -eq 1]
+    then
+        make cleanall
+    else
+        make clean
+        make cleandataq
+    fi
     make
     cd ..
 

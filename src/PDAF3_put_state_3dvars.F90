@@ -31,7 +31,7 @@
 !! * 2025-02 - Lars Nerger - Initial code by collecting files into a module
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_put_state_3dvars
+MODULE PDAF3_put_state_3dvars
 
 CONTAINS
 
@@ -361,4 +361,4 @@ SUBROUTINE PDAF3_put_state_hyb3dvar_lestkf(collect_state_pdaf, &
 
 END SUBROUTINE PDAF3_put_state_hyb3dvar_lestkf
 
-END MODULE PDAF_put_state_3dvars
+END MODULE PDAF3_put_state_3dvars

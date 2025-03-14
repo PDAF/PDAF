@@ -37,7 +37,7 @@
 !! * 2025-03 - Lars Nerger - Initial code by collecting files into a module
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_assimilate_3dvars_nondiagR
+MODULE PDAF3_assimilate_3dvars_nondiagR
 
 CONTAINS
 
@@ -413,4 +413,4 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, distrib
 
 END SUBROUTINE PDAF3_assimilate_hyb3dvar_lestkf_nondiagR
 
-END MODULE PDAF_assimilate_3dvars_nondiagR
+END MODULE PDAF3_assimilate_3dvars_nondiagR
