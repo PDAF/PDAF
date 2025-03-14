@@ -99,7 +99,7 @@ PDAF    LEnKF configuration
 PDAF          ensemble size:    8
 PDAF          filter sub-type= 0
 PDAF              --> local EnKF (analysis for small observation dimension)
-PDAF          param_int(3) rank_ana_enkf=  0
+PDAF          param_int(4) rank_ana_enkf=  0
 PDAF            ---> analysis with direct inversion
 PDAF          Use fixed forgetting factor: 0.80
 PDAF          param_int(8) observe_ens
@@ -117,7 +117,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.9288E-01
 PDAF     Inflate forecast ensemble, forget=     0.800
 PDAF Prepare observations -------------------------------------------
@@ -136,7 +135,6 @@ PDAF     --- use diagonal observation eror cov. matrix
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   1.5801E+01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -151,27 +149,27 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.002 MiB (persistent)
 PDAF           ensemble array:      0.013 MiB (persistent)
-PDAF            analysis step:      0.098 MiB (temporary)
+PDAF            analysis step:      0.100 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          LEnKF analysis:                      0.028 s
-PDAF            PDAF-internal operations:            0.020 s
+PDAF          LEnKF analysis:                      0.029 s
+PDAF            PDAF-internal operations:            0.041 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.007 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              localize_covar_pdafomi:            0.001 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF          prepoststep_pdaf:                    0.010 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                     Initialize PDAF (1):      0.002 s
-PDAF                      LEnKF analysis (3):      0.028 s
+PDAF                      LEnKF analysis (3):      0.029 s
 PDAF                        get mean state (9):      0.000 s
 PDAF                  prepare observations (6):      0.007 s
 PDAF                 compute HPH+R and HP (10):      0.010 s
@@ -182,10 +180,10 @@ PDAF                  localize HP_p and HPH (45):      0.001 s
 PDAF                           add matrix R (46):      0.000 s
 PDAF                 sample obs. ensemble (11):      0.001 s
 PDAF             init innovation ensemble (12):      0.008 s
-PDAF             compute transform matrix (13):      0.000 s
-PDAF                 solve for representers (33):      0.000 s
+PDAF             compute transform matrix (13):      0.001 s
+PDAF                 solve for representers (33):      0.001 s
 PDAF                         HX*representer (34):      0.000 s
 PDAF              ensemble transformation (14):      0.000 s
-PDAF                         Prepoststep (5):      0.007 s
+PDAF                         Prepoststep (5):      0.010 s
 
  PDAF offline mode: END

@@ -31,15 +31,16 @@
   PARSER: dim_ens=         8
   PARSER: filtertype=        12
   PARSER: subtype=         0
-  PARSER: forget=  8.0000E-01
+  PARSER: forget=  1.0000E+00
   PARSER: cradius=  5.0000E+00
+  PARSER: pf_noise_amp=  8.0000E-01
                      Filter: PF with resampling
       -- Standard mode
               ensemble size:    8
       Assimilation interval:    0
              reampling type:    1
                  noise type:    0
-            noise amplitude:   0.000
+            noise amplitude:   0.800
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -94,15 +95,15 @@ PDAF          param_int(4) type_noise=  0
 PDAF            --> no noise added to particles (default)
 PDAF          param_int(5) type_forget=  0
 PDAF            --> prior inflation, forgetting factor: 1.00
-PDAF          param_int(6) type_winf=  0
+PDAF          param_int(7) type_winf=  0
 PDAF            --> no inflation of particle weights relating to N_eff (default)
 PDAF          param_int(8) observe_ens
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
-PDAF          param_real(1) noise_amp=     0.800
-PDAF          param_real(2) forget=     1.000
-PDAF          param_real(3) limit_winf=     0.000
+PDAF          param_real(1) forget=     1.000
+PDAF          param_real(2) limit_winf=     0.000
+PDAF          param_real(3) noise_amp=     0.800
 
   PDAF offline mode: START ASSIMILATION
 
@@ -113,7 +114,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.9288E-01
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
@@ -130,7 +130,6 @@ PDAF     --- use blocking with size   200
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   8.2296E-17
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -143,7 +142,7 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.016 MiB (temporary)
+PDAF            analysis step:      0.018 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines

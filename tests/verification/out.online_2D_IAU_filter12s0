@@ -26,23 +26,21 @@
   -- local domain sizes (nx_p x ny):  36 x 18
 
  INITIALIZE PDAF - ONLINE MODE
-  PARSER: delt_obs=         9
   PARSER: screen=         1
   PARSER: dim_ens=         4
   PARSER: filtertype=        12
   PARSER: subtype=         0
   PARSER: type_iau=         1
   PARSER: steps_iau=         5
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+00
-  PARSER: locweight=         2
+  PARSER: forget=  1.0000E+00
+  PARSER: pf_noise_amp=  8.0000E-01
                      Filter: PF with resampling
       -- Standard mode
               ensemble size:    4
       Assimilation interval:    9
              reampling type:    1
                  noise type:    0
-            noise amplitude:   0.000
+            noise amplitude:   0.800
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -102,15 +100,15 @@ PDAF          param_int(4) type_noise=  0
 PDAF            --> no noise added to particles (default)
 PDAF          param_int(5) type_forget=  0
 PDAF            --> prior inflation, forgetting factor: 1.00
-PDAF          param_int(6) type_winf=  0
+PDAF          param_int(7) type_winf=  0
 PDAF            --> no inflation of particle weights relating to N_eff (default)
 PDAF          param_int(8) observe_ens
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
-PDAF          param_real(1) noise_amp=     0.800
-PDAF          param_real(2) forget=     1.000
-PDAF          param_real(3) limit_winf=     0.000
+PDAF          param_real(1) forget=     1.000
+PDAF          param_real(2) limit_winf=     0.000
+PDAF          param_real(3) noise_amp=     0.800
 
 
 PDAF ----------------------------------------------------------------
@@ -118,7 +116,6 @@ PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine at initial time
         Analyze initial state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.0941E-01
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      9
@@ -139,7 +136,6 @@ PDAF     --- Gather sub-ensembles on filter task
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       9
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.0941E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -157,7 +153,6 @@ PDAF     --- use blocking with size   200
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   0.0000E+00
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -183,7 +178,6 @@ PDAF     --- Gather sub-ensembles on filter task
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.9291E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -201,7 +195,6 @@ PDAF     --- use blocking with size   200
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   0.0000E+00
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -212,21 +205,21 @@ PDAF          ---------------------------------------------
 PDAF                 Globally allocated memory  (MiB)
 PDAF              state and A:        0.044 MiB (persistent)
 PDAF           ensemble array:        0.035 MiB (persistent)
-PDAF            analysis step:        0.009 MiB (temporary)
+PDAF            analysis step:        0.012 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.003 s
-PDAF            MPI communication in PDAF:           0.003 s
+PDAF          Ensemble forecast:                   0.004 s
+PDAF            MPI communication in PDAF:           0.004 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          PF analysis:                         0.001 s
+PDAF          PF analysis:                         0.000 s
 PDAF            PDAF-internal operations:            0.008 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF          prepoststep_pdaf:                    0.009 s

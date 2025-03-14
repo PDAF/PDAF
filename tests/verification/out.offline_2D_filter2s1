@@ -91,7 +91,7 @@ PDAF    EnKF configuration
 PDAF          ensemble size:    8
 PDAF          filter sub-type= 1
 PDAF              --> EnKF with analysis for small observation dimension
-PDAF          param_int(3) rank_ana_enkf=  0
+PDAF          param_int(4) rank_ana_enkf=  0
 PDAF            ---> analysis with direct inversion
 PDAF          Use fixed forgetting factor: 0.80
 PDAF          param_int(8) observe_ens
@@ -109,7 +109,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.9288E-01
 PDAF     Inflate forecast ensemble, forget=     0.800
 PDAF Prepare observations -------------------------------------------
@@ -125,7 +124,6 @@ PDAF     --- use diagonal observation eror cov. matrix
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   6.2504E-02
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -138,15 +136,15 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.246 MiB (temporary)
+PDAF            analysis step:      0.249 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
+PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          EnKF analysis:                       0.001 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF            PDAF-internal operations:            0.003 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.000 s
@@ -156,7 +154,7 @@ PDAF          prepoststep_pdaf:                    0.003 s
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.003 s
+PDAF                     Initialize PDAF (1):      0.002 s
 PDAF                       EnKF analysis (3):      0.001 s
 PDAF                        get mean state (9):      0.000 s
 PDAF                  prepare observations (6):      0.000 s

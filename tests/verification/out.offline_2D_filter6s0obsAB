@@ -112,7 +112,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.9288E-01
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
@@ -133,7 +132,6 @@ PDAF     --- Ensemble update: use blocking with size   200
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   8.1482E-02
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -146,7 +144,7 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.022 MiB (temporary)
+PDAF            analysis step:      0.026 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines

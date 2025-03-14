@@ -105,7 +105,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.9288E-01
 PDAF     Inflate forecast ensemble, forget=     0.800
 PDAF Prepare observations -------------------------------------------
@@ -122,7 +121,6 @@ PDAFomi            --- Use uniform weight
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.2945E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -135,35 +133,35 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.013 MiB (temporary)
+PDAF            analysis step:      0.016 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          ENSRF analysis:                        0.001 s
-PDAF            PDAF-internal operations:             0.001 s
+PDAF          ENSRF analysis:                        0.002 s
+PDAF            PDAF-internal operations:             0.000 s
 PDAF            OMI-internal routines:                0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:               0.000 s
+PDAF              init_dim_obs_pdafomi:               0.001 s
 PDAF              obs_op_pdafomi:                     0.000 s
-PDAF              localize_covar_serial_pdafomi:      0.000 s
-PDAF          prepoststep_pdaf:                     0.004 s
+PDAF              localize_covar_serial_pdafomi:      0.001 s
+PDAF          prepoststep_pdaf:                     0.003 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF          Initialize PDAF (1):                 0.002 s
-PDAF          EnSRF analysis (3):                  0.001 s
-PDAF            prepare observations (6):            0.000 s
+PDAF          EnSRF analysis (3):                  0.002 s
+PDAF            prepare observations (6):            0.001 s
 PDAF            compute ensemble mean (9):           0.000 s
-PDAF              HXpert, var(hx), covars (10):      0.000 s
+PDAF              HXpert, var(hx), covars (10):      0.001 s
 PDAF              HXpert, HXbar, var(hx) (30):         0.000 s
 PDAF              covariances X(HX), HX(HX) (31):      0.000 s
-PDAF              Apply localization (45):             0.000 s
+PDAF              Apply localization (45):             0.001 s
 PDAF            transform obs. ensemble (13):        0.000 s
-PDAF            ensemble transformation (14):        0.001 s
-PDAF          Prepoststep (5):                     0.004 s
+PDAF            ensemble transformation (14):        0.000 s
+PDAF          Prepoststep (5):                     0.003 s
 
  PDAF offline mode: END

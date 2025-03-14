@@ -114,7 +114,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.9288E-01
 PDAF     Inflate forecast ensemble, type_forget= 0, forget=     0.800
 PDAF Prepare observations -------------------------------------------
@@ -123,7 +122,6 @@ PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use limited full observations
 PDAFomi        --- global observation dimension      36
 PDAFomi        --- process-local min/max full obs. dimensions     36      36
- after PDAFobs_init
 PDAF Analysis -------------------------------------------------------
 PDAF       0   LNETF analysis using T-matrix
 PDAF     --- local analysis domains:      648
@@ -151,7 +149,6 @@ PDAF        Number of small singular values:               52
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   1.9126E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -164,31 +161,31 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.104 MiB (temporary)
+PDAF            analysis step:      0.107 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          LNETF analysis:                      0.004 s
+PDAF          LNETF analysis:                      0.002 s
 PDAF            PDAF-internal operations:            0.002 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.003 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
 
 PDAF                       PDAF Timing information
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF (1):                 0.002 s
-PDAF          LNETF analysis (3):                  0.004 s
-PDAF            prepare observations (6):            0.001 s
-PDAF              init_dim_obs_pdaf (43):              0.001 s
+PDAF          LNETF analysis (3):                  0.002 s
+PDAF            prepare observations (6):            0.000 s
+PDAF              init_dim_obs_pdaf (43):              0.000 s
 PDAF              obs_op_pdaf (44):                    0.000 s
 PDAF              init_obs_pdaf (50):                  0.000 s
 PDAF            compute ensemble mean (9):           0.000 s
@@ -211,6 +208,6 @@ PDAF                  complete transform matrix (23):      0.000 s
 PDAF                transform ensemble (18):             0.000 s
 PDAF              local to global (14):                0.000 s
 PDAF            add noise to ensemble (19):          0.000 s
-PDAF          Prepoststep (5):                     0.003 s
+PDAF          Prepoststep (5):                     0.004 s
 
  PDAF offline mode: END

@@ -90,12 +90,12 @@ PDAF    LKNETF configuration
 PDAF          ensemble size:    4
 PDAF          filter sub-type= 1
 PDAF            --> (HKN) 2-step LKNETF: LETKF before NETF
+PDAF          param_int(4) type_hyb=  1
+PDAF            --> use gamma_lin (default): (1 - N_eff/N_e)*   0.950
 PDAF          param_int(5) type_forget=  0
 PDAF            --> prior inflation (default), forgetting factor: 0.80
 PDAF          param_int(6) type_trans=  0
 PDAF            --> Transform ensemble including product with random matrix (default)
-PDAF          param_int(7) type_hyb=  0
-PDAF            --> use gamma_fix: fixed hybrid weight   0.950
 PDAF          param_int(8) observe_ens
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
@@ -110,7 +110,6 @@ PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine at initial time
         Analyze initial state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.0941E-01
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      9
@@ -131,7 +130,6 @@ PDAF     --- Gather sub-ensembles on filter task
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       9
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.0941E-01
         --- write ensemble and state estimate
 PDAF     Inflate forecast ensemble, type_forget= 0, forget=     0.800
@@ -153,10 +151,11 @@ PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
-PDAF     Set hybrid weight in LETKF to    0.950
+PDAF     Compute adaptive hybrid weight
+PDAF     --- gamma_lin: (1 - N_eff/N)*scale, scale=   0.950
 PDAF     Compute LETKF update
 PDAF     --- Use OpenMP parallelization with     4 threads
-PDAFomi     --- hybrid gamma=     0.95000
+PDAFomi     --- hybrid gamma=     0.00001
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
@@ -169,7 +168,7 @@ PDAF     --- use blocking with size   200
 PDAF     Compute LNETF update
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
-PDAFomi     --- Apply tempering with 1.0-gamma=      0.05000
+PDAFomi     --- Apply tempering with 1.0-gamma=      0.99999
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
@@ -182,15 +181,14 @@ PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
-PDAF        Minimal/Maximal/Mean N_eff:                            3.984     4.000     3.999
-PDAF        Minimal/Maximal/Mean hybrid weight:                    0.950     0.950     0.950
+PDAF        Minimal/Maximal/Mean N_eff:                            3.167     4.000     3.730
+PDAF        Minimal/Maximal/Mean hybrid weight:                    0.000     0.662     0.164
 PDAF        Minimal/Maximal/Mean abs. skewness/SQRT(dim_ens):      0.000     0.435     0.213
 PDAF        Minimal/Maximal/Mean abs. kurtosis/dim_ens:            0.206     0.346     0.299
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
-            RMS error according to sampled variance:   3.0818E-01
+            RMS error according to sampled variance:   3.3263E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
       9   Next observation at time step     18
@@ -210,8 +208,7 @@ PDAF     --- Gather sub-ensembles on filter task
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
-            RMS error according to sampled variance:   3.0818E-01
+            RMS error according to sampled variance:   3.3263E-01
         --- write ensemble and state estimate
 PDAF     Inflate forecast ensemble, type_forget= 0, forget=     0.800
 PDAF Prepare observations -------------------------------------------
@@ -232,10 +229,11 @@ PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
-PDAF     Set hybrid weight in LETKF to    0.950
+PDAF     Compute adaptive hybrid weight
+PDAF     --- gamma_lin: (1 - N_eff/N)*scale, scale=   0.950
 PDAF     Compute LETKF update
 PDAF     --- Use OpenMP parallelization with     4 threads
-PDAFomi     --- hybrid gamma=     0.95000
+PDAFomi     --- hybrid gamma=     0.00001
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
@@ -248,7 +246,7 @@ PDAF     --- use blocking with size   200
 PDAF     Compute LNETF update
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
-PDAFomi     --- Apply tempering with 1.0-gamma=      0.05000
+PDAFomi     --- Apply tempering with 1.0-gamma=      0.99999
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
@@ -261,15 +259,14 @@ PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
-PDAF        Minimal/Maximal/Mean N_eff:                            3.988     4.000     3.999
-PDAF        Minimal/Maximal/Mean hybrid weight:                    0.950     0.950     0.950
-PDAF        Minimal/Maximal/Mean abs. skewness/SQRT(dim_ens):      0.012     0.551     0.203
-PDAF        Minimal/Maximal/Mean abs. kurtosis/dim_ens:            0.176     0.403     0.306
+PDAF        Minimal/Maximal/Mean N_eff:                            3.045     4.000     3.717
+PDAF        Minimal/Maximal/Mean hybrid weight:                    0.000     0.591     0.122
+PDAF        Minimal/Maximal/Mean abs. skewness/SQRT(dim_ens):      0.017     0.555     0.281
+PDAF        Minimal/Maximal/Mean abs. kurtosis/dim_ens:            0.174     0.398     0.288
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
-            RMS error according to sampled variance:   3.1255E-01
+            RMS error according to sampled variance:   3.2833E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
      18   No more observations - end assimilation
@@ -279,24 +276,24 @@ PDAF          ---------------------------------------------
 PDAF                 Globally allocated memory  (MiB)
 PDAF              state and A:        0.005 MiB (persistent)
 PDAF           ensemble array:        0.035 MiB (persistent)
-PDAF            analysis step:        0.040 MiB (temporary)
+PDAF            analysis step:        0.042 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ------------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.002 s
-PDAF            MPI communication in PDAF:           0.002 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Ensemble forecast:                   0.003 s
+PDAF            MPI communication in PDAF:           0.003 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LKNETF analysis:                     0.009 s
+PDAF          LKNETF analysis:                     0.008 s
 PDAF            PDAF-internal operations:            0.003 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.001 s
-PDAF          prepoststep_pdaf:                    0.009 s
+PDAF          prepoststep_pdaf:                    0.011 s

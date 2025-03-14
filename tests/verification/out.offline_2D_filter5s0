@@ -94,7 +94,7 @@ PDAF            --> Use fixed forgetting factor: 0.80
 PDAF          param_int(6) type_trans=  0
 PDAF            --> Deterministic symmetric ensemble transformation
 PDAF          param_int(8) observe_ens
-PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
+PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
@@ -108,7 +108,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.9288E-01
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
@@ -139,7 +138,6 @@ PDAF        Avg. for domains with observations:          4.3
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   2.2256E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -152,15 +150,15 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.011 MiB (temporary)
+PDAF            analysis step:      0.014 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LETKF analysis:                      0.002 s
-PDAF            PDAF-internal operations:            0.002 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
@@ -173,7 +171,7 @@ PDAF          Prepoststep_pdaf:                    0.004 s
 
 PDAF                       PDAF Timing information
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF (1):                 0.003 s
+PDAF          Initialize PDAF (1):                 0.002 s
 PDAF          LETKF analysis (3):                  0.002 s
 PDAF            prepare observations (6):            0.000 s
 PDAF              init_dim_obs_pdaf (43):              0.000 s
@@ -191,7 +189,7 @@ PDAF              local analysis (12):                 0.002 s
 PDAF                compute Ainv (16):                   0.001 s
 PDAF                  init innovation (20):                0.000 s
 PDAF                  prodRinvA_pdaf (48):                 0.000 s
-PDAF                  complete Ainv (21):                  0.001 s
+PDAF                  complete Ainv (21):                  0.000 s
 PDAF                compute ensemble weights (17):       0.001 s
 PDAF                  get state weight vector (22):        0.001 s
 PDAF                  complete transform matrix (23):      0.000 s

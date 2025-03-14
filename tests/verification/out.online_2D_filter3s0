@@ -97,7 +97,7 @@ PDAF            --> Transform ensemble with deterministic Omega (default)
 PDAF          param_int(7) type_sqrt=  0
 PDAF            --> symmetric square root (default)
 PDAF          param_int(8) observe_ens
-PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
+PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
@@ -108,7 +108,6 @@ PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine at initial time
         Analyze initial state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.0941E-01
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      9
@@ -129,7 +128,6 @@ PDAF     --- Gather sub-ensembles on filter task
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       9
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.0941E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -161,7 +159,6 @@ PDAF        Maximum local observation dimension:            6
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.0637E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -182,7 +179,6 @@ PDAF     --- Gather sub-ensembles on filter task
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.0637E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -214,7 +210,6 @@ PDAF        Maximum local observation dimension:            6
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.1082E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -225,25 +220,25 @@ PDAF          ---------------------------------------------
 PDAF                 Globally allocated memory  (MiB)
 PDAF              state and U:        0.005 MiB (persistent)
 PDAF           ensemble array:        0.035 MiB (persistent)
-PDAF            analysis step:        0.004 MiB (temporary)
+PDAF            analysis step:        0.007 MiB (temporary)
 PDAF                resampling:       0.026 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
+PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
 PDAF          Ensemble forecast:                   0.003 s
 PDAF            MPI communication in PDAF:           0.003 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LSEIK analysis:                      0.005 s
+PDAF          LSEIK analysis:                      0.004 s
 PDAF            PDAF-internal operations:            0.012 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_l_pdaf:                     0.001 s
 PDAF            Time in OMI observation module routines
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF          prepoststep_pdaf:                    0.009 s
