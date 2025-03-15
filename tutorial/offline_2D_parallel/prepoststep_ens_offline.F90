@@ -40,11 +40,9 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
-       ONLY: nx, ny, dim_state, local_dims, do_omi_obsstats
+       ONLY: nx, ny, dim_state, local_dims
   USE PDAF, &                  ! PDAF diagnostic routine
        ONLY: PDAF_diag_stddev
-  USE PDAFomi, &               ! PDAF-OMI diagnostics
-       ONLY: PDAFomi_diag_obs_rmsd
 
   IMPLICIT NONE
 
@@ -99,16 +97,6 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   CALL PDAF_diag_stddev(dim_p, dim_ens, state_p, ens_p, &
         ens_stddev, 1, COMM_filter, pdaf_status)
-
- 
-! **************************************
-! *** Compute observation statistics ***
-! **************************************
-
-  IF (do_omi_obsstats) THEN
-     ! Compute RMS deviation between observation and observed ensemble mean
-     CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1)
-  END IF
 
 
 ! *****************

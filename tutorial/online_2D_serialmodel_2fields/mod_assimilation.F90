@@ -27,23 +27,33 @@ MODULE mod_assimilation
 
 ! *** Variables specific for model setup ***
 
-  REAL :: coords_l(2)      !< Coordinates of local analysis domain
+  REAL :: coords_l(2)                   !< Coordinates of local analysis domain
 
 ! *** Variables to handle multiple fields in the state vector ***
 
-  INTEGER :: n_fields      !< number of fields in state vector
-  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
-  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
-
-  ! Declare Fortran type holding the indices of model fields in the state vector
-  ! This can be extended to any number of fields - it severs to give each field a name
+  !< Fortran type holding the indices of model fields in the state vector
+  !< This can be extended to any number of fields - it severs to give each field a name
+  !< ++ For the tutorial example, it contains two fields
   TYPE field_ids
      INTEGER :: fieldA 
      INTEGER :: fieldB
   END TYPE field_ids
 
-  ! Type variable holding field IDs in state vector
+  !< Type variable holding field IDs in state vector
   TYPE(field_ids) :: id
+
+  !< number of fields in state vector
+  INTEGER :: n_fields                   
+
+  !< Generic type storing size and offset of each model field in the state vector
+  !< This is generic, but one could extend this type to more variables, e.g. to store a field name
+  TYPE state_field
+     INTEGER :: dim    ! size of field in state vector
+     INTEGER :: off    ! offset of field in state vector
+  END TYPE state_field
+
+  !< Vector of type variable holding dimension and offset of each field
+  TYPE(state_field), ALLOCATABLE :: fields(:)
 
 !$OMP THREADPRIVATE(coords_l)
 
@@ -53,16 +63,19 @@ MODULE mod_assimilation
 ! *** Their values are set in init_PDAF                         ***
 
 ! Settings for state vector size
-  INTEGER :: dim_state     !< Global model state dimension
-  INTEGER :: dim_state_p   !< Model state dimension for PE-local domain
+  INTEGER :: dim_state         !< Global model state dimension
+  INTEGER :: dim_state_p       !< Model state dimension for PE-local domain
 
 ! Settings for time stepping - available as command line options
-  LOGICAL :: model_error   !< Control application of model error
-  REAL    :: model_err_amp !< Amplitude for model error
+  LOGICAL :: model_error       !< Control application of model error
+  REAL    :: model_err_amp     !< Amplitude for model error
 
 ! Settings for observations - available as command line options
-  INTEGER :: delt_obs      !< time step interval between assimilation steps
-  LOGICAL :: twin_experiment  !< Whether to run an twin experiment with synthetic observations
+  INTEGER :: delt_obs          !< time step interval between assimilation steps
+  LOGICAL :: twin_experiment   !< Whether to run an twin experiment with synthetic observations
+  INTEGER :: observe_ens=0     !< (0) apply H also to ensemble mean; (1) apply H only to ensemble states
+  INTEGER :: type_obs_init=1   !< init obs. (0) before or (1) after call to prepostsstep
+  LOGICAL :: do_omi_obsstats=.false. !< Whether to let OMI compute observation statistics
 
 ! General control of PDAF - available as command line options
   INTEGER :: screen       !< Control verbosity of PDAF
@@ -124,7 +137,12 @@ MODULE mod_assimilation
                           !<     (4) 3D Ensemble Var using ESTKF for ensemble update
                           !<     (6) hybrid 3D-Var using LESTKF for ensemble update
                           !<     (7) hybrid 3D-Var using ESTKF for ensemble update
-  INTEGER :: incremental  !< SEIK/LSEIK: (1) Perform incremental updating
+  INTEGER :: type_iau     !< Type of incremental updating:
+                          !<     (0) no IAU
+                          !<     (1) constant IAU weight
+                          !<     (2) linear increase/decrease with maimum in middle of period
+                          !<     (3) Null IAU: initialize increments arrays, but do not add increment
+  INTEGER :: steps_iau    !< Number of time steps over which IAU is applied
   INTEGER :: dim_lag      !< Number of time instances for smoother
 
 ! Filter settings - available as command line options
@@ -235,5 +253,7 @@ MODULE mod_assimilation
 
 !    ! Other variables - _NOT_ available as command line options!
   REAL    :: time               !< model time
+  REAL, ALLOCATABLE :: coords_p(:,:)    !< Coordinates of process-local state vector entries
+                                        !< needed to intiialize localization for LEnKF/ENSRF
 
 END MODULE mod_assimilation

@@ -17,11 +17,13 @@ SUBROUTINE init_pdaf_parse()
        ONLY: parse
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       model_error, model_err_amp, incremental, type_forget, &
-       forget, rank_ana_enkf, locweight, cradius, &
-       sradius, type_trans, type_sqrt, dim_lag, type_hyb, &
+       model_error, model_err_amp, type_forget, forget, &
+       type_iau, steps_iau, rank_ana_enkf, &
+       locweight, cradius, sradius, &
+       type_trans, type_sqrt, dim_lag, type_hyb, &
        hyb_gamma, hyb_kappa, type_winf, limit_winf, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
+       observe_ens, type_obs_init, do_omi_obsstats, &
        ensgroup
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
@@ -57,6 +59,12 @@ SUBROUTINE init_pdaf_parse()
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
   CALL parse(handle, delt_obs)
+  handle = 'observe_ens'             ! (0) apply H also to ensemble mean; (1) apply H only to ensemble states
+  CALL parse(handle, observe_ens)
+  handle = 'type_obs_init'           ! init obs. (0) before or (1) after call to prepostsstep
+  CALL parse(handle, type_obs_init)
+  handle = 'do_omi_obsstats'         ! Whether to let PDAF-OMI compute observation statistics
+  CALL parse(handle, do_omi_obsstats)
 
   ! Settings for model and time stepping
   handle = 'model_error'             ! Control application of model error
@@ -73,8 +81,12 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, filtertype)
   handle = 'subtype'                 ! Set subtype of filter
   CALL parse(handle, subtype)
-  handle = 'incremental'             ! Set whether to use incremental updating
-  CALL parse(handle, incremental)
+
+  ! Control IAU
+  handle = 'type_iau'                ! Set whether to use incremental updating
+  CALL parse(handle, type_iau)
+  handle = 'steps_iau'               ! Number of time steps over which IAU is applied
+  CALL parse(handle, steps_iau)
 
   ! Settings for smoother
   handle = 'dim_lag'                 ! Size of lag in smoother
@@ -99,7 +111,7 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, locweight)
   sradius = cradius                  ! By default use cradius as support radius
   handle = 'sradius'                 ! Set support radius in grid points
-             ! for 5th-order polynomial or distance for 1/e in exponential weighting
+             ! for 5th-order polynomial or radius for 1/e in exponential weighting
   CALL parse(handle, sradius)
 
   ! Settings for nonlinear filters

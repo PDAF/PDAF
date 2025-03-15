@@ -19,14 +19,11 @@ SUBROUTINE assimilate_pdaf_offline()
        PDAF_localfilter
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: filtertype
 
   IMPLICIT NONE
 
 ! *** Local variables ***
   INTEGER :: status_pdaf          ! PDAF status flag
-  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
 
 
 ! *** External subroutines ***
@@ -47,8 +44,7 @@ SUBROUTINE assimilate_pdaf_offline()
   ! Interface to PDAF-OMI for local and global filters
   EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
-       localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
+       init_dim_obs_l_pdafomi         ! Get dimension of obs. vector for local analysis domain
 
 
 ! *****************************
@@ -65,15 +61,16 @@ SUBROUTINE assimilate_pdaf_offline()
 
   ! Call assimilate routine for global or local filter
   IF (PDAF_localfilter() == 1) THEN
-     ! Call generic OMI interface routine for domain-localized filters
+     ! Call generic routine for domain-localized filters and ENSRF
      CALL PDAF3_put_state_local(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           prepoststep_ens_offline, status_pdaf)
   ELSE
-     ! Call generic OMI interface routine for global filters
-     CALL PDAF3_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
-          obs_op_pdafomi, prepoststep_ens_offline, status_pdaf)
+     ! Call generic routine for global filters and LEnKF
+     CALL PDAF3_put_state_global(collect_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, &
+          prepoststep_ens_offline, status_pdaf)
   END IF
 
 

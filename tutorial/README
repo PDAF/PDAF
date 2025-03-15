@@ -1,5 +1,5 @@
 This directory is part of PDAF - the Parallel Data Assimilation Framework.
-It contains an implementations of the offline and online modes of PDAF
+It contains implementations of the offline and online modes of PDAF
 with a simple 2-dimensional model setup.
 
 The implementation is described in detail in the tutorials that are available
@@ -128,9 +128,10 @@ This directory contains outputs files from a test run using the script 'runtests
 The script
    runtests.sh
 allows one to compile and all tutorial cases. The outputs in verification/ can then
-be used for comparison. To run the script one has to set the correct make.arch 
-file for 
-  ARCH        (the default is linux_gfortran_openmpi)
+be used for comparison. To run the script one has to set
+  ARCH
+to the correct make.arch file for the computer on which the tests are run
+(the default is linux_gfortran_openmpi)
 To test the cases with OpenMP parallelization the make.arch files need to activate
 OpenMP for the compilation. runtests.sh does set the number of OpenMP threads by
 itself.
@@ -155,9 +156,30 @@ plot_ens.py
    Usage: ./plot_ens.py <i> <j>
 
 
----- Classical implementations (without PDAF-OMI) -----
+---- Further directories -----
 
+Over the years, the interface of PDAF was advanced. The previous interfaces
+are still usable for backward compatibility. Examples are given for the
+following cases.
+Note: While the provious interfaces are still usable we strongly recommend
+to perform new implementations using the latest interface standard.
+
+---- Implementations using full (PDAF-1) interface (without PDAF-OMI) -----
+
+PDAF1/
 When PDAF V1.16 introduced PDAF-OMI (Observation Module Infrastructure), 
 the tutorial implementations above have been updated for PDAF-OMI.
 The classical implementations, i.e. not using OMI, have been moved into
-the directory classical/
+the directory PDAF1/ for reference.
+
+---- Implementations using PDAFomi and PDAFlocalomi (final status of PDAF 2.3.1) -----
+
+PDAF2/
+With PDAF V3.0 a new interface was introduced that combines the 
+features of PDAF-OMI and PDAF-local, which were introduced with
+PDAF V1.1.6 (OMI) and PDAF 2.3 (PDAF-local). With PDAF V3.0 the
+the tutorial implementations above have been updated to use the
+PDAF3 interface.  The previous implementations using the
+PDAFomi interface for global DA methods and PDAFlocalomi 
+interface for localized DA methods have been moved into the
+directory PDAF2/ for reference.

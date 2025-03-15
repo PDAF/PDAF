@@ -25,7 +25,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   USE mod_model, &             ! Model variables
        ONLY: nx, ny, field, fieldB
   USE mod_assimilation, &      ! Assimilation variables
-       ONLY: off_fields, id
+       ONLY: fields, id
 
   IMPLICIT NONE
   
@@ -48,12 +48,12 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
   ! Field
   DO j = 1, nx
-     field(1:ny, j) = state_p(off_fields(id%fieldA) + 1 + (j-1)*ny : off_fields(id%fieldA) + j*ny)
+     field(1:ny, j) = state_p(fields(id%fieldA)%off + 1 + (j-1)*ny : fields(id%fieldA)%off + j*ny)
   END DO
 
   ! FieldB
   DO j = 1, nx
-     fieldB(1:ny, j) = state_p(off_fields(id%fieldB) + 1 + (j-1)*ny : off_fields(id%fieldB) + j*ny)
+     fieldB(1:ny, j) = state_p(fields(id%fieldB)%off + 1 + (j-1)*ny : fields(id%fieldB)%off + j*ny)
   END DO
 
 END SUBROUTINE distribute_state_pdaf

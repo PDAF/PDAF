@@ -16,17 +16,18 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF_init, PDAF_get_state
-  USE mod_parallel_model, &       ! Parallelization variables for model
-       ONLY: mype_world, COMM_model, abort_parallel
+  USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, mype_filter
+  USE mod_parallel_model, &       ! Parallelization variables for model
+       ONLY: mype_world, COMM_model, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
-       dim_ens, incremental, type_forget, forget, &
+       ONLY: dim_state_p, dim_state, &
+       screen, filtertype, subtype, dim_ens, &
+       type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
-       type_trans, type_sqrt, delt_obs
+       type_trans, type_sqrt, delt_obs, &
+       observe_ens, type_obs_init, do_omi_obsstats
   USE mod_model, &                ! Model variables
        ONLY: nx, ny, nx_p
   USE obs_A_pdafomi, &            ! Variables for observation type A
@@ -39,8 +40,8 @@ SUBROUTINE init_pdaf()
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(3) ! Real parameter array for filter
+  INTEGER :: filter_param_i(2) ! Integer parameter array for filter
+  REAL    :: filter_param_r(1) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
@@ -93,10 +94,6 @@ SUBROUTINE init_pdaf()
 
   type_trans = 0     ! Type of ensemble transformation (deterministic or random)
   type_sqrt = 0      ! SEIK/LSEIK/ESTKF/LESTKF: Type of transform matrix square-root
-  incremental = 0    ! SEIK/LSEIK: (1) to perform incremental updating
-
-  !EnKF
-  rank_ana_enkf = 0  ! EnKF: rank to be considered for inversion of HPH in analysis step
 
 
 ! *********************************************************************
@@ -121,7 +118,7 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 0.0     ! Cut-off radius for observation domain in local filters
+  cradius = 0.0     ! Cut-off radius in grid points for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
 
@@ -135,7 +132,6 @@ SUBROUTINE init_pdaf()
 
   call init_pdaf_parse()
 
-
 ! *** Initial Screen output ***
 ! *** This is optional      ***
 
@@ -147,47 +143,34 @@ SUBROUTINE init_pdaf()
 ! ***                                               ***
 ! *** Here, the full selection of filters is        ***
 ! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
+! *** reduces this to selected filters.             ***
 ! ***                                               ***
-! *** For all filters, first the arrays of integer  ***
-! *** and real number parameters are initialized.   ***
-! *** Subsequently, PDAF_init is called.            ***
+! *** For all filters, PDAF_init is first called    ***
+! *** specifying only the required parameters.      ***
+! *** Further settings are done afterwards using    ***
+! *** calls to PDAF_set_iparam & PDAF_set_rparam.   ***
 ! *****************************************************
 
-  whichinit: IF (filtertype == 2) THEN
-     ! *** EnKF with Monte Carlo init ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_ana_enkf ! Rank of pseudo-inverse in analysis
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
-     filter_param_i(5) = 0           ! Smoother lag (not implemented here)
-     filter_param_r(1) = forget      ! Forgetting factor
+  ! *** Here we specify only the required integer and real parameters
+  ! *** Other parameters are set using calls to PDAF_set_iparam/PDAF_set_rparam
+  filter_param_i(1) = dim_state_p ! State dimension
+  filter_param_i(2) = dim_ens     ! Size of ensemble
+  filter_param_r(1) = forget      ! Forgetting factor
 
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 6,&
-          filter_param_r, 1, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
-  ELSE
-     ! *** All other filters                       ***
-     ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
-     filter_param_i(5) = type_forget ! Type of forgetting factor
-     filter_param_i(6) = type_trans  ! Type of ensemble transformation
-     filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
-     filter_param_r(1) = forget      ! Forgetting factor
+  CALL PDAF_init(filtertype, subtype, 0, &
+       filter_param_i, 2,&
+       filter_param_r, 1, &
+       COMM_model, COMM_filter, COMM_couple, &
+       task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+       screen, status_pdaf)
 
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 7,&
-          filter_param_r, 1, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
-  END IF whichinit
+  ! *** Additional parameter specifications ***
+  ! *** -- These are all optional --        ***
+  CALL PDAF_set_iparam(5, type_forget, status_pdaf)      ! Type of forgetting factor
+  CALL PDAF_set_iparam(6, type_trans, status_pdaf)       ! Type of ensemble transformation
+  CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)        ! Type of transform square-root (SEIK-sub4/ESTKF)
+  CALL PDAF_set_iparam(8, observe_ens, status_pdaf)      ! Whether to apply observation operator to ensemble mean
+  CALL PDAF_set_iparam(9, type_obs_init, status_pdaf)    ! Initialize observation before or after call to prepoststep
 
 
 ! *** Check whether initialization of PDAF was successful ***

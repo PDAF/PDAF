@@ -32,10 +32,12 @@
 SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
-  USE mod_model, &           ! Model variables
+  USE mod_model, &             ! Model variables
        ONLY: nx, ny
-  USE mod_assimilation, &
-       ONLY: n_fields, dim_fields, off_fields, id
+  USE mod_assimilation, &      ! Assimilation variables
+       ONLY: n_fields, fields, id
+  USE PDAF, &                  ! PDAF diagnostic routine
+       ONLY: PDAF_diag_stddev_nompi
 
   IMPLICIT NONE
 
@@ -55,11 +57,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 ! *** local variables ***
   INTEGER :: i, j, member             ! Counters
+  INTEGER :: istart, iend             ! stard and end index of a field in state vector
+  INTEGER :: pdaf_status              ! status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
-  REAL :: invdim_ens                  ! Inverse ensemble size
-  REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
-  REAL, ALLOCATABLE :: rmserror_est(:) ! estimated RMS errors
-  REAL, ALLOCATABLE :: variance(:)    ! model state variances
+  REAL, ALLOCATABLE :: ens_stddev(:) ! estimated RMS errors
   REAL, ALLOCATABLE :: field_tmp(:,:) ! global model field for file output
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   CHARACTER(len=2) :: stepstr         ! String for time step
@@ -83,60 +84,26 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      END IF
   END IF
 
+
+! ************************************************************
+! *** Compute ensemble mean and standard deviation         ***
+! *** (=RMS errors according to sampled covar matrix)      ***
+! ************************************************************
+
   ! Allocate fields
-  ALLOCATE(variance(dim_p))
-  ALLOCATE(rmserror_est(n_fields))
+  ALLOCATE(ens_stddev(n_fields))
 
-  ! Initialize numbers
-  rmserror_est  = 0.0
-  invdim_ens    = 1.0 / REAL(dim_ens)  
-  invdim_ensm1  = 1.0 / REAL(dim_ens - 1)
-
-
-! **************************************************************
-! *** Perform prepoststep for SEIK with re-inititialization. ***
-! *** The state and error information is completely in the   ***
-! *** ensemble.                                              ***
-! *** Also performed for SEIK without re-init at the initial ***
-! *** time.                                                  ***
-! **************************************************************
-
-  ! *** Compute mean state
-  WRITE (*, '(8x, a)') '--- compute ensemble mean'
-
-  state_p = 0.0
-  DO member = 1, dim_ens
-     DO i = 1, dim_p
-        state_p(i) = state_p(i) + ens_p(i, member)
-     END DO
-  END DO
-  state_p(:) = invdim_ens * state_p(:)
-
-  ! *** Compute sampled variances ***
-  variance(:) = 0.0
-  DO member = 1, dim_ens
-     DO j = 1, dim_p
-        variance(j) = variance(j) &
-             + (ens_p(j, member) - state_p(j)) &
-             * (ens_p(j, member) - state_p(j))
-     END DO
-  END DO
-  variance(:) = invdim_ensm1 * variance(:)
-
-
-! ************************************************************
-! *** Compute RMS errors according to sampled covar matrix ***
-! ************************************************************
-
+  ! Compute ensemble deviation and mean separately
+  ! for each field in the state vector
   DO j = 1, n_fields
-     ! total estimated RMS error per field
-     DO i = 1+off_fields(j), dim_fields(j)+off_fields(j)
-        rmserror_est(j) = rmserror_est(j) + variance(i)
-     ENDDO
-     rmserror_est(j) = SQRT(rmserror_est(j) / dim_fields(j))
-  ENDDO
+     ! Start and end index
+     istart = 1 + fields(j)%off
+     iend = fields(j)%dim + fields(j)%off
 
-  DEALLOCATE(variance)
+     CALL PDAF_diag_stddev_nompi(fields(j)%dim, dim_ens, &
+          state_p(istart:iend), ens_p(istart:iend,:), &
+          ens_stddev(j), 1, pdaf_status)
+  END DO
 
 
 ! *****************
@@ -145,9 +112,9 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   ! Output RMS errors given by sampled covar matrix
   WRITE (*, '(12x, a, 2es12.4)') &
-       'RMS errors according to sampled variance: ', rmserror_est
+       'RMS errors according to sampled variance: ', ens_stddev
 
-  DEALLOCATE(rmserror_est)
+  DEALLOCATE(ens_stddev)
 
   
 ! *******************
@@ -172,7 +139,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
         ! Field
         DO j = 1, nx
-           field_tmp(1:ny, j) = ens_p(off_fields(id%fieldA) + 1 + (j-1)*ny : off_fields(id%fieldA) + j*ny, member)
+           field_tmp(1:ny, j) = ens_p(fields(id%fieldA)%off + 1 + (j-1)*ny : fields(id%fieldA)%off + j*ny, member)
         END DO
 
         WRITE (ensstr, '(i2.2)') member
@@ -187,7 +154,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
         ! FieldB
         DO j = 1, nx
-           field_tmp(1:ny, j) = ens_p(off_fields(id%fieldB) + 1 + (j-1)*ny : off_fields(id%fieldB) + j*ny, member)
+           field_tmp(1:ny, j) = ens_p(fields(id%fieldB)%off + 1 + (j-1)*ny : fields(id%fieldB)%off + j*ny, member)
         END DO
 
         WRITE (ensstr, '(i2.2)') member
@@ -205,7 +172,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
      ! Field
      DO j = 1, nx
-        field_tmp(1:ny, j) = state_p(off_fields(id%fieldA) + 1 + (j-1)*ny : off_fields(id%fieldA) + j*ny)
+        field_tmp(1:ny, j) = state_p(fields(id%fieldA)%off + 1 + (j-1)*ny : fields(id%fieldA)%off + j*ny)
      END DO
 
      OPEN(11, file = 'state_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
@@ -218,7 +185,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
      ! FieldB
      DO j = 1, nx
-        field_tmp(1:ny, j) = state_p(off_fields(id%fieldB) + 1 + (j-1)*ny : off_fields(id%fieldB) + j*ny)
+        field_tmp(1:ny, j) = state_p(fields(id%fieldB)%off + 1 + (j-1)*ny : fields(id%fieldB)%off + j*ny)
      END DO
 
      OPEN(12, file = 'stateB_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')

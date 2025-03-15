@@ -36,16 +36,13 @@
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
 !!
-!! In addition, there are two optional routines, which are required if filters 
+!! In addition, there is one optional routine, which is required if filters 
 !! with localization are used:
 !! * init_dim_obs_l_OBSTYPE \n
 !!           Only required if domain-localized filters (e.g. LESTKF, LETKF) are used:
 !!           Count number of local observations of module-type according to
 !!           their coordinates (distance from local analysis domain). Initialize
 !!           module-internal distances and index arrays.
-!! * localize_covar_OBSTYPE \n
-!!           Only required if the localized EnKF is used:
-!!           Apply covariance localization in the LEnKF.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -377,48 +374,5 @@ CONTAINS
          locweight, cradius, sradius, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_B
-
-
-
-!-------------------------------------------------------------------------------
-!> Perform covariance localization for local EnKF on the module-type observation
-!!
-!! The routine is called in the analysis step of the localized
-!! EnKF. It has to apply localization to the two matrices
-!! HP and HPH of the analysis step for the module-type
-!! observation.
-!!
-!! This routine calls the routine PDAFomi_localize_covar
-!! for each observation type. The call allows to specify a
-!! different localization radius and localization functions
-!! for each observation type.
-!!
-  SUBROUTINE localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
-
-    ! Include PDAFomi function
-    USE PDAFomi, ONLY: PDAFomi_localize_covar
-
-    ! Include localization radius and local coordinates
-    USE mod_assimilation, &   
-         ONLY: cradius, locweight, sradius
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
-    INTEGER, INTENT(in) :: dim_obs               !< Dimension of observation vector
-    REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< PE local part of matrix HP
-    REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
-    REAL, INTENT(in)    :: coords_p(:,:)         !< Coordinates of state vector elements
-
-
-! *************************************
-! *** Apply covariance localization ***
-! *************************************
-
-    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, cradius, sradius, &
-         coords_p, HP_p, HPH)
-
-  END SUBROUTINE localize_covar_B
 
 END MODULE obs_B_pdafomi

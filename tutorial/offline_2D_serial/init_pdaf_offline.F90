@@ -17,8 +17,6 @@
 SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
-  USE PDAFomi, &                  ! PDAF-OMI routine
-       ONLY: PDAFomi_set_obs_diag
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
@@ -27,7 +25,7 @@ SUBROUTINE init_pdaf()
        type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, &
-       observe_ens, type_obs_init, do_omi_obsstats
+       observe_ens, type_obs_init
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -116,10 +114,6 @@ SUBROUTINE init_pdaf()
 
   call init_pdaf_parse()
 
-! *** Possibly activate PDAF-OMI observation statistics ***
-
-  IF (do_omi_obsstats) CALL PDAFomi_set_obs_diag(1)
-
 ! *** Initial Screen output ***
 ! *** This is optional      ***
 
@@ -131,7 +125,7 @@ SUBROUTINE init_pdaf()
 ! ***                                               ***
 ! *** Here, the full selection of filters is        ***
 ! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
+! *** reduces this to selected filters.             ***
 ! ***                                               ***
 ! *** For all filters, PDAF_init is first called    ***
 ! *** specifying only the required parameters.      ***
