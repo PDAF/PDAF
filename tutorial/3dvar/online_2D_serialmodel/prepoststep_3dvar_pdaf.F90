@@ -34,10 +34,12 @@
 SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
-  USE mod_model, &
+  USE mod_model, &             ! Model variables
        ONLY: nx, ny
-  USE mod_assimilation, &
+  USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_cvec, Vmat_p
+  USE PDAF, &                  ! PDAF diagnostic routine
+       ONLY: PDAF_diag_stddev_nompi
 
   IMPLICIT NONE
 
@@ -58,10 +60,8 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** local variables ***
   INTEGER :: i, j, member             ! Counters
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
-  REAL :: invdim_ens                  ! Inverse ensemble size
-  REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
-  REAL :: rmserror_est                ! estimated RMS error
-  REAL, ALLOCATABLE :: variance(:)    ! model state variances
+  INTEGER :: pdaf_status              ! status flag
+  REAL :: ens_stddev                  ! estimated RMS error
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   CHARACTER(len=2) :: stepstr         ! String for time step
@@ -85,42 +85,27 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      END IF
   END IF
 
-  ! Allocate fields
-  ALLOCATE(variance(dim_p))
-
-  ! Initialize numbers
-  rmserror_est  = 0.0
-  invdim_ens    = 1.0 / REAL(dim_ens)  
-  invdim_ensm1  = 1.0 / REAL(dim_ens - 1)
-
 
 ! **************************************************************
-! *** Perform prepoststep for 3D-Var in which dim_ens=1      ***
-! *** The sampled error is here computed from B^(1/2)        ***
+! *** Compute sample standard deviation for Vmat_p           ***
+! *** We use here the routine PDAF_diag_stddev_nompi which   ***
+! *** is designed for ensembles. Since for Vmat_p the        ***
+! *** sample normalization by SQRT(dim_cvec-1) is not valid, ***
+! *** we multiply the result of the routine by this factor.  ***
 ! **************************************************************
+
+  ! Set mean to zero to handle modes in Vmat_p
+  state_p(:) = 0
+
+  CALL PDAF_diag_stddev_nompi(dim_p, dim_cvec, state_p, Vmat_p, &
+        ens_stddev, 0, pdaf_status)
+
+  ! Scale for correct standard deviation
+  ens_stddev = ens_stddev*SQRT(REAL(dim_cvec-1))
+
 
   ! *** Initialize state estimate (here we only have a single state)
   state_p(:) = ens_p(:,1)
-
-  ! *** Compute sampled variances ***
-  variance(:) = 0.0
-  DO member = 1, dim_cvec
-     DO j = 1, dim_p
-        variance(j) = variance(j) &
-             + Vmat_p(j,member) * Vmat_p(j,member)
-     END DO
-  END DO
-
-
-! ************************************************************
-! *** Compute RMS errors according to sampled covar matrix ***
-! ************************************************************
-
-  ! total estimated RMS error
-  DO i = 1, dim_p
-     rmserror_est = rmserror_est + variance(i)
-  ENDDO
-  rmserror_est = SQRT(rmserror_est / dim_p)
 
 
 ! *****************
@@ -129,7 +114,7 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   ! Output RMS errors given by sampled covar matrix
   WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', rmserror_est
+       'RMS error according to modes Vmat_p: ', ens_stddev
 
 
 ! *******************
@@ -187,8 +172,6 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! ********************
 ! *** finishing up ***
 ! ********************
-
-  DEALLOCATE(variance)
 
   firsttime = .FALSE.
 

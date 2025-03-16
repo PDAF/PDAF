@@ -42,6 +42,8 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_parallel_pdaf, & ! Model parallelization variables
        ONLY: mype_filter, npes_filter, COMM_filter, &
        MPIerr, MPIstatus
+  USE PDAF, &                  ! PDAF diagnostic routine
+       ONLY: PDAF_diag_stddev
 
   IMPLICIT NONE
 
@@ -62,17 +64,14 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** local variables ***
   INTEGER :: i, j, member, domain     ! Counters
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
-  REAL :: invdim_ens                  ! Inverse ensemble size
-  REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
-  REAL :: rmserror_est                ! estimated RMS error
-  REAL, ALLOCATABLE :: variance_p(:)  ! model state variances
+  INTEGER :: pdaf_status              ! status flag
+  REAL :: ens_stddev                  ! estimated RMS error
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   CHARACTER(len=2) :: stepstr         ! String for time step
   CHARACTER(len=3) :: anastr          ! String for call type (initial, forecast, analysis)
   ! Variables for parallelization - global fields
   INTEGER :: off_p   ! Row-offset according to domain decomposition
-  REAL, ALLOCATABLE :: variance(:)    ! local variance
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
@@ -97,80 +96,26 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      END IF
   END IF
 
-  ! Allocate fields
-  ALLOCATE(variance_p(dim_p))
-  ALLOCATE(variance(dim_state))
-
-  ! Initialize numbers
-  rmserror_est  = 0.0
-  invdim_ens    = 1.0 / REAL(dim_ens)  
-  invdim_ensm1  = 1.0 / REAL(dim_ens - 1)
-
-
 ! **************************************************************
-! *** Perform prepoststep for 3D-Var in which dim_ens=1      ***
-! *** The sampled error is here computed from B^(1/2)        ***
+! *** Compute sample standard deviation for Vmat_p           ***
+! *** We use here the routine PDAF_diag_stddev which         ***
+! *** is designed for ensembles. Since for Vmat_p the        ***
+! *** sample normalization by SQRT(dim_cvec-1) is not valid, ***
+! *** we multiply the result of the routine by this factor.  ***
 ! **************************************************************
+
+  ! Set mean to zero to handle modes in Vmat_p
+  state_p(:) = 0
+
+  CALL PDAF_diag_stddev(dim_p, dim_cvec, state_p, Vmat_p, &
+        ens_stddev, 0, COMM_filter, pdaf_status)
+
+  ! Scale for correct standard deviation
+  ens_stddev = ens_stddev*SQRT(REAL(dim_cvec-1))
+
 
   ! *** Initialize state estimate (here we only have a single state)
   state_p(:) = ens_p(:,1)
-
-  ! *** Compute sampled variances ***
-  variance_p(:) = 0.0
-  DO member = 1, dim_cvec
-     DO j = 1, dim_p
-        variance_p(j) = variance_p(j) &
-             + Vmat_p(j,member) * Vmat_p(j,member)
-     END DO
-  END DO
-
-
-! ******************************************************
-! *** Assemble global variance vector on filter PE 0 ***
-! ******************************************************
-
-  PE0_a: IF (mype_filter /= 0) THEN
-
-     ! send sub-fields from PEs /=0
-     CALL MPI_send(variance_p(1 : dim_p), dim_p, &
-          MPI_DOUBLE_PRECISION,0, mype_filter, COMM_filter, MPIerr)
-
-  ELSE PE0_a
-     ! receive and assemble variance field
-
-     ! On PE 0 init variance directly
-     variance(1 : dim_p) = variance_p(1 : dim_p)
-
-     ! Receive part of variance field from PEs > 0 into 
-     ! correct part of global variance
-
-     off_p = 0
-
-     DO i = 2, npes_filter
-        ! Increment offset
-        off_p = off_p + nx_p*ny
-
-        ! Receive variance part
-        CALL MPI_recv(variance(1 + off_p), nx_p*ny, &
-             MPI_DOUBLE_PRECISION, i - 1, i - 1, COMM_filter, MPIstatus, MPIerr)
-     END DO
-      
-  END IF PE0_a
-
-  DEALLOCATE(variance_p)
-
-
-! ************************************************************
-! *** Compute RMS errors according to sampled covar matrix ***
-! ************************************************************
-
-  ! total estimated RMS error
-  DO i = 1, dim_state
-     rmserror_est = rmserror_est + variance(i)
-  ENDDO
-  rmserror_est = SQRT(rmserror_est / dim_state)
-
-  DEALLOCATE(variance)
 
 
 ! *****************
@@ -180,7 +125,7 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ! Output RMS errors given by sampled covar matrix
   IF (mype_filter == 0) THEN
      WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', rmserror_est
+       'RMS error according to modes Vmat_p: ', ens_stddev
   END IF
 
  

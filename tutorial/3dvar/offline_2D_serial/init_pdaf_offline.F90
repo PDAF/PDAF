@@ -17,18 +17,17 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE PDAF, &                     ! Interface definitions to PDAF core routines
-       ONLY: PDAF_init, PDAF_set_offline_mode
+  USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       incremental, type_forget, forget, &
+       type_forget, forget, &
        locweight, cradius, sradius, &
        type_trans, type_sqrt, &
-       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, &
-       beta_3dvar
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar, &
+       observe_ens, type_obs_init
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -107,7 +106,7 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 0       ! Cut-off radius in grid points for observation domain in local filters
+  cradius = 0.0     ! Cut-off radius in grid points for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
 
@@ -123,6 +122,7 @@ SUBROUTINE init_pdaf()
 
   ! Set size of control vector for ensemble 3D-Var
   ! Using mcols_cvec_ens simulates the effect when localization would be applied
+
   dim_cvec_ens = dim_ens * mcols_cvec_ens
 
 
@@ -141,6 +141,11 @@ SUBROUTINE init_pdaf()
 ! *** For all methods, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
 ! *** Subsequently, PDAF_init is called.            ***
+! ***                                               ***
+! *** As for the ensemble filters, one can after    ***
+! *** call to PDAF_init insert calls to             ***
+! *** PDAF_set_iparam and PDAF_set_rparam to set    ***
+! *** further optional parameters for PDAF.         ***
 ! *****************************************************
 
   ! *** 3D-Var ***

@@ -17,17 +17,17 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE PDAF, &                     ! Interface definitions to PDAF core routines
-       ONLY: PDAF_init, PDAF_get_state
+  USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       incremental, type_forget, forget, &
+       type_forget, forget, &
        locweight, cradius, sradius, &
        type_trans, type_sqrt, delt_obs, ensgroup, &
-       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar, &
+       observe_ens, type_obs_init, do_omi_obsstats
   USE mod_model, &                ! Model variables
        ONLY: nx, ny
   USE obs_A_pdafomi, &            ! Variables for observation type A
@@ -159,6 +159,11 @@ SUBROUTINE init_pdaf()
 ! *** For all methods, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
 ! *** Subsequently, PDAF_init is called.            ***
+! ***                                               ***
+! *** As for the ensemble filters, one can after    ***
+! *** call to PDAF_init insert calls to             ***
+! *** PDAF_set_iparam and PDAF_set_rparam to set    ***
+! *** further optional parameters for PDAF.         ***
 ! *****************************************************
 
   ! *** 3D-Var ***

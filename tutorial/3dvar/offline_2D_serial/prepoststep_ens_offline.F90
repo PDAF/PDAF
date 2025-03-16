@@ -38,6 +38,8 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   USE mod_assimilation, &      ! Model variables
        ONLY: nx, ny
+  USE PDAF, &                  ! PDAF diagnostic routine
+       ONLY: PDAF_diag_stddev_nompi
 
   IMPLICIT NONE
 
@@ -57,11 +59,11 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 ! *** local variables ***
   INTEGER :: i, j, member             ! Counters
+  INTEGER :: pdaf_status              ! status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
-  REAL :: invdim_ens                  ! Inverse ensemble size
-  REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
-  REAL :: rmserror_est                ! estimated RMS error
-  REAL, ALLOCATABLE :: variance(:)    ! model state variances
+  REAL :: ens_stddev                  ! estimated RMS error
+  INTEGER :: nobs                     ! Number of observations in diagnostics
+  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
 
@@ -76,55 +78,14 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
   END IF
 
-  ! Allocate fields
-  ALLOCATE(variance(dim_p))
-
-  ! Initialize numbers
-  rmserror_est  = 0.0
-  invdim_ens    = 1.0 / REAL(dim_ens)  
-  invdim_ensm1  = 1.0 / REAL(dim_ens - 1)
-
-
-! **************************************************************
-! *** Perform prepoststep for SEIK with re-inititialization. ***
-! *** The state and error information is completely in the   ***
-! *** ensemble.                                              ***
-! *** Also performed for SEIK without re-init at the initial ***
-! *** time.                                                  ***
-! **************************************************************
-
-  ! *** Compute mean state
-  WRITE (*, '(8x, a)') '--- compute ensemble mean'
-
-  state_p = 0.0
-  DO member = 1, dim_ens
-     DO i = 1, dim_p
-        state_p(i) = state_p(i) + ens_p(i, member)
-     END DO
-  END DO
-  state_p(:) = invdim_ens * state_p(:)
-
-  ! *** Compute sampled variances ***
-  variance(:) = 0.0
-  DO member = 1, dim_ens
-     DO j = 1, dim_p
-        variance(j) = variance(j) &
-             + (ens_p(j, member) - state_p(j)) &
-             * (ens_p(j, member) - state_p(j))
-     END DO
-  END DO
-  variance(:) = invdim_ensm1 * variance(:)
-
 
 ! ************************************************************
-! *** Compute RMS errors according to sampled covar matrix ***
+! *** Compute ensemble mean and standard deviation         ***
+! *** (=RMS errors according to sampled covar matrix)      ***
 ! ************************************************************
 
-  ! total estimated RMS error
-  DO i = 1, dim_p
-     rmserror_est = rmserror_est + variance(i)
-  ENDDO
-  rmserror_est = SQRT(rmserror_est / dim_p)
+  CALL PDAF_diag_stddev_nompi(dim_p, dim_ens, state_p, ens_p, &
+        ens_stddev, 1, pdaf_status)
 
 
 ! *****************
@@ -133,7 +94,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   ! Output RMS errors given by sampled covar matrix
   WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', rmserror_est
+       'RMS error according to sampled variance: ', ens_stddev
 
 
 ! *******************
@@ -183,8 +144,6 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! ********************
 ! *** finishing up ***
 ! ********************
-
-  DEALLOCATE(variance)
 
   firsttime = .FALSE.
 
