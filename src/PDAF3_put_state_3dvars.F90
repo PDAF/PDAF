@@ -162,7 +162,7 @@ SUBROUTINE PDAF3_put_state_en3dvar_lestkf(collect_state_pdaf, &
      init_dim_obs_f_pdaf, obs_op_f_pdaf, &
      cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-      prepoststep_pdaf, outflag)
+     prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc

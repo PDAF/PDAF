@@ -138,6 +138,8 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 
      CALL PDAF_options_filters(filtertype)
 
+     subtype_filter = -1
+
      ! Set status flag
      flag = -1
 

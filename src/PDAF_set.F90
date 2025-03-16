@@ -193,6 +193,8 @@ SUBROUTINE PDAF_set_iparam(id, value, flag)
 
   USE PDAF_utils_filters, &
        ONLY: PDAF_set_iparam_filters
+  USE PDAF_mod_core, &
+       ONLY: subtype_filter
 
   IMPLICIT NONE
 
@@ -209,7 +211,7 @@ SUBROUTINE PDAF_set_iparam(id, value, flag)
 ! *** Set filter-specific parameter value ***
 ! *******************************************
 
-  CALL PDAF_set_iparam_filters(id, value, inflag)
+  IF (subtype_filter > -1) CALL PDAF_set_iparam_filters(id, value, inflag)
 
   ! Incremenat flag
   flag = flag + inflag
@@ -315,6 +317,8 @@ SUBROUTINE PDAF_set_rparam(id, value, flag)
 
   USE PDAF_utils_filters, &
        ONLY: PDAF_set_rparam_filters
+  USE PDAF_mod_core, &
+       ONLY: subtype_filter
 
   IMPLICIT NONE
 
@@ -331,7 +335,7 @@ SUBROUTINE PDAF_set_rparam(id, value, flag)
 ! *** Set filter-specific parameter value ***
 ! *******************************************
 
-  CALL PDAF_set_rparam_filters(id, value, inflag)
+  IF (subtype_filter > -1) CALL PDAF_set_rparam_filters(id, value, inflag)
 
   ! Incremenat flag
   flag = flag + inflag
