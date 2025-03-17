@@ -1030,6 +1030,108 @@ SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
 
 END SUBROUTINE PDAF_diag_ensstats
 
+subroutine PDAF_compute_moments(dim_p,dim_ens,ens,kmax,moments)
+  ! comutes the unbiased estimator for mean, variance,
+  ! skewness, and excesskurtosis form an ensemble.
+  ! This is more efficent than computing them in isolation.
+  !
+  ! overflow in kurtosis calculation occures if residulal > 10**77 (assuming E+308 is largest number)
+
+  implicit none
+
+  ! *** Arguments ***
+  integer, intent(in) :: dim_p
+  integer, intent(in) :: dim_ens
+  real, dimension(dim_p,dim_ens), intent(in) :: ens
+  integer, intent(in) :: kmax
+  real, dimension(dim_p,kmax), intent(out) :: moments
+
+  ! *** local variables ***
+  integer :: kmax_
+  integer :: i
+
+  integer :: blk_lb, blk_ub, blk_size
+  integer, parameter :: maxblksize = 500
+
+  real, dimension(:,:), allocatable :: ensemble_residuals
+
+  if(kmax>dim_ens) then
+    write(*,'(a,i1,a)') 'WARNING not enough samples to compute ', kmax, '-th moment'
+    kmax_ = dim_ens
+  else
+    kmax_ = kmax
+  end if
+
+  ! first moment (mean)
+  moments(:,1) = sum(ens,dim=2)/dim_ens
+
+  if( kmax_ > 1 ) then
+
+    allocate(ensemble_residuals(maxblksize,dim_ens))
+    blocking: do blk_lb = 1, dim_p, maxblksize
+      blk_ub = MIN(blk_lb + maxblksize - 1, dim_p)
+      blk_size = blk_ub - blk_lb + 1
+
+      ensemble_residuals(:,:) = ens - spread(moments(blk_lb:blk_ub,1),dim=2,ncopies=dim_ens)
+      do i = 2, kmax_
+        ensemble_residuals = ensemble_residuals*ensemble_residuals
+        moments(blk_lb:blk_ub,i) = sum(ensemble_residuals,dim=2)
+      end do
+
+      call PDAF_moments_from_summed_residuals(dim_ens,&
+                                              blk_size,&
+                                              kmax_,&
+                                              moments(blk_lb:blk_ub,2:kmax_),&
+                                              moments(blk_lb:blk_ub,2:kmax_))
+    end do blocking
+    deallocate(ensemble_residuals)
+
+  end if
+
+end subroutine PDAF_compute_moments
+
+subroutine PDAF_moments_from_summed_residuals(dim_ens,dim_p,kmax,power_residual_sums,moments)
+
+  ! computes unbiased central moments from the sum over exponentiated residulals.
+  ! called by PDAF_compute_moments
+  ! you can perform an inplace moment calculation by using the
+  ! same input for power_residual_sums and moments
+
+  implicit none
+
+  ! *** Arguments ***
+  integer, intent(in) :: dim_ens
+  integer, intent(in) :: dim_p
+  integer, intent(in) :: kmax
+  real, dimension(1:dim_p,2:kmax), intent(in) :: power_residual_sums ! columns should contain [sum(r**2) sum(r**3) ... sun(r**kmax)] with r = x-mean(x)
+  real, dimension(1:dim_p,2:kmax), intent(out) :: moments
+
+  ! variance
+  moments(:,2) = power_residual_sums(:,2)/(dim_ens-1)
+
+  ! skewness
+  if(kmax>2) then
+    where(moments(:,2)/=0)
+      moments(:,3) = real(dim_ens)/real((dim_ens-1)*(dim_ens-2)) &
+                    * power_residual_sums(:,3)/moments(:,2)**(3./2.)
+    elsewhere
+      moments(:,3) = 0.
+    endwhere
+  end if
+
+  ! excess kurtosis
+  if(kmax>3) then
+    where(moments(:,2)/=0)
+      moments(:,4) = real(dim_ens*(dim_ens+1))/real((dim_ens-1)*(dim_ens-2)*(dim_ens-3)) &
+                      * power_residual_sums(:,4)/moments(:,2)**2
+      moments(:,4) = moments(:,4) - 3.*real((dim_ens-1)**2)/real(((dim_ens-2)*(dim_ens-3)))
+    elsewhere
+      moments(:,4) = 0.
+    endwhere
+  end if
+
+end subroutine PDAF_moments_from_summed_residuals
+
 
 !--------------------------------------------------------------------------
 !> Increment rank histogram
