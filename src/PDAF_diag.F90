@@ -1031,30 +1031,26 @@ SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
 END SUBROUTINE PDAF_diag_ensstats
 
 !--------------------------------------------------------------------------
-!> @brief Computes the unbiased estimator for mean, variance, skewness, and excess kurtosis.
+!> Computes the unbiased estimator for mean, variance, skewness, and excess kurtosis.
 !!
 !! This routine is faster than computing the moments in isolation.
 !! Overflow in kurtosis calculation occures if residulal > 10**77 (assuming E+308 is largest number)
 !!
-!! @param[in]       dim_p    local size of the state
-!! @param[in]       dim_ens  number of ensemble members/samples
-!! @param[in]       ens      ensemble matrix
-!! @param[in]       kmax     maximum order of central moment that is comuted, maximum is 4
-!! @param[out]      moments  The columns contain the moments of the ensemble (mean, variance, skewness, excess kurtosis)
 !! __Revision history:__
 !! * 2023-08 - Armin Corbin - original code for tiegcm-pdaf
 !! * 2025-03 - Armin Corbin - ported for PDAF 3
 !!
-SUBROUTINE PDAF_compute_moments(dim_p,dim_ens,ens,kmax,moments)
+SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments)
 
   IMPLICIT NONE
 
   ! *** Arguments ***
-  INTEGER, INTENT(IN) :: dim_p
-  INTEGER, INTENT(IN) :: dim_ens
-  REAL, DIMENSION(dim_p,dim_ens), INTENT(IN) :: ens
-  INTEGER, INTENT(IN) :: kmax
-  REAL, DIMENSION(DIM_P,KMAX), INTENT(OUT) :: moments
+  INTEGER, INTENT(IN) :: dim_p              !< local size of the state
+  INTEGER, INTENT(IN) :: dim_ens            !< number of ensemble members/samples
+  REAL, INTENT(IN) :: ens(dim_p,dim_ens)    !< ensemble matrix
+  INTEGER, INTENT(IN) :: kmax               !< maximum order of central moment that is computed, maximum is 4
+  REAL, INTENT(OUT) :: moments(dim_p, kmax) !< The columns contain the moments of the ensemble
+                                            !< (mean, variance, skewness, excess kurtosis)
 
   ! *** local variables ***
   INTEGER :: kmax_
@@ -1063,11 +1059,11 @@ SUBROUTINE PDAF_compute_moments(dim_p,dim_ens,ens,kmax,moments)
   INTEGER :: blk_lb, blk_ub, blk_size
   INTEGER, PARAMETER :: maxblksize = 500
 
-  REAL, DIMENSION(:,:), ALLOCATABLE :: ensemble_residuals
-  REAL, DIMENSION(:,:), ALLOCATABLE :: exponentiated_residuals
+  REAL, ALLOCATABLE :: ensemble_residuals(:,:)
+  REAL, ALLOCATABLE :: exponentiated_residuals(:,:)
 
   IF(kmax>dim_ens) THEN
-    write(*,'(a,i1,a)') 'WARNING not enough samples to compute ', kmax, '-th moment'
+    WRITE(*,'(a,i1,a)') 'WARNING not enough samples to compute ', kmax, '-th moment'
     kmax_ = dim_ens
     ELSE
     kmax_ = kmax
@@ -1095,27 +1091,24 @@ SUBROUTINE PDAF_compute_moments(dim_p,dim_ens,ens,kmax,moments)
       CALL PDAF_moments_from_summed_residuals(dim_ens,&
                                               blk_size,&
                                               kmax_,&
-                                              moments(blk_lb:blk_ub,2:kmax_),&
-                                              moments(blk_lb:blk_ub,2:kmax_))
+                                              moments(blk_lb:blk_ub,1:kmax_),&
+                                              moments(blk_lb:blk_ub,1:kmax_))
     END DO blocking
     DEALLOCATE(ensemble_residuals)
     DEALLOCATE(exponentiated_residuals)
 
   END IF
 
-END SUBROUTINE PDAF_compute_moments
+END SUBROUTINE PDAF_diag_compute_moments
 
 !--------------------------------------------------------------------------
-!> @brief Computes the unbiased estimator for mean, variance, skewness, and excess kurtosis from the sum of exponentiated residulals
+!> Computes the unbiased estimator for mean, variance, skewness, and excess
+!! kurtosis from the sum of exponentiated residulals
 !!
-!! Computes the unbiased estimator for mean, variance, skewness, and excess kurtosis from the sum of exponentiated residulals.
-!! you can perform an inplace moment calculation by using the same input for sum_expo_resid and moments
+!! Computes the unbiased estimator for mean, variance, skewness, and excess
+!! kurtosis from the sum of exponentiated residulals. You can perform an inplace
+!! moment calculation by using the same input for sum_expo_resid and moments
 !!
-!! @param[in]  dim_ens             number of ensemble members/samples
-!! @param[in]  dim_p               local size of the state
-!! @param[in]  kmax                maximum order of central moment that is comuted, maximum is 4
-!! @param[in]  sum_expo_resid               sum of exponentiated residulals [sum(r**2) sum(r**3) ... sun(r**kmax)]
-!! @param[out] moments             The columns contain the moments of the ensemble (mean, variance, skewness, excess kurtosis)
 !! __Revision history:__
 !! * 2023-08 - Armin Corbin - original code for tiegcm-pdaf
 !! * 2025-03 - Armin Corbin - ported for PDAF 3
@@ -1125,11 +1118,13 @@ SUBROUTINE PDAF_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,
   IMPLICIT NONE
 
   ! *** Arguments ***
-  INTEGER, INTENT(IN) :: dim_ens
-  INTEGER, INTENT(IN) :: dim_p
-  INTEGER, INTENT(IN) :: kmax
-  REAL, DIMENSION(1:dim_p,2:kmax), INTENT(IN) :: sum_expo_resid
-  REAL, DIMENSION(1:dim_p,2:kmax), INTENT(OUT) :: moments
+  INTEGER, INTENT(IN) :: dim_ens  !< number of ensemble members/samples
+  INTEGER, INTENT(IN) :: dim_p    !< local size of the state
+  INTEGER, INTENT(IN) :: kmax     !< maximum order of central moment that is computed, maximum is 4
+  REAL, INTENT(IN) :: sum_expo_resid(dim_p, kmax) ! sum of exponentiated residulals
+                                  !< [sum(r**2) sum(r**3) ... sum(r**kmax)]
+  REAL, INTENT(INOUT) :: moments(dim_p, kmax)     !  The columns contain the moments of the ensemble
+                                  !< (mean, variance, skewness, excess kurtosis)
 
   ! unbiased estimator of variance
   ! k2 = sum(r**2)/(n-1)
