@@ -54,6 +54,8 @@ CONTAINS
          ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
          type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
          HX_l, HXbar_l, obs_l
+    USE PDAFomi_obs_f, &              ! PDAF-OMI variables
+         ONLY: omi_n_obstypes => n_obstypes, omi_obs_diag => obs_diag
 ! TEMPLATE: Include here variables from module of the DA method
     USE PDAF_LOCALTEMPLATE, &
          ONLY: localfilter, debug, forget, type_forget, &
@@ -537,6 +539,24 @@ CONTAINS
 
 ! *** Clean up from local analysis update ***
     DEALLOCATE(rndmat)
+
+
+! ******************************************************
+! *** Initialize analysis observed ensemble and mean ***
+! ******************************************************
+! +++ TEMPLATE:
+! +++ This additional call to PDAFomi_init initializes
+! +++ the observed analysis ensemble and its mean. This
+! +++ is used in the observation diagnostics of PDAF-OMI
+
+  IF (omi_n_obstypes>0 .AND. omi_obs_diag>0) THEN
+     ! This call initializes HX_p, HXbar_p in the module PDAFobs
+     ! for the analysis ensemble
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .false., .true., .true., .false.)
+  END IF
+
 #else
     WRITE (*,'(/5x,a/)') &
          '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'
@@ -550,6 +570,10 @@ CONTAINS
 ! +++ TEMPLATE:
 ! +++ The call to the pre/poststep routine for the analysis
 ! +++ ensemble is standard and should be kept
+
+! **************************************
+! *** Poststep for analysis ensemble ***
+! **************************************
 
     CALL PDAF_timeit(5, 'new')
     IF (mype == 0 .AND. screen > 0) THEN

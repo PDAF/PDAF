@@ -87,7 +87,7 @@ PDAF: Initialization completed
 PDAF    ENSRF configuration
 PDAF          ensemble size:    4
 PDAF          filter sub-type= 1
-PDAF              --> 2-step local least squares EAKF by Anderson (2003)
+PDAF              --> 2-step local least squares EAKF cf. Anderson (2003)
 PDAF          Use fixed forgetting factor: 0.80
 PDAF          param_int(8) observe_ens
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
@@ -190,7 +190,7 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.004 s
+PDAF          Ensemble forecast:                   0.003 s
 PDAF            MPI communication in PDAF:           0.003 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
@@ -198,7 +198,7 @@ PDAF          ENSRF analysis:                        0.002 s
 PDAF            PDAF-internal operations:             0.000 s
 PDAF            OMI-internal routines:                0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:               0.002 s
+PDAF              init_dim_obs_pdafomi:               0.000 s
 PDAF              obs_op_pdafomi:                     0.000 s
-PDAF              localize_covar_serial_pdafomi:      0.000 s
+PDAF              localize_covar_serial_pdafomi:      0.002 s
 PDAF          prepoststep_pdaf:                     0.009 s

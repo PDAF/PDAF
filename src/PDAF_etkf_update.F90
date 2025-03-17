@@ -107,7 +107,7 @@ SUBROUTINE PDAFetkf_update(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
-  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
         DO i = 1, dim_p
@@ -193,7 +193,7 @@ SUBROUTINE PDAFetkf_update(step, dim_p, dim_obs_p, dim_ens, &
      IF (subtype==1) THEN
         WRITE (*, '(a, 1x, i7, 3x, a)') &
              'PDAF', step, 'Assimilating observations - ETKF following Hunt et al. (2007)'
-     ELSEIF (subtype==3) THEN
+     ELSEIF (subtype==10 .OR. subtype==11) THEN
         WRITE (*, '(a, i7, 3x, a)') &
              'PDAF ', step, 'Assimilating observations - ETKF with fixed ensemble'
      ELSE
@@ -241,7 +241,7 @@ SUBROUTINE PDAFetkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
 ! ***  Execute Analysis step  ***
 
-  IF (subtype == 0 .OR. subtype == 2) THEN
+  IF (subtype == 0 .OR. subtype == 10) THEN
      ! *** ETKF analysis using T-matrix ***
      CALL PDAF_etkf_ana_T(step, dim_p, dim_obs_p, dim_ens, &
           state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &
@@ -251,7 +251,7 @@ SUBROUTINE PDAFetkf_update(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_etkf_ana(step, dim_p, dim_obs_p, dim_ens, &
           state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &
           forget_ana, U_prodRinvA, screen, type_trans, debug, flag)
-  ELSE IF (subtype == 3) THEN
+  ELSE IF (subtype == 11) THEN
      ! Analysis with state update but no ensemble transformation
      CALL PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
           state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &

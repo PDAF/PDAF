@@ -143,14 +143,14 @@ CONTAINS
 
     ! Some special conditions
     IF (dim_pint<4) THEN
-       IF (subtype==0 .OR. subtype==4 .OR. subtype==6 .OR. subtype==7) THEN
+       IF (subtype==0 .OR. subtype==3 .OR. subtype==4) THEN
           WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): Missing specification of control vector dimension - param_int(4)!'
           outflag = 3
        END IF
     END IF
 
     IF (dim_pint<5) THEN
-       IF (subtype==1 .OR. subtype==4) THEN
+       IF (subtype>0 .AND. subtype<3) THEN
           dim_cvec_ens = dim_ens
        END IF
     END IF
@@ -163,7 +163,7 @@ CONTAINS
     ensemblefilter = .TRUE.
  
     ! Initialize flag for fixed-basis filters
-    IF (subtype == 2 .OR. subtype == 3) THEN
+    IF (subtype == 10 .OR. subtype == 11) THEN
        fixedbasis = .TRUE.
     ELSE
        fixedbasis = .FALSE.
@@ -174,7 +174,7 @@ CONTAINS
 ! *** Check subtype ***
 ! *********************
 
-    IF (subtype<0 .OR. subtype>8 .OR. subtype==2 .OR. subtype==3 .OR. subtype==5) THEN
+    IF (subtype<0 .OR. subtype>4) THEN
        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
        outflag = 3
     END IF
@@ -263,15 +263,15 @@ CONTAINS
        ELSEIF (subtype == 1) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using LESTKF for ensemble transformation'
           WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
-       ELSEIF (subtype == 4) THEN
+       ELSEIF (subtype == 2) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using ESTKF for ensemble transformation'
           WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
-       ELSEIF (subtype == 6) THEN
+       ELSEIF (subtype == 3) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using LESTKF for ensemble transformation'
           WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
           WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
           WRITE (*, '(a, 12x, a, 2i7)') 'PDAF', '--> size of ensemble and parameterized parts', dim_cvec_ens, dim_cvec
-       ELSEIF (subtype == 7) THEN
+       ELSEIF (subtype == 4) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using ESTKF for ensemble transformation'
           WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
           WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
@@ -292,7 +292,7 @@ CONTAINS
        ELSE IF (type_opt == 13) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> direct implementation of CG with decomposed control vector'
        END IF
-       IF (subtype==0 .OR. subtype>=6) &
+       IF (subtype==0 .OR. subtype>=3) &
             WRITE(*, '(a, 10x, a, i3)') &
             'PDAF', 'param_int(4) dim_cvec=', dim_cvec
        IF (subtype>0) &
@@ -335,7 +335,7 @@ CONTAINS
        END IF
 
        IF (subtype>0) THEN
-          IF (subtype==1 .OR. subtype==4) THEN
+          IF (subtype==1 .OR. subtype==3) THEN
              WRITE(*, '(a, 10x, a)') &
                   'PDAF', '___ Parameters for LESTKF ___'
           ELSE
@@ -345,13 +345,13 @@ CONTAINS
           WRITE (*, '(a, 12x, a, i5)') 'PDAF', '---> ensemble size:', dim_ens
           WRITE(*, '(a, 10x, a, i3)') &
                'PDAF', 'param_int(11) type_forget=', type_forget
-          IF (subtype==4 .OR. subtype==7) THEN
+          IF (subtype==2 .OR. subtype==4) THEN
              IF (type_forget == 0) THEN
                 WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
              ELSEIF (type_forget == 1) THEN
                 WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
              ENDIF
-          ELSEIF (subtype==1 .OR. subtype==6) THEN
+          ELSEIF (subtype==1 .OR. subtype==3) THEN
              IF (type_forget == 0) THEN
                 WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
              ELSEIF (type_forget == 1) THEN
@@ -381,7 +381,7 @@ CONTAINS
        IF (subtype>0) &
             WRITE(*, '(a, 10x, a, f10.3)') &
             'PDAF', 'param_real(1) forget=', forget
-       IF (subtype>=6) &
+       IF (subtype>=3) &
             WRITE(*, '(a, 10x, a, f10.3)') &
             'PDAF', 'param_real(2) hybrid weight in hyb3DVar: beta_3dvar=', beta_3dvar
        IF (type_opt == 1) THEN
@@ -586,9 +586,9 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: incremental 3D-Var with parameterized covariance matrix'
     WRITE(*, '(a, 7x, a)') 'PDAF', '1: 3D ensemble Var using LESTKF for ensemble transformation'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '4: 3D ensemble Var using ESTKF for ensemble transformation'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '6: hybrid 3D-Var using LESTKF for ensemble transformation'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '7: hybrid 3D-Var using ESTKF for ensemble transformation'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '2: 3D ensemble Var using ESTKF for ensemble transformation'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '3: hybrid 3D-Var using LESTKF for ensemble transformation'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '4: hybrid 3D-Var using ESTKF for ensemble transformation'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
@@ -671,8 +671,8 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
     WRITE(*, '(a, 11x, a)') &
-         'PDAF', '>=1 for subtypes 0 and 1; not larger than total number of processors'
-    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 2 and 3'
+         'PDAF', '>=1 for subtypes >0; not larger than total number of processors'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtype 0'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
     WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
     WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'
@@ -794,7 +794,7 @@ CONTAINS
 
           IF (subtype_filter==0) THEN
              WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis:', pdaf_time_tot(3), 's'
-          ELSEIF (subtype_filter>0 .AND. subtype_filter<4) THEN
+          ELSEIF (subtype_filter==1 .AND. subtype_filter==2) THEN
              WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'En3DVAR analysis:', pdaf_time_tot(3), 's'
           ELSE
              WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Hyb3DVAR analysis:', pdaf_time_tot(3), 's'
@@ -805,7 +805,7 @@ CONTAINS
              ! Output when using OMI
 
              time_omi = pdaf_time_tot(50) + pdaf_time_tot(48)
-             IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+             IF(subtype_filter==1 .OR. subtype_filter==3) THEN
                 time_omi = time_omi + pdaf_time_tot(46) + pdaf_time_tot(47)
                 IF (type_forget==1) &
                      time_omi = time_omi + pdaf_time_tot(49) + pdaf_time_tot(52)
@@ -819,7 +819,7 @@ CONTAINS
              ELSE
                 WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_pdaf:', pdaf_time_tot(61), 's'
                 WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_adj_pdaf:', pdaf_time_tot(63), 's'
-                IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+                IF(subtype_filter==1 .OR. subtype_filter==3) THEN
                    WRITE (*, '(a, 12x, a)') 'PDAF', 'Timers in LESTKF only'
                    WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
                    WRITE (*, '(a, 14x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
@@ -835,11 +835,11 @@ CONTAINS
              WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
              WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'obs_op_lin_pdafomi:', pdaf_time_tot(64), 's'
              WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'obs_op_adj_pdafomi:', pdaf_time_tot(65), 's'
-             IF(subtype_filter==1 .OR. subtype_filter==6) &
+             IF(subtype_filter==1 .OR. subtype_filter==3) &
                   WRITE (*, '(a, 14x, a, 6x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdafomi:', pdaf_time_tot(38), 's'
 
 !            WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI-internal routines'
-!            IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+!            IF(subtype_filter==1 .OR. subtype_filter==3) THEN
 !               IF (type_forget==1) THEN
 !                  WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvar:', pdaf_time_tot(49), 's'
 !               END IF
@@ -869,7 +869,7 @@ CONTAINS
                 WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'obs_ens_op_lin_pdaf:', pdaf_time_tot(64), 's'
                 WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_adj_pdaf:', pdaf_time_tot(63), 's'
                 WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'obs_ens_op_adj_pdaf:', pdaf_time_tot(65), 's'
-                IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+                IF(subtype_filter==1 .OR. subtype_filter==3) THEN
                    WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in LESTKF only'
                    WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
                    WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_f_pdaf:', pdaf_time_tot(43), 's'
@@ -904,7 +904,7 @@ CONTAINS
        WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') &
             'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
@@ -918,9 +918,9 @@ CONTAINS
           ! Filter-specific part
           IF (subtype_filter==0) THEN
              WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis (3):', pdaf_time_tot(3), 's'
-          ELSEIF(subtype_filter==1 .OR. subtype_filter==6) THEN
+          ELSEIF(subtype_filter==1 .OR. subtype_filter==3) THEN
              WRITE (*, '(a, 10x, a, 10x, F11.3, 1x, a)') 'PDAF', 'En3DVAR analysis (3):', pdaf_time_tot(3), 's'
-          ELSEIF(subtype_filter==4 .OR. subtype_filter==7) THEN
+          ELSEIF(subtype_filter==2 .OR. subtype_filter==4) THEN
              WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'hyb3DVAR analysis (3):', pdaf_time_tot(3), 's'
           END IF
           IF (subtype_filter>0) &
@@ -931,7 +931,7 @@ CONTAINS
           WRITE (*, '(a, 14x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute J and grad J (53):', pdaf_time_tot(53), 's'
           WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'execute solver (54):', pdaf_time_tot(54), 's'
           WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'update state vector (19):', pdaf_time_tot(19), 's'
-          IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+          IF(subtype_filter==1 .OR. subtype_filter==3) THEN
              WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in ESTKF only'
              WRITE (*, '(a, 12x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (10):', pdaf_time_tot(10), 's'
              WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute inverse of A (11):', pdaf_time_tot(11), 's'
@@ -940,7 +940,7 @@ CONTAINS
              WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'transform ensemble (21):', pdaf_time_tot(21), 's'
              IF (dim_lag >0) &
                   WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
-          ELSEIF(subtype_filter==4 .OR. subtype_filter==7) THEN
+          ELSEIF(subtype_filter==2 .OR. subtype_filter==4) THEN
              WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in LESTKF only'
              WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'global preparations (7):', pdaf_time_tot(7), 's'
              WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'local analysis loop (8):', pdaf_time_tot(8), 's'
@@ -968,7 +968,7 @@ CONTAINS
        WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') &
             'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
@@ -982,9 +982,9 @@ CONTAINS
           ! Filter-specific part
           IF (subtype_filter==0) THEN
              WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis (3):', pdaf_time_tot(3), 's'
-          ELSEIF(subtype_filter==1 .OR. subtype_filter==6) THEN
+          ELSEIF(subtype_filter==1 .OR. subtype_filter==3) THEN
              WRITE (*, '(a, 10x, a, 10x, F11.3, 1x, a)') 'PDAF', 'En3DVAR analysis (3):', pdaf_time_tot(3), 's'
-          ELSEIF(subtype_filter==4 .OR. subtype_filter==7) THEN
+          ELSEIF(subtype_filter==2 .OR. subtype_filter==4) THEN
              WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'hyb3DVAR analysis (3):', pdaf_time_tot(3), 's'
           END IF
           IF (subtype_filter>0) &
@@ -1001,7 +1001,7 @@ CONTAINS
                WRITE (*, '(a, 14x, a, 2x, F11.3, 1x, a)') 'PDAF', 'compute Hessian times d (59):', pdaf_time_tot(59), 's'
           WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'execute solver (54):', pdaf_time_tot(54), 's'
           WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'update state vector (19):', pdaf_time_tot(19), 's'
-          IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+          IF(subtype_filter==1 .OR. subtype_filter==3) THEN
              WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in ESTKF only'
              WRITE (*, '(a, 12x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (10):', pdaf_time_tot(10), 's'
              WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute inverse of A (11):', pdaf_time_tot(11), 's'
@@ -1016,7 +1016,7 @@ CONTAINS
              IF (dim_lag >0) &
                   WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
 
-          ELSEIF(subtype_filter==4 .OR. subtype_filter==7) THEN
+          ELSEIF(subtype_filter==2 .OR. subtype_filter==4) THEN
              WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in LESTKF only'
              WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'global preparations (7):', pdaf_time_tot(7), 's'
              WRITE (*, '(a, 14x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'

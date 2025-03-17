@@ -6,8 +6,8 @@ export DA_SPECS_3DVar="-dim_ens 1 -dim_cvec 9 -filtertype 200 -subtype 0"
 export DA_SPECS_3DEnVar="-dim_ens 9 -filtertype 200"
 export DA_SPECS_hyb3DVar="-dim_ens 9 -filtertype 200"
 
-COMPILEPDAF=0
-COMPILE=0
+COMPILEPDAF=1
+COMPILE=1
 RUN_OFFLINE=1
 RUN_ONLINE_SERIAL=1
 RUN_ONLINE_PARALLEL=1
@@ -105,7 +105,7 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
     make cleandataq
-    ./PDAF_offline $DA_SPECS_3DEnVar  -subtype 4 -type_opt 2 > ../out.offline_2D_serial_3denvar_opt2
+    ./PDAF_offline $DA_SPECS_3DEnVar  -subtype 2 -type_opt 2 > ../out.offline_2D_serial_3denvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_ESTKF
 
@@ -113,7 +113,7 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
     make cleandataq
-    ./PDAF_offline $DA_SPECS_hyb3DVar -subtype 6 -type_opt 2 -dim_cvec 9 > \
+    ./PDAF_offline $DA_SPECS_hyb3DVar -subtype 3 -type_opt 2 -dim_cvec 9 > \
 	../out.offline_2D_serial_3dlhybvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_lenvar_cg
@@ -123,7 +123,7 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
     make cleandataq
-    ./PDAF_offline $DA_SPECS_hyb3DVar -subtype 7 -type_opt 2 -dim_cvec 9 > \
+    ./PDAF_offline $DA_SPECS_hyb3DVar -subtype 4 -type_opt 2 -dim_cvec 9 > \
 	../out.offline_2D_serial_3dhybvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_ESTKF
@@ -175,7 +175,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_serialmodel
     make cleandataq
-    mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_3DEnVar -subtype 4 -type_opt 2 > \
+    mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_3DEnVar -subtype 2 -type_opt 2 > \
 	../out.online_2D_serialmodel_3denvar_opt2
     cd ..
 #    echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-4"
@@ -196,7 +196,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_serialmodel
     make cleandataq
-    mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 6 -type_opt 2 -dim_cvec 9 > ../out.online_2D_serialmodel_3dlhybvar_opt2
+    mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 3 -type_opt 2 -dim_cvec 9 > ../out.online_2D_serialmodel_3dlhybvar_opt2
     cd ..
     python ../verification/check_online_envar2.py 1.e-9 online_2D_serialmodel online_2D_serialmodel_lhybvar_cg
 
@@ -204,7 +204,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_serialmodel
     make cleandataq
-    mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 7 -type_opt 2 -dim_cvec 9 > ../out.online_2D_serialmodel_3dhybvar_opt2
+    mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 4 -type_opt 2 -dim_cvec 9 > ../out.online_2D_serialmodel_3dhybvar_opt2
     cd ..
     python ../verification/check_online_envar2.py 1.e-9 online_2D_serialmodel online_2D_serialmodel_hybvar_cg_ESTKF
 
@@ -212,7 +212,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_serialmodel
     make cleandataq
-    mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_3DEnVar -subtype 4 -type_opt 3 > ../out.online_2D_serialmodel_3denvar_opt3
+    mpirun --oversubscribe -np 9 ./model_pdaf $DA_SPECS_3DEnVar -subtype 2 -type_opt 3 > ../out.online_2D_serialmodel_3denvar_opt3
     cd ..
     python ../verification/check_online_envar2.py 1.e-5 online_2D_serialmodel online_2D_serialmodel_envar_plaincg_ESTKF
     echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-9"
@@ -264,7 +264,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_parallelmodel
     make cleandataq
-    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_3DEnVar -subtype 4 -type_opt 12 > ../out.online_2D_parallelmodel_3denvar_opt12
+    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_3DEnVar -subtype 2 -type_opt 12 > ../out.online_2D_parallelmodel_3denvar_opt12
     cd ..
 #    echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-4"
 #    python ../verification/check_online_envar2.py 1.e-4 online_2D_parallelmodel online_2D_serialmodel_ESTKF
@@ -275,7 +275,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_parallelmodel
     make cleandataq
-    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 6 -type_opt 12 -dim_cvec 9 > ../out.online_2D_parallelmodel_3dlhybvar_opt12
+    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 3 -type_opt 12 -dim_cvec 9 > ../out.online_2D_parallelmodel_3dlhybvar_opt12
     cd ..
     python ../verification/check_online_envar2.py 1.e-9 online_2D_parallelmodel online_2D_serialmodel_lhybvar_cg
 
@@ -283,7 +283,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_parallelmodel
     make cleandataq
-    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 7 -type_opt 12 -dim_cvec 9 > ../out.online_2D_parallelmodel_3dhybvar_opt12
+    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 4 -type_opt 12 -dim_cvec 9 > ../out.online_2D_parallelmodel_3dhybvar_opt12
     cd ..
     python ../verification/check_online_envar2.py 1.e-9 online_2D_parallelmodel online_2D_serialmodel_hybvar_cg_ESTKF
     
@@ -300,7 +300,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_parallelmodel
     make cleandataq
-    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_3DEnVar -subtype 4 -type_opt 13 > ../out.online_2D_parallelmodel_3denvar_opt13
+    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_3DEnVar -subtype 2 -type_opt 13 > ../out.online_2D_parallelmodel_3denvar_opt13
     cd ..
     python ../verification/check_online_envar2.py 1.e-5 online_2D_parallelmodel  online_2D_serialmodel_envar_plaincg_ESTKF
 #echo "   -> compare to ESTKF case online_2D_serialmodel_ESTKF - expect accuracy < 1.e-9"
@@ -318,7 +318,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_parallelmodel
     make cleandataq
-    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 6 -type_opt 13 -dim_cvec 9 > ../out.online_2D_parallelmodel_3dlhybvar_opt13
+    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 3 -type_opt 13 -dim_cvec 9 > ../out.online_2D_parallelmodel_3dlhybvar_opt13
     cd ..
     python ../verification/check_online_envar2.py 1.e-9 online_2D_parallelmodel online_2D_serialmodel_lhybvar_plaincg
 
@@ -326,7 +326,7 @@ then
     export OMP_NUM_THREADS=1
     cd online_2D_parallelmodel
     make cleandataq
-    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 7 -type_opt 13 -dim_cvec 9 > ../out.online_2D_parallelmodel_3dhybvar_opt13
+    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_hyb3DVar -subtype 4 -type_opt 13 -dim_cvec 9 > ../out.online_2D_parallelmodel_3dhybvar_opt13
     cd ..
     python ../verification/check_online_envar2.py 1.e-9 online_2D_parallelmodel online_2D_serialmodel_hybvar_cg_ESTKF
 

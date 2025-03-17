@@ -83,20 +83,20 @@ SUBROUTINE assimilate_pdaf_offline()
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           prepoststep_ens_offline, status_pdaf)
-  ELSEIF (subtype==4) THEN
+  ELSEIF (subtype==2) THEN
      ! Ensemble 3D-Var with global ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_en3dvar_estkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           prepoststep_ens_offline, status_pdaf)
-  ELSEIF (subtype==6) THEN
+  ELSEIF (subtype==3) THEN
      ! Hybrid 3D-Var with local ESTKF update of ensemble perturbations
      CALL PDAFlocalomi_put_state_hyb3dvar_lestkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           prepoststep_ens_offline, status_pdaf)
-  ELSEIF (subtype==7) THEN
+  ELSEIF (subtype==4) THEN
      ! Hybrid 3D-Var with global ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_hyb3dvar_estkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &

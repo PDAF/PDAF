@@ -134,7 +134,7 @@ CONTAINS
     localfilter = 0
 
     ! Initialize flag for fixed-basis filters
-    IF (subtype == 2 .OR. subtype == 3) THEN
+    IF (subtype == 10 .OR. subtype == 11) THEN
        fixedbasis = .TRUE.
     ELSE
        fixedbasis = .FALSE.
@@ -145,7 +145,7 @@ CONTAINS
 ! *** Check subtype ***
 ! *********************
 
-    IF (subtype<0 .OR. subtype>3) THEN
+    IF (.NOT.(subtype==0 .OR. subtype==10 .OR. subtype==11)) THEN
        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
        outflag = 3
     END IF
@@ -222,9 +222,9 @@ CONTAINS
        WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
        IF (subtype == 0) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard ESTKF'
-       ELSE IF (subtype == 2) THEN
+       ELSE IF (subtype == 10) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF with fixed error-space basis'
-       ELSE IF (subtype == 3) THEN
+       ELSE IF (subtype == 11) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF with fixed state covariance matrix'
        END IF
        WRITE(*, '(a, 10x, a, i3)') &
@@ -426,8 +426,8 @@ CONTAINS
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard implementation with ensemble integration'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '2: Fixed error space basis'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '3: Fixed state covariance matrix'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '10: Fixed error space basis'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '11: Fixed state covariance matrix'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
@@ -478,8 +478,8 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
     WRITE(*, '(a, 11x, a)') &
-         'PDAF', '>=1 for subtypes 0 and 1; not larger than total number of processors'
-    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 2 and 3'
+         'PDAF', '>=1 for subtype 0; not larger than total number of processors'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 10 and 11'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
     WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
     WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'
@@ -546,7 +546,7 @@ CONTAINS
        WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
             'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
@@ -582,7 +582,7 @@ CONTAINS
        WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
        WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 10x, a, 17x, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
@@ -643,7 +643,7 @@ CONTAINS
        WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
        WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
@@ -661,7 +661,7 @@ CONTAINS
           WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (10):', pdaf_time_tot(10), 's'
           WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Ainv (11):', pdaf_time_tot(11), 's'
           WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'
-          IF (subtype_filter /=3 ) THEN
+          IF (subtype_filter /= 11) THEN
              WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
              WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'transform ensemble (21):', pdaf_time_tot(21), 's'
              IF (dim_lag >0) &
@@ -685,7 +685,7 @@ CONTAINS
        WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
        WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
@@ -703,7 +703,7 @@ CONTAINS
           WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (10):', pdaf_time_tot(10), 's'
           WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Ainv (11):', pdaf_time_tot(11), 's'
           WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'
-          IF (subtype_filter /= 3) THEN
+          IF (subtype_filter /= 11) THEN
              WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
              WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'SQRT(Ainv) (32):', pdaf_time_tot(32), 's'
              WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'

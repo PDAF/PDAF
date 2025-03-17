@@ -176,7 +176,6 @@ SUBROUTINE init_pdaf()
           screen, status_pdaf)
   END IF
 
-
 ! *** Check whether initialization of PDAF was successful ***
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &

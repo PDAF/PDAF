@@ -260,7 +260,7 @@ write (*,*) 'PDAF_GET_STATE_MOD!!'
         ! *** not includes the filter PEs           ***
 
         IF ((mype_world == 0) .AND. (screen > 0)) THEN
-           IF (subtype_filter == 2 .OR. subtype_filter == 3) THEN
+           IF (subtype_filter == 10 .OR. subtype_filter == 11) THEN
               ! Output for fixed-basis (only SEEK/SEIK/LSEIK/ESTKF/LESTKF)
               WRITE (*, '(a, 5x, a)') 'PDAF', 'Fixed basis - evolve only state estimate'
            ELSE
@@ -284,7 +284,7 @@ write (*,*) 'PDAF_GET_STATE_MOD!!'
      END IF doevol
 
      ENSF1: IF (ensemblefilter .AND. filterpe &
-          .AND. (subtype_filter == 2 .OR. subtype_filter == 3)) THEN
+          .AND. (subtype_filter == 10 .OR. subtype_filter == 11)) THEN
 
         ! *** Compute ensemble mean state ***
         state = 0.0
@@ -319,7 +319,7 @@ write (*,*) 'PDAF_GET_STATE_MOD!!'
 ! ********************************************************
   doevol1: IF (nsteps > 0) THEN
      IF (ensemblefilter) THEN
-        IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
+        IF (subtype_filter/=10 .AND. subtype_filter/=11) THEN
            IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
                 WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Evolve member ', member_get, &
                 'in task ', task_id
@@ -342,7 +342,7 @@ write (*,*) 'PDAF_GET_STATE_MOD!!'
 
      ! *** Distribute state fields within model communicators ***
      IF (ensemblefilter) THEN
-        IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
+        IF (subtype_filter/=10 .AND. subtype_filter/=11) THEN
            IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
                 WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Distribute state fields', &
                 ' in task ', task_id, ', member ', member_get
@@ -377,7 +377,7 @@ write (*,*) 'PDAF_GET_STATE_MOD!!'
            ! or if IAU is performed in flexible parallelization mode
            IF (type_iau==0 .OR. (type_iau>0 .AND. .NOT.iau_now) .or. .NOT.use_PDAF_assim) THEN
 
-              IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
+              IF (subtype_filter/=10 .AND. subtype_filter/=11) THEN
                  ! Dynamic ensemble filter with ensemble forecast
 
                  ! distribute ensemble state
@@ -425,7 +425,7 @@ write (*,*) 'PDAF_GET_STATE_MOD!!'
            member_put = dim_eof_l + 1
         END IF
         ! For fixed basis SFEK set member to maximum
-        IF (subtype_filter == 2 .OR. subtype_filter == 3) THEN
+        IF (subtype_filter == 10 .OR. subtype_filter == 11) THEN
            member_get = dim_eof_l + 1
            member_put = dim_eof_l + 1
         END IF

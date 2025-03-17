@@ -423,7 +423,7 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, Uinv, &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_resample -- START'
 
   IF (mype == 0 .AND. screen > 0) THEN
-     IF (subtype /= 3) THEN
+     IF (subtype /= 11) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', 'Transform state ensemble'
      ELSE
         WRITE (*, '(a, 5x, a)') 'PDAF', 'Transform state ensemble for fixed ensemble case'
@@ -446,7 +446,7 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, Uinv, &
   ! initialize Uinv for internal use
   ALLOCATE(tempUinv(rank, rank))
   IF (allocflag == 0) CALL PDAF_memcount(4, 'r', rank ** 2)
-  IF (subtype /= 3) THEN
+  IF (subtype /= 11) THEN
      tempUinv(:,:) = Uinv(:,:)
   ELSE
      rdim_ens = REAL(dim_ens)

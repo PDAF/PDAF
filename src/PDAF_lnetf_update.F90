@@ -152,7 +152,7 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
-  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
         DO i = 1, dim_p

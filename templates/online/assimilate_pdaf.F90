@@ -57,14 +57,14 @@ SUBROUTINE assimilate_pdaf()
 
   ! Call assimilate routine for global or local filter
   IF (PDAF_localfilter() == 1) THEN
-     ! Call generic OMI interface routine for domain-localized filters
+     ! Call generic routine for domain-localized filters and ENSRF
      CALL PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   ELSE
      IF (filtertype /= 100) THEN
-        ! Call generic OMI interface routine for global filters
+        ! Call generic routine for global filters and LEnKF
         CALL PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
              init_dim_obs_pdafomi, obs_op_pdafomi, &
              prepoststep_pdaf, next_observation_pdaf, status_pdaf)

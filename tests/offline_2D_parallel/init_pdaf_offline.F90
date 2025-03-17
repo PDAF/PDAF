@@ -26,7 +26,7 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: nx_p, ny, ndim, dim_state_p, local_dims, coords_p, &
-       screen, filtertype, subtype, dim_ens, incremental, &
+       screen, filtertype, subtype, dim_ens, &
        type_forget, forget, rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, pf_res_type, pf_noise_type, pf_noise_amp, &
        observe_ens, type_obs_init, do_omi_obsstats
@@ -82,7 +82,6 @@ SUBROUTINE init_pdaf()
 
   type_trans = 0     ! Type of ensemble transformation (deterministic or random)
   type_sqrt = 0      ! SEIK/LSEIK/ESTKF/LESTKF: Type of transform matrix square-root
-  incremental = 0    ! SEIK/LSEIK: (1) to perform incremental updating
 
   !EnKF
   rank_ana_enkf = 0  ! EnKF: rank to be considered for inversion of HPH in analysis step

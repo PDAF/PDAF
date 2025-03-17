@@ -26,13 +26,15 @@ MODULE mod_assimilation
   INTEGER :: nx_p                       !< Process-local size in x-direction
   INTEGER :: ndim                       !< Number of coordinate directions
   INTEGER, ALLOCATABLE :: local_dims(:) !< Array for local state dimensions
-  REAL, ALLOCATABLE :: coords_p(:,:)    !< Coordinates of process-local state vector entries
 
 ! *** Variables specific for model setup ***
 
-  REAL :: coords_l(2)      !< Coordinates of local analysis domain
+  REAL :: coords_l(2)                   !< Coordinates of local analysis domain
+  REAL, ALLOCATABLE :: coords_p(:,:)    !< Coordinates of process-local state vector entries
+                                        !< needed to intiialize localization for LEnKF/ENSRF
 
-  ! Variables to handle multiple fields in the state vector
+! *** Variables to handle multiple fields in the state vector ***
+
   INTEGER :: n_fields      !< number of fields in state vector
   INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
   INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
@@ -55,12 +57,12 @@ MODULE mod_assimilation
 ! *** Their values are set in init_PDAF                         ***
 
 ! Settings for state vector size
-  INTEGER :: dim_state     !< Global model state dimension
-  INTEGER :: dim_state_p   !< Model state dimension for PE-local domain
+  INTEGER :: dim_state         !< Global model state dimension
+  INTEGER :: dim_state_p       !< Model state dimension for PE-local domain
 
 ! Settings for time stepping - available as command line options
-  LOGICAL :: model_error   !< Control application of model error
-  REAL    :: model_err_amp !< Amplitude for model error
+  LOGICAL :: model_error       !< Control application of model error
+  REAL    :: model_err_amp     !< Amplitude for model error
 
 ! Settings for observations - available as command line options
   INTEGER :: delt_obs          !< time step interval between assimilation steps
@@ -129,7 +131,12 @@ MODULE mod_assimilation
                           !<     (4) 3D Ensemble Var using ESTKF for ensemble update
                           !<     (6) hybrid 3D-Var using LESTKF for ensemble update
                           !<     (7) hybrid 3D-Var using ESTKF for ensemble update
-  INTEGER :: incremental  !< SEIK/LSEIK: (1) Perform incremental updating
+  INTEGER :: type_iau     !< Type of incremental updating:
+                          !<     (0) no IAU
+                          !<     (1) constant IAU weight
+                          !<     (2) linear increase/decrease with maimum in middle of period
+                          !<     (3) Null IAU: initialize increments arrays, but do not add increment
+  INTEGER :: steps_iau    !< Number of time steps over which IAU is applied
   INTEGER :: dim_lag      !< Number of time instances for smoother
 
 ! Filter settings - available as command line options

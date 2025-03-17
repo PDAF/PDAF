@@ -10,8 +10,8 @@ RUNSTR="mpirun -np 1 ./PDAF_offline"
 RUNPAR="mpirun -np 3 ./PDAF_offline"
 
 
-COMPILEPDAF=0
-COMPILE=0
+COMPILEPDAF=1
+COMPILE=1
 TEST_SUBTYPES=1
 TEST_SUBTYPES_2OBS=1
 TEST_OPTIONS=1
@@ -78,7 +78,7 @@ then
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
     FTYPE=1
-    STYPE=4
+    STYPE=2
     echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
@@ -280,7 +280,7 @@ then
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
     FTYPE=11
-    STYPE=4
+    STYPE=2
     echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
@@ -367,7 +367,7 @@ then
     python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
 
     FTYPE=1
-    STYPE=4
+    STYPE=2
     echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
@@ -569,7 +569,7 @@ then
     python verification/check_offline2.py offline_2D_parallel offline_2D_obsAB_ftype${FTYPE}s${STYPE}
 
     FTYPE=11
-    STYPE=4
+    STYPE=2
     echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel

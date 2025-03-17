@@ -156,8 +156,8 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          LEnKF analysis:                      0.029 s
-PDAF            PDAF-internal operations:            0.041 s
+PDAF          LEnKF analysis:                      0.027 s
+PDAF            PDAF-internal operations:            0.037 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.007 s
@@ -169,7 +169,7 @@ PDAF          prepoststep_pdaf:                    0.010 s
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                     Initialize PDAF (1):      0.002 s
-PDAF                      LEnKF analysis (3):      0.029 s
+PDAF                      LEnKF analysis (3):      0.027 s
 PDAF                        get mean state (9):      0.000 s
 PDAF                  prepare observations (6):      0.007 s
 PDAF                 compute HPH+R and HP (10):      0.010 s
@@ -180,8 +180,8 @@ PDAF                  localize HP_p and HPH (45):      0.001 s
 PDAF                           add matrix R (46):      0.000 s
 PDAF                 sample obs. ensemble (11):      0.001 s
 PDAF             init innovation ensemble (12):      0.008 s
-PDAF             compute transform matrix (13):      0.001 s
-PDAF                 solve for representers (33):      0.001 s
+PDAF             compute transform matrix (13):      0.000 s
+PDAF                 solve for representers (33):      0.000 s
 PDAF                         HX*representer (34):      0.000 s
 PDAF              ensemble transformation (14):      0.000 s
 PDAF                         Prepoststep (5):      0.010 s

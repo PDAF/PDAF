@@ -152,7 +152,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
-  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
         DO i = 1, dim_p
@@ -267,13 +267,13 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
-        IF (subtype == 0 .OR. subtype == 2) THEN
+        IF (subtype == 0 .OR. subtype == 10) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Assimilating observations - LETKF analysis using T-matrix'
         ELSE IF (subtype == 1) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Assimilating observations - LETKF following Hunt et al. (2007)'
-        ELSE IF (subtype == 3) THEN
+        ELSE IF (subtype == 10 .OR. subtype == 11) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'LETKF analysis for fixed covariance matrix'
         END IF
@@ -471,7 +471,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
      
      CALL PDAF_timeit(12, 'new')
 
-     IF (subtype == 0 .OR. subtype == 2) THEN
+     IF (subtype == 0 .OR. subtype == 10) THEN
         ! *** LETKF analysis using T-matrix ***
         CALL PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              state_l, Ainv_l, ens_l, HX_l, HXbar_l, obs_l, &
@@ -481,7 +481,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
         CALL PDAF_letkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              state_l, Ainv_l, ens_l, HX_l, HXbar_l, obs_l, &
              rndmat, forget_ana_l, U_prodRinvA_l, type_trans, screen, debug, flag)
-     ELSE IF (subtype == 3) THEN
+     ELSE IF (subtype == 11) THEN
         ! Analysis with state update but no ensemble transformation
         CALL PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              state_l, Ainv_l, ens_l, HX_l, HXbar_l, obs_l, &
@@ -503,7 +503,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
         CALL U_l2g_state(step, domain_p, dim_l, ens_l(:, member), dim_p, ens_p(:,member))
      END DO
-     IF (subtype == 3) THEN
+     IF (subtype == 11) THEN
         ! Initialize global state for ETKF with fixed covariance matrix
         member_save = 0
 
@@ -542,7 +542,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
   inloop = .false.
 
 !$OMP CRITICAL
-  ! Set Ainv - required for subtype=3
+  ! Set Ainv - required for subtype=11
   Ainv = Ainv_l
 !$OMP END CRITICAL
 

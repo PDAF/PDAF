@@ -142,7 +142,7 @@ SUBROUTINE init_pdaf()
 ! ***                                               ***
 ! *** Here, the full selection of filters is        ***
 ! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
+! *** reduces this to selected filters.             ***
 ! ***                                               ***
 ! *** For all filters, PDAF_init is first called    ***
 ! *** specifying only the required parameters.      ***

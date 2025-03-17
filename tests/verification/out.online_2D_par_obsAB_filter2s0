@@ -7,8 +7,8 @@
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      7              4      1      2      3       F
-     3              2      1      2      1       F
      6              4      0      1      3       F
+     3              2      1      2      1       F
      5              3      1      2      2       F
      4              3      0      1      2       F
      2              2      0      1      1       F
@@ -207,14 +207,14 @@ PDAF            analysis step:        0.062 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.007 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          Ensemble forecast:                   0.010 s
-PDAF            MPI communication in PDAF:           0.010 s
+PDAF          Initialize PDAF:                     0.006 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.009 s
+PDAF            MPI communication in PDAF:           0.009 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          EnKF analysis:                       0.050 s
-PDAF            PDAF-internal operations:            0.022 s
+PDAF          EnKF analysis:                       0.047 s
+PDAF            PDAF-internal operations:            0.018 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.026 s

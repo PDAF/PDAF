@@ -17,9 +17,10 @@ SUBROUTINE init_pdaf_parse()
        ONLY: parse
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       model_error, model_err_amp, incremental, type_forget, &
-       forget, rank_ana_enkf, locweight, cradius, &
-       sradius, type_trans, type_sqrt, dim_lag, type_hyb, &
+       model_error, model_err_amp, type_forget, forget, &
+       type_iau, steps_iau, rank_ana_enkf, &
+       locweight, cradius, sradius, &
+       type_trans, type_sqrt, dim_lag, type_hyb, &
        hyb_gamma, hyb_kappa, type_winf, limit_winf, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
        observe_ens, type_obs_init, do_omi_obsstats
@@ -75,8 +76,12 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, filtertype)
   handle = 'subtype'                 ! Set subtype of filter
   CALL parse(handle, subtype)
-  handle = 'incremental'             ! Set whether to use incremental updating
-  CALL parse(handle, incremental)
+
+  ! Control IAU
+  handle = 'type_iau'                ! Set whether to use incremental updating
+  CALL parse(handle, type_iau)
+  handle = 'steps_iau'               ! Number of time steps over which IAU is applied
+  CALL parse(handle, steps_iau)
 
   ! Settings for smoother
   handle = 'dim_lag'                 ! Size of lag in smoother
@@ -101,7 +106,7 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, locweight)
   sradius = cradius                  ! By default use cradius as support radius
   handle = 'sradius'                 ! Set support radius in grid points
-             ! for 5th-order polynomial or radius for 1/e in exponential weighting
+             ! for 5th-order polynomial or distance for 1/e in exponential weighting
   CALL parse(handle, sradius)
 
   ! Settings for nonlinear filters

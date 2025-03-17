@@ -64,49 +64,7 @@ MODULE PDAF_mod_core
 
   ! *** Specification of type and subtype of DA method ***
   INTEGER :: type_filter          !< Type of Filter
-                                  !< (0) SEEK  (Pham et al., 1998a)
-                                  !< (1) SEIK  (Pham et al., 1998b)
-                                  !< (2) EnKF  (Evensen, 1994)
-                                  !< (3) LSEIK (Nerger et al., 2007)
-                                  !< (4) ETKF  (Bishop et al., 2001) 
-                                  !<     (ETKF uses symmetric square roots like LETKF)
-                                  !< (5) LETKF (Hunt et al., 2007)
   INTEGER :: subtype_filter       !< Sub-type of Filter
-                                  !< Subtype of SEEK: 
-                                  !<     (0) Evolve with finite difference approx to TLM
-                                  !<     (1) Scaled modes, unit U
-                                  !<     (2) Fixed basis (V); variable U matrix
-                                  !<     (3) Fixed covar matrix (V,U kept static)
-                                  !<     (5) PDAF offline mode
-                                  !< Subtype of SEIK: 
-                                  !<     (0) Usual SEIK with mean forecast, new formulation;
-                                  !<     (1) Usual SEIK with mean forecast, old formulation;
-                                  !<     (2) Fixed error space basis
-                                  !<     (3) Fixed state covariance matrix
-                                  !<     (4) SEIK with ensemble transformation (like ETKF)
-                                  !<     (5) PDAF offline mode
-                                  !< Subtype of EnKF forecast and update step: 
-                                  !<     (0) Mean forecast & representer analysis for large dim_obs;
-                                  !<     (1) Mean forecast & representer analysis for small dim_obs;
-                                  !<     (5) PDAF offline mode
-                                  !< Subtype of LSEIK: 
-                                  !<     (0) Mean forecast;
-                                  !<     (2) Fixed error space basis
-                                  !<     (3) Fixed state covariance matrix
-                                  !<     (4) LSEIK with ensemble transformation (like LETKF)
-                                  !<     (5) PDAF offline mode
-                                  !< Subtype of ETKF:
-                                  !<     (0) ETKF using T-matrix like SEIK
-                                  !<     (1) ETKF following Hunt et al. (2007)
-                                  !<       There are no fixed basis/covariance cases, as
-                                  !<       these are equivalent to SEIK subtypes 2/3
-                                  !<     (5) PDAF offline mode
-                                  !< Subtype of LETKF:
-                                  !<     (0) ETKF using T-matrix like SEIK
-                                  !<       There are no fixed basis/covariance cases, as
-                                  !<       these are equivalent to LSEIK subtypes 2/3
-                                  !<     (5) PDAF offline mode
-
 
   ! *** Control variables for DA method ***
   LOGICAL :: ensemblefilter=.true.          !< Whether the chosen filter is ensemble-based

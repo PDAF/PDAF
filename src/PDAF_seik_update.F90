@@ -104,7 +104,7 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
-  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
         DO i = 1, dim_p
@@ -192,7 +192,7 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      IF (subtype==1) THEN
         WRITE (*, '(a, i7, 3x, a)') &
              'PDAF ', step, 'Assimilating observations - SEIK old formulation'
-     ELSEIF (subtype==4) THEN
+     ELSEIF (subtype==2) THEN
         WRITE (*, '(a, 1x, i7, 3x, a)') &
              'PDAF', step, 'Assimilating observations - SEIK with ensemble transformation'
      ELSE
@@ -238,7 +238,7 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
 ! ***  Execute Analysis step  ***
 
-  IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
+  IF (subtype == 0 .OR. subtype == 10 .OR. subtype == 11) THEN
 ! *** SEIK analysis with forgetting factor better implementation for T ***
      CALL PDAF_seik_ana_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, HX_p, HXbar_p, obs_p, &
@@ -248,7 +248,7 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, HX_p, HXbar_p, obs_p, &
           forget_ana, U_prodRinvA, screen, debug, flag)
-  ELSE IF (subtype == 4) THEN
+  ELSE IF (subtype == 2) THEN
 ! *** SEIK analysis with ensemble transformation ***
      CALL PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, HX_p, HXbar_p, obs_p, &
@@ -267,7 +267,7 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(51, 'new')
   CALL PDAF_timeit(7, 'new')
 
-  IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
+  IF (subtype == 0 .OR. subtype == 10 .OR. subtype == 11) THEN
      CALL PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, type_trans, &
           Nm1vsN, screen, flag)

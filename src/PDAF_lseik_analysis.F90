@@ -458,7 +458,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
 ! **********************
 
   IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
-     IF (subtype /= 3) THEN
+     IF (subtype /= 11) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', 'Transform state ensemble'
      ELSE
         WRITE (*, '(a, 5x, a)') 'PDAF', 'Transform state ensemble for fixed ensemble case'
@@ -485,7 +485,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   ! initialize Uinv for internal use
   ALLOCATE(tmpUinv_l(rank, rank))
   IF (allocflag == 0) CALL PDAF_memcount(4, 'r', rank**2)
-  IF (subtype /= 3) THEN
+  IF (subtype /= 11) THEN
      tmpUinv_l(:, :) = Uinv_l(:, :)
   ELSE
      rdim_ens = REAL(dim_ens)

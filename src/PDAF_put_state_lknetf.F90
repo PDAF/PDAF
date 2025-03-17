@@ -120,7 +120,7 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
         ! Store member index for PDAF_get_memberid
         member_save = member
 
-        IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
+        IF (subtype_filter /= 10 .AND. subtype_filter /= 11) THEN
            ! Save evolved state in ensemble matrix
            CALL U_collect_state(dim_p, ens(1 : dim_p, member))
         ELSE
@@ -190,7 +190,7 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
      ENDIF
      
      OnFilterPE: IF (filterpe) THEN
-        IF (subtype_filter == 4) THEN
+        IF (subtype_filter == 2) THEN
            CALL PDAFlknetf_update_sync(step_obs, dim_p, dim_obs, dim_ens, &
                 state, Ainv, ens, &
                 U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &

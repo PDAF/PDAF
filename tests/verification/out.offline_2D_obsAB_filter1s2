@@ -31,11 +31,11 @@
   PARSER: screen=         1
   PARSER: dim_ens=         8
   PARSER: filtertype=         1
-  PARSER: subtype=         4
+  PARSER: subtype=         2
   PARSER: forget=  8.0000E-01
   PARSER: cradius=  5.0000E+00
                      Filter: SEIK
-      -- use ensemble transformation
+      -- fixed error-space basis
               ensemble size:    8
       Assimilation interval:    0
           forgetting factor: 0.80
@@ -90,7 +90,7 @@ PDAF    Activate PDAF offline mode
 
 PDAF    SEIK configuration
 PDAF          ensemble size:    8
-PDAF          filter sub-type= 4
+PDAF          filter sub-type= 2
 PDAF            --> SEIK with ensemble transformation
 PDAF          param_int(5) type_forget=  0
 PDAF            --> Use fixed forgetting factor: 0.80
@@ -150,8 +150,8 @@ PDAF            analysis step:      0.026 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          SEIK analysis/transform:             0.001 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
@@ -163,7 +163,7 @@ PDAF          prepoststep_pdaf:                    0.004 s
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.002 s
+PDAF                     Initialize PDAF (1):      0.003 s
 PDAF                       SEIK analysis (3):      0.001 s
 PDAF                        get mean state (9):      0.000 s
 PDAF                  prepare observations (6):      0.001 s

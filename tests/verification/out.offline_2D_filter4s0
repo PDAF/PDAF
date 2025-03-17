@@ -141,7 +141,7 @@ PDAF            analysis step:      0.022 MiB (temporary)
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          ETKF analysis:                       0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s

@@ -124,10 +124,6 @@ PDAF Analysis -------------------------------------------------------
 PDAF       0   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
 PDAF     --- Compute deterministic Omega
-PDAF     --- Apply dynamically estimated local forgetting factors
-PDAF         Maximum limit for forgetting factor  1.00E+02
-PDAF         Minimum limit for forgetting factor  1.00E-02
-PDAF         Forgetting factor if var(obs)>var(resid)  8.00E-01
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
@@ -139,18 +135,6 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     --- Apply dynamically estimated local forgetting factors
-PDAF         Maximum limit for forgetting factor  1.00E+02
-PDAF         Minimum limit for forgetting factor  1.00E-02
-PDAF         Forgetting factor if var(obs)>var(resid)  8.00E-01
-PDAF     --- Apply dynamically estimated local forgetting factors
-PDAF         Maximum limit for forgetting factor  1.00E+02
-PDAF         Minimum limit for forgetting factor  1.00E-02
-PDAF         Forgetting factor if var(obs)>var(resid)  8.00E-01
-PDAF     --- Apply dynamically estimated local forgetting factors
-PDAF         Maximum limit for forgetting factor  1.00E+02
-PDAF         Minimum limit for forgetting factor  1.00E-02
-PDAF         Forgetting factor if var(obs)>var(resid)  8.00E-01
 PDAF     --- Apply dynamically estimated local forgetting factors
 PDAF         Maximum limit for forgetting factor  1.00E+02
 PDAF         Minimum limit for forgetting factor  1.00E-02
@@ -236,8 +220,8 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LESTKF analysis:                     0.002 s
-PDAF            PDAF-internal operations:            0.001 s
-PDAF            OMI-internal routines:               0.001 s
+PDAF            PDAF-internal operations:            0.002 s
+PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
@@ -265,12 +249,12 @@ PDAF                init_dim_obs_l_pdaf (38):            0.000 s
 PDAF                g2l_obs_pdaf (46):                   0.000 s
 PDAF                init_obs_l (47):                     0.000 s
 PDAF              local analysis (12):                 0.002 s
-PDAF                compute Ainv (16):                   0.001 s
+PDAF                compute Ainv (16):                   0.000 s
 PDAF                  init innovation (20):                0.000 s
-PDAF                  prodRinvA_pdaf (48):                 0.001 s
-PDAF                  complete Ainv (21):                  0.001 s
-PDAF                compute ensemble weights (17):       0.001 s
-PDAF                  get state weight vector (22):        0.001 s
+PDAF                  prodRinvA_pdaf (48):                 0.000 s
+PDAF                  complete Ainv (21):                  0.000 s
+PDAF                compute ensemble weights (17):       0.002 s
+PDAF                  get state weight vector (22):        0.002 s
 PDAF                  complete transform matrix (23):      0.000 s
 PDAF                transform ensemble (18):             0.000 s
 PDAF              local to global (14):                0.000 s

@@ -517,8 +517,7 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
     WRITE(*, '(a, 11x, a)') &
-         'PDAF', '>=1 for subtypes 0 and 1; not larger than total number of processors'
-    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 2 and 3'
+         'PDAF', '>=1; not larger than total number of processors'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
     WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
     WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'
@@ -586,7 +585,7 @@ CONTAINS
        WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
        WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
@@ -622,7 +621,7 @@ CONTAINS
        WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
        WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 10x, a, 17x, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
@@ -706,7 +705,7 @@ CONTAINS
        WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
        WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter/=2) THEN
+          IF (subtype_filter/=10) THEN
              WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
@@ -746,7 +745,7 @@ CONTAINS
        WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') &
             'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'

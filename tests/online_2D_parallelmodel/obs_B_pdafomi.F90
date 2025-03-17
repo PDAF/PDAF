@@ -151,9 +151,10 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs, PDAFomi_set_localize_covar
     USE mod_assimilation, &
-         ONLY: filtertype, dim_state_p, locweight, cradius, sradius
+         ONLY: filtertype, dim_state_p, locweight, cradius, sradius, &
+         coords_p
     USE mod_model, &
-         ONLY: nx, ny, nx_p, ndim, coords_p
+         ONLY: nx, ny, nx_p, ndim
 
     IMPLICIT NONE
 

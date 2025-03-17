@@ -49,7 +49,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        ONLY: dim_ens, dim_eof, dim_p, flag, &
        screen, step, step_obs, type_filter, filterstr, &
        subtype_filter, ensemblefilter, state, Ainv, ens, &
-       debug, offline_mode
+       debug
   USE PDAF_mod_parallel, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
        isset_comm_pdaf

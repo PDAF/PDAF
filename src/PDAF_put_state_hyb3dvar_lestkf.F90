@@ -133,7 +133,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_lestkf(U_collect_state, &
         ! Store member index for PDAF_get_memberid
         member_save = member
 
-        IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
+        IF (subtype_filter /= 10 .AND. subtype_filter /= 11) THEN
            ! Save evolved state in ensemble matrix
            CALL U_collect_state(dim_p, ens(1 : dim_p, member))
         ELSE

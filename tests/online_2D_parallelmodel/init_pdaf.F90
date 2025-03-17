@@ -27,13 +27,13 @@ SUBROUTINE init_pdaf()
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, mype_filter
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
-       dim_ens, type_iau, type_forget, forget, &
+       dim_ens, type_iau, type_forget, forget, coords_p, &
        rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, delt_obs, steps_iau, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
        observe_ens, type_obs_init, do_omi_obsstats
   USE mod_model, &                ! Model variables
-       ONLY: nx, ny, nx_p, ndim, coords_p
+       ONLY: nx, ny, nx_p, ndim
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B

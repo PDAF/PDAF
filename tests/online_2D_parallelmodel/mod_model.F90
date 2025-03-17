@@ -19,7 +19,6 @@ MODULE mod_model
   INTEGER :: total_steps                !< Total number of time steps
   INTEGER :: ndim                       !< Number of coordinate directions
   REAL, ALLOCATABLE :: field_p(:,:)     !< Process-local part of model field
-  REAL, ALLOCATABLE :: coords_p(:,:)    !< Coordinates of process-local state vector entries
 
   INTEGER :: nx_p                       !< Process-local size in x-direction
 

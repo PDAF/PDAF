@@ -88,7 +88,7 @@ PDAF    Activate PDAF offline mode
 PDAF    ENSRF configuration
 PDAF          ensemble size:    8
 PDAF          filter sub-type= 1
-PDAF              --> 2-step local least squares EAKF by Anderson (2003)
+PDAF              --> 2-step local least squares EAKF cf. Anderson (2003)
 PDAF          Use fixed forgetting factor: 0.80
 PDAF          param_int(8) observe_ens
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
@@ -141,12 +141,12 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          ENSRF analysis:                        0.002 s
-PDAF            PDAF-internal operations:             0.000 s
+PDAF            PDAF-internal operations:             0.001 s
 PDAF            OMI-internal routines:                0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:               0.001 s
 PDAF              obs_op_pdafomi:                     0.000 s
-PDAF              localize_covar_serial_pdafomi:      0.001 s
+PDAF              localize_covar_serial_pdafomi:      0.000 s
 PDAF          prepoststep_pdaf:                     0.003 s
 
 
@@ -156,12 +156,12 @@ PDAF          Initialize PDAF (1):                 0.002 s
 PDAF          EnSRF analysis (3):                  0.002 s
 PDAF            prepare observations (6):            0.001 s
 PDAF            compute ensemble mean (9):           0.000 s
-PDAF              HXpert, var(hx), covars (10):      0.001 s
+PDAF              HXpert, var(hx), covars (10):      0.000 s
 PDAF              HXpert, HXbar, var(hx) (30):         0.000 s
 PDAF              covariances X(HX), HX(HX) (31):      0.000 s
-PDAF              Apply localization (45):             0.001 s
+PDAF              Apply localization (45):             0.000 s
 PDAF            transform obs. ensemble (13):        0.000 s
-PDAF            ensemble transformation (14):        0.000 s
+PDAF            ensemble transformation (14):        0.001 s
 PDAF          Prepoststep (5):                     0.003 s
 
  PDAF offline mode: END

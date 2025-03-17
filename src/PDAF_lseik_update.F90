@@ -144,7 +144,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
-  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
         DO i = 1, dim_p
@@ -258,7 +258,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
   IF (screen > 0) THEN
      IF (mype == 0) THEN
-        IF (subtype /= 4) THEN
+        IF (subtype /= 1) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Local SEIK analysis'
         ELSE
@@ -454,7 +454,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! Reset forget (can be reset with PDAF_reset_forget)
      IF (type_forget == 0) forget_ana_l = forget_l
 
-     IF (subtype /= 4 ) THEN
+     IF (subtype /= 1 ) THEN
 
         CALL PDAF_timeit(12, 'new')
 
@@ -522,7 +522,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
         CALL U_l2g_state(step, domain_p, dim_l, ens_l(:, member), dim_p, ens_p(:,member))
      END DO
-     IF (subtype /= 4) THEN
+     IF (subtype /= 1) THEN
         member_save = 0
 
         IF (debug>0) THEN
@@ -551,7 +551,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(51, 'new')
 
 !$OMP CRITICAL
-  ! Set Uinv - required for subtype=3
+  ! Set Uinv - required for subtype=11
   Uinv = Uinv_l
 !$OMP END CRITICAL
 

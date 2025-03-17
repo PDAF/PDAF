@@ -90,17 +90,14 @@ MODULE mod_assimilation
                           !<   * SEIK:
                           !<     (0) ensemble forecast; new formulation
                           !<     (1) ensemble forecast; old formulation
-                          !<     (2) fixed error space basis
-                          !<     (3) fixed state covariance matrix
-                          !<     (4) SEIK with ensemble transformation
-                          !<   * EnKF:
-                          !<     (0) analysis for large observation dimension
-                          !<     (1) analysis for small observation dimension
+                          !<     (2) SEIK with ensemble transformation
+                          !<     (10) fixed error space basis
+                          !<     (11) fixed state covariance matrix
                           !<   * LSEIK:
                           !<     (0) ensemble forecast;
-                          !<     (2) fixed error space basis
-                          !<     (3) fixed state covariance matrix
-                          !<     (4) LSEIK with ensemble transformation
+                          !<     (2) LSEIK with ensemble transformation
+                          !<     (10) fixed error space basis
+                          !<     (11) fixed state covariance matrix
                           !<   * ETKF:
                           !<     (0) ETKF using T-matrix like SEIK
                           !<     (1) ETKF following Hunt et al. (2007)
@@ -111,6 +108,11 @@ MODULE mod_assimilation
                           !<     (1) LETKF following Hunt et al. (2007)
                           !<       There are no fixed basis/covariance cases, as
                           !<       these are equivalent to LSEIK subtypes 2/3
+                          !<   * EnKF:
+                          !<     (0) analysis for large observation dimension
+                          !<     (1) analysis for small observation dimension
+                          !<   * LEnKF:
+                          !<     (0) standard analysis
                           !<   * ESTKF:
                           !<     (0) standard ESTKF 
                           !<       There are no fixed basis/covariance cases, as
@@ -126,15 +128,18 @@ MODULE mod_assimilation
                           !<   * LKNETF:
                           !<     (0) HNK: 2-step LKNETF with NETF before LETKF
                           !<     (1) HKN: 2-step LKNETF with LETKF before NETF
-                          !<     (4) HSync: LKNETF synchronous
+                          !<     (2) HSync: LKNETF synchronous
                           !<   * PF:
                           !<     (0) standard PF 
+                          !<   * ENSRF/EAKF:
+                          !<     (0) ENSRF with serial observation processing
+                          !<     (1) EAKF with loca least square regression
                           !<   * 3D-Var:
                           !<     (0) parameterized 3D-Var
                           !<     (1) 3D Ensemble Var using LESTKF for ensemble update
-                          !<     (4) 3D Ensemble Var using ESTKF for ensemble update
-                          !<     (6) hybrid 3D-Var using LESTKF for ensemble update
-                          !<     (7) hybrid 3D-Var using ESTKF for ensemble update
+                          !<     (2) 3D Ensemble Var using ESTKF for ensemble update
+                          !<     (3) hybrid 3D-Var using LESTKF for ensemble update
+                          !<     (4) hybrid 3D-Var using ESTKF for ensemble update
   INTEGER :: type_iau     !< Type of incremental updating:
                           !<     (0) no IAU
                           !<     (1) constant IAU weight
@@ -251,7 +256,7 @@ MODULE mod_assimilation
 
 !    ! Other variables - _NOT_ available as command line options!
   REAL    :: time               !< model time
-  REAL, ALLOCATABLE :: coords_p(:,:,:)  !< Coordinates of process-local state vector entries
+  REAL, ALLOCATABLE :: coords_p(:,:)    !< Coordinates of process-local state vector entries
                                         !< needed to intiialize localization for LEnKF/ENSRF
 
 END MODULE mod_assimilation

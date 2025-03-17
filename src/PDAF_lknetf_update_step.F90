@@ -173,7 +173,7 @@ SUBROUTINE  PDAFlknetf_update_step(step, dim_p, dim_obs_f, dim_ens, &
 
   CALL PDAF_timeit(51, 'new')
 
-  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
         DO i = 1, dim_p
@@ -827,7 +827,7 @@ SUBROUTINE  PDAFlknetf_update_step(step, dim_p, dim_obs_f, dim_ens, &
   END IF
 
 !$OMP CRITICAL
-  ! Set Ainv - required for subtype=3
+  ! Set Ainv - required for subtype=11
   Ainv = Ainv_l
 !$OMP END CRITICAL
 

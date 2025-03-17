@@ -2,18 +2,18 @@ Collection of template routines for PDAF user routines
 
 Directories:
 
-offline_omi/ 
-- offline coupling using OMI
+offline/ 
+- offline coupling using PDAF3 interface
 
 online_omi/
-- online coupling using OMI in fully parallel mode
+- online coupling using PDAF3 interface in fully parallel mode
 
 omi/
-- templates just for OMI (file with callback routines, observation module, observation operator)
+- templates specific for PDAF-OMI (file with callback routines, observation module, observation operator)
 
 3dvar/
-- additional templates for implementing 3D-Var methods (for online implementation; first copy online_omi/, then copy 3dvar/ overwriting some files)
+- additional templates for implementing 3D-Var methods (for online implementation; first copy online/, then copy 3dvar/ overwriting some files)
 
-classical/
-- classical implementation not using OMI
+full_interface/
+- classical implementation usingt he interface routines specifying all call-back routines (not using OMI or PDAFlocal)
 

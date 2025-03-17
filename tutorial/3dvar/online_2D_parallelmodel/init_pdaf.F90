@@ -191,7 +191,7 @@ SUBROUTINE init_pdaf()
 
   ! Ensemble part of control vector
 
-  IF (filtertype==200 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7) &
+  IF (filtertype==200 .AND. (subtype==0 .OR. subtype==3 .OR. subtype==4) &
        .AND. (type_opt==12 .OR. type_opt==13)) THEN
 
      ! split control vector

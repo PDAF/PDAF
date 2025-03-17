@@ -151,7 +151,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
-  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
         DO i = 1, dim_p
@@ -283,7 +283,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   IF (screen > 0) THEN
      IF (mype == 0) THEN
         IF (envar_mode < 1) THEN
-           IF (subtype /= 3) THEN
+           IF (subtype /= 11) THEN
               WRITE (*, '(a, i7, 3x, a)') 'PDAF ', step, 'Local ESTKF analysis'
            ELSE
               WRITE (*, '(a, i7, 3x, a)') 'PDAF ', step, 'LESTKF analysis for fixed covariance matrix'
@@ -489,7 +489,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! Perform analysis only if we have observations
      havelocalobs: IF (dim_obs_l > 0) THEN
 
-        IF (subtype /= 3) THEN
+        IF (subtype /= 11) THEN
            ! LESTKF analysis for current domain
            CALL PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
@@ -568,7 +568,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   inloop = .false.
 
 !$OMP CRITICAL
-  ! Set Ainv - required for subtype=3
+  ! Set Ainv - required for subtype=11
   Ainv = Ainv_l
 !$OMP END CRITICAL
 

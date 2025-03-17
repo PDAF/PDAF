@@ -151,7 +151,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   USE obs_A_pdafomi, ONLY: localize_covar_A
   USE obs_B_pdafomi, ONLY: localize_covar_B
 
-  USE mod_model, &              ! Include information on model grid
+  USE mod_assimilation, &           ! Include information on model grid
        ONLY: coords_p
 
   IMPLICIT NONE
@@ -189,7 +189,7 @@ SUBROUTINE localize_covar_serial_pdafomi(iobs, dim_p, dim_obs, HP_p, HXY_p)
   USE obs_A_pdafomi, ONLY: localize_covar_serial_A
   USE obs_B_pdafomi, ONLY: localize_covar_serial_B
 
-  USE mod_model, &              ! Include information on model grid
+  USE mod_assimilation, &              ! Include information on model grid
        ONLY: coords_p
 
   IMPLICIT NONE

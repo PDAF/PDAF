@@ -121,10 +121,6 @@ CONTAINS
        CALL PDAF_ensrf_set_rparam(i, param_real(i), outflag)
     END DO
 
-    ! Smoothing is only possible with the RLM variant of the algorithm
-    IF (subtype==1 .AND. dim_lag>0) subtype = 0
-
-
     ! Define whether filter is mode-based or ensemble-based
     ensemblefilter = .TRUE.
 
@@ -218,9 +214,9 @@ CONTAINS
        WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
        WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
        IF (subtype == 0) THEN
-          WRITE (*, '(a, 14x, a)') 'PDAF', '--> ENSRF by Whitaker/Hamill (2002) with serial observation processing'
+          WRITE (*, '(a, 14x, a)') 'PDAF', '--> ENSRF with serial observation processing cf. Whitaker & Hamill (2002) '
        ELSEIF (subtype == 1) THEN
-          WRITE (*, '(a, 14x, a)') 'PDAF', '--> 2-step local least squares EAKF by Anderson (2003)'
+          WRITE (*, '(a, 14x, a)') 'PDAF', '--> 2-step local least squares EAKF cf. Anderson (2003)'
        END IF
        IF (dim_lag > 0) &
             WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'Apply smoother up to lag:',dim_lag
@@ -385,8 +381,8 @@ CONTAINS
     WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for ENSRF:'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '0: ENSRF with serial observation processing'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '1: EAKF/2-step local least squares filter'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: ENSRF with serial observation processing (cf. Houtekamer/Mitchell, 2002)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '1: EAKF/2-step local least squares filter (cf. Anderson, 2003)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
@@ -570,7 +566,7 @@ CONTAINS
        WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') &
             'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<2) THEN
+          IF (subtype_filter<10) THEN
              WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
              WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'

@@ -278,7 +278,7 @@ END SUBROUTINE PDAF_genobs_init
     WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
     WRITE(*, '(a, 11x, a)') &
          'PDAF', '=1 for GENOBS; not larger than total number of processors'
-    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 2 and 3'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 10 and 11'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
     WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
     WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'

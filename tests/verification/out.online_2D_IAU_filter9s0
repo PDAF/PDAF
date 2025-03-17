@@ -215,8 +215,8 @@ PDAF            analysis step:        0.012 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
 PDAF          Ensemble forecast:                   0.002 s
 PDAF            MPI communication in PDAF:           0.002 s
 PDAF            distribute_state_pdaf:               0.000 s

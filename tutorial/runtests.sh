@@ -22,7 +22,7 @@ then
 
     echo "------------ offline_2D_serial --------------"
     cd offline_2D_serial
-    if [ $COMPILEPDAF -eq 1]
+    if [ $COMPILEPDAF -eq 1 ]
     then
         make cleanall
     else

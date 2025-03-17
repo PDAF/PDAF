@@ -112,7 +112,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
-  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
         DO i = 1, dim_p
@@ -211,7 +211,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
      IF (envar_mode<2) THEN
-        IF (subtype == 0 .OR. subtype == 2) THEN
+        IF (subtype == 0 .OR. subtype == 10) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Assimilating observations - ESTKF'
         ELSE
@@ -271,7 +271,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
   TA = 0.0
 
 ! *** ESTKF analysis ***
-  IF (subtype == 0 .OR. subtype == 2) THEN
+  IF (subtype == 0 .OR. subtype == 10) THEN
      ! Analysis with ensemble transformation
      CALL PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
           state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &
