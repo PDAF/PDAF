@@ -1072,10 +1072,10 @@ subroutine PDAF_compute_moments(dim_p,dim_ens,ens,kmax,moments)
       blk_ub = MIN(blk_lb + maxblksize - 1, dim_p)
       blk_size = blk_ub - blk_lb + 1
 
-      ensemble_residuals(:,:) = ens - spread(moments(blk_lb:blk_ub,1),dim=2,ncopies=dim_ens)
+      ensemble_residuals(1:blk_size,:) = ens(blk_lb:blk_ub,:) - spread(moments(blk_lb:blk_ub,1),dim=2,ncopies=dim_ens)
       do i = 2, kmax_
         ensemble_residuals = ensemble_residuals*ensemble_residuals
-        moments(blk_lb:blk_ub,i) = sum(ensemble_residuals,dim=2)
+        moments(blk_lb:blk_ub,i) = sum(ensemble_residuals(1:blk_size,:),dim=2)
       end do
 
       call PDAF_moments_from_summed_residuals(dim_ens,&
