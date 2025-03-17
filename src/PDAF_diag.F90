@@ -1064,6 +1064,7 @@ SUBROUTINE PDAF_compute_moments(dim_p,dim_ens,ens,kmax,moments)
   INTEGER, PARAMETER :: maxblksize = 500
 
   REAL, DIMENSION(:,:), ALLOCATABLE :: ensemble_residuals
+  REAL, DIMENSION(:,:), ALLOCATABLE :: exponentiated_residuals
 
   IF(kmax>dim_ens) THEN
     write(*,'(a,i1,a)') 'WARNING not enough samples to compute ', kmax, '-th moment'
@@ -1078,14 +1079,17 @@ SUBROUTINE PDAF_compute_moments(dim_p,dim_ens,ens,kmax,moments)
   IF( kmax_ > 1 ) THEN
 
     ALLOCATE(ensemble_residuals(maxblksize,dim_ens))
+    ALLOCATE(exponentiated_residuals(maxblksize,dim_ens))
+
     blocking: DO blk_lb = 1, dim_p, maxblksize
       blk_ub = MIN(blk_lb + maxblksize - 1, dim_p)
       blk_size = blk_ub - blk_lb + 1
 
       ensemble_residuals(1:blk_size,:) = ens(blk_lb:blk_ub,:) - SPREAD(moments(blk_lb:blk_ub,1),DIM=2,ncopies=dim_ens)
+      exponentiated_residuals = ensemble_residuals
       DO i = 2, kmax_
-        ensemble_residuals = ensemble_residuals*ensemble_residuals
-        moments(blk_lb:blk_ub,i) = SUM(ensemble_residuals(1:blk_size,:),DIM=2)
+        exponentiated_residuals = exponentiated_residuals*ensemble_residuals
+        moments(blk_lb:blk_ub,i) = SUM(exponentiated_residuals(1:blk_size,:),DIM=2)
       END DO
 
       CALL PDAF_moments_from_summed_residuals(dim_ens,&
@@ -1095,6 +1099,7 @@ SUBROUTINE PDAF_compute_moments(dim_p,dim_ens,ens,kmax,moments)
                                               moments(blk_lb:blk_ub,2:kmax_))
     END DO blocking
     DEALLOCATE(ensemble_residuals)
+    DEALLOCATE(exponentiated_residuals)
 
   END IF
 
@@ -1104,18 +1109,18 @@ END SUBROUTINE PDAF_compute_moments
 !> @brief Computes the unbiased estimator for mean, variance, skewness, and excess kurtosis from the sum of exponentiated residulals
 !!
 !! Computes the unbiased estimator for mean, variance, skewness, and excess kurtosis from the sum of exponentiated residulals.
-!! you can perform an inplace moment calculation by using the same input for power_residual_sums and moments
+!! you can perform an inplace moment calculation by using the same input for sum_expo_resid and moments
 !!
 !! @param[in]  dim_ens             number of ensemble members/samples
 !! @param[in]  dim_p               local size of the state
 !! @param[in]  kmax                maximum order of central moment that is comuted, maximum is 4
-!! @param[in]  power_residual_sums sum of exponentiated residulals [sum(r**2) sum(r**3) ... sun(r**kmax)]
+!! @param[in]  sum_expo_resid               sum of exponentiated residulals [sum(r**2) sum(r**3) ... sun(r**kmax)]
 !! @param[out] moments             The columns contain the moments of the ensemble (mean, variance, skewness, excess kurtosis)
 !! __Revision history:__
 !! * 2023-08 - Armin Corbin - original code for tiegcm-pdaf
 !! * 2025-03 - Armin Corbin - ported for PDAF 3
 !!
-SUBROUTINE PDAF_moments_from_summed_residuals(dim_ens,dim_p,kmax,power_residual_sums,moments)
+SUBROUTINE PDAF_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,moments)
 
   IMPLICIT NONE
 
@@ -1123,27 +1128,30 @@ SUBROUTINE PDAF_moments_from_summed_residuals(dim_ens,dim_p,kmax,power_residual_
   INTEGER, INTENT(IN) :: dim_ens
   INTEGER, INTENT(IN) :: dim_p
   INTEGER, INTENT(IN) :: kmax
-  REAL, DIMENSION(1:dim_p,2:kmax), INTENT(IN) :: power_residual_sums
+  REAL, DIMENSION(1:dim_p,2:kmax), INTENT(IN) :: sum_expo_resid
   REAL, DIMENSION(1:dim_p,2:kmax), INTENT(OUT) :: moments
 
-  ! variance
-  moments(:,2) = power_residual_sums(:,2)/REAL(dim_ens-1)
+  ! unbiased estimator of variance
+  ! k2 = sum(r**2)/(n-1)
+  moments(:,2) = sum_expo_resid(:,2)/REAL(dim_ens-1)
 
-  ! skewness
+  ! unbiased skewness
   IF(kmax>2) THEN
     WHERE(moments(:,2)/=0)
+      ! G1 = k3/k2**(3/2)
       moments(:,3) = REAL(dim_ens)/REAL((dim_ens-1)*(dim_ens-2)) &
-                    * power_residual_sums(:,3)/moments(:,2)**(3./2.)
+                    * sum_expo_resid(:,3)/moments(:,2)**(3./2.)
     ELSEWHERE
       moments(:,3) = 0.
     ENDWHERE
   END IF
 
-  ! excess kurtosis
+  ! unbiased excess kurtosis
   IF(kmax>3) THEN
+    ! G2 = k4/k2**2
     WHERE(moments(:,2)/=0)
       moments(:,4) = REAL(dim_ens*(dim_ens+1))/REAL((dim_ens-1)*(dim_ens-2)*(dim_ens-3)) &
-                      * power_residual_sums(:,4)/moments(:,2)**2
+                      * sum_expo_resid(:,4)/moments(:,2)**2
       moments(:,4) = moments(:,4) - 3.*REAL((dim_ens-1)**2)/REAL(((dim_ens-2)*(dim_ens-3)))
     ELSEWHERE
       moments(:,4) = 0.
