@@ -1031,7 +1031,7 @@ SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
 END SUBROUTINE PDAF_diag_ensstats
 
 !--------------------------------------------------------------------------
-!> Computes the unbiased estimator for mean, variance, skewness, and excess kurtosis.
+!> Computes the unbiased or biased estimator for mean, variance, skewness, and excess kurtosis.
 !!
 !! This routine is faster than computing the moments in isolation.
 !! Overflow in kurtosis calculation occures if residulal > 10**77 (assuming E+308 is largest number)
@@ -1055,6 +1055,8 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
 
   ! *** local variables ***
   INTEGER :: kmax_
+  LOGICAL :: bias_
+
   INTEGER :: i
 
   INTEGER :: blk_lb, blk_ub, blk_size
@@ -1062,8 +1064,6 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
 
   REAL, ALLOCATABLE :: ensemble_residuals(:,:)
   REAL, ALLOCATABLE :: exponentiated_residuals(:,:)
-
-  LOGICAL :: bias_
 
   if (present(bias)) then
     bias_ = bias
@@ -1104,7 +1104,7 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
                                                 moments(blk_lb:blk_ub,1:kmax_),&
                                                 moments(blk_lb:blk_ub,1:kmax_))
       else
-        CALL PDAF_moments_from_summed_residuals(dim_ens,&
+        CALL PDAF_unbiased_moments_from_summed_residuals(dim_ens,&
                                                 blk_size,&
                                                 kmax_,&
                                                 moments(blk_lb:blk_ub,1:kmax_),&
@@ -1130,7 +1130,7 @@ END SUBROUTINE PDAF_diag_compute_moments
 !! * 2023-08 - Armin Corbin - original code for tiegcm-pdaf
 !! * 2025-03 - Armin Corbin - ported for PDAF 3
 !!
-SUBROUTINE PDAF_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,moments)
+SUBROUTINE PDAF_unbiased_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,moments)
 
   IMPLICIT NONE
 
@@ -1170,7 +1170,7 @@ SUBROUTINE PDAF_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,
     ENDWHERE
   END IF
 
-END SUBROUTINE PDAF_moments_from_summed_residuals
+END SUBROUTINE PDAF_unbiased_moments_from_summed_residuals
 
 !--------------------------------------------------------------------------
 !> Computes the biased estimator for mean, variance, skewness, and excess
