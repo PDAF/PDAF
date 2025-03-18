@@ -1051,7 +1051,7 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
   INTEGER, INTENT(IN) :: kmax               !< maximum order of central moment that is computed, maximum is 4
   REAL, INTENT(OUT) :: moments(dim_p, kmax) !< The columns contain the moments of the ensemble
                                             !< (mean, variance, skewness, excess kurtosis)
-  LOGICAL, OPTIONAL, INTENT(IN) :: bias     !< if false bias correction is applied (default)
+  INTEGER, OPTIONAL, INTENT(IN) :: bias     !< if 0 bias correction is applied (default)
 
   ! *** local variables ***
   INTEGER :: kmax_
@@ -1066,7 +1066,7 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
   REAL, ALLOCATABLE :: exponentiated_residuals(:,:)
 
   if (present(bias)) then
-    bias_ = bias
+    bias_ = (bias/=0)
   else
     bias_ = .false.
   end if
@@ -1198,7 +1198,7 @@ SUBROUTINE PDAF_biased_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo
 
   moments= sum_expo_resid/REAL(dim_ens)
 
-  ! unbiased skewness
+  ! biased skewness
   IF(kmax>2) THEN
     WHERE(moments(:,2)/=0)
       moments(:,3) = moments(:,3)/moments(:,2)**(3./2.)
@@ -1207,7 +1207,7 @@ SUBROUTINE PDAF_biased_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo
     ENDWHERE
   END IF
 
-  ! unbiased excess kurtosis
+  ! biased excess kurtosis
   IF(kmax>3) THEN
     WHERE(moments(:,2)/=0)
       moments(:,4) = moments(:,4)/moments(:,2)**2 - 3
