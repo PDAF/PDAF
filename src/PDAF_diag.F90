@@ -18,6 +18,9 @@
 !!
 MODULE PDAF_diag
 
+PRIVATE PDAF_unbiased_moments_from_summed_residuals
+PRIVATE PDAF_biased_moments_from_summed_residuals
+
 CONTAINS
 
 !--------------------------------------------------------------------------
@@ -1040,7 +1043,7 @@ END SUBROUTINE PDAF_diag_ensstats
 !! * 2023-08 - Armin Corbin - original code for tiegcm-pdaf
 !! * 2025-03 - Armin Corbin - ported for PDAF 3
 !!
-SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
+SUBROUTINE PDAF_diag_compute_moments(dim_p, dim_ens, ens, kmax, moments, bias)
 
   IMPLICIT NONE
 
@@ -1065,11 +1068,11 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
   REAL, ALLOCATABLE :: ensemble_residuals(:,:)
   REAL, ALLOCATABLE :: exponentiated_residuals(:,:)
 
-  if (present(bias)) then
+  IF (PRESENT(bias)) THEN
     bias_ = (bias/=0)
-  else
-    bias_ = .false.
-  end if
+  ELSE
+    bias_ = .FALSE.
+  END IF
 
   IF(kmax>dim_ens) THEN
     WRITE(*,'(a,i1,a)') 'WARNING not enough samples to compute ', kmax, '-th moment'
@@ -1091,25 +1094,26 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
       blk_size = blk_ub - blk_lb + 1
 
       ensemble_residuals(1:blk_size,:) = ens(blk_lb:blk_ub,:) - SPREAD(moments(blk_lb:blk_ub,1),DIM=2,ncopies=dim_ens)
+
       exponentiated_residuals = ensemble_residuals
       DO i = 2, kmax_
         exponentiated_residuals = exponentiated_residuals*ensemble_residuals
         moments(blk_lb:blk_ub,i) = SUM(exponentiated_residuals(1:blk_size,:),DIM=2)
       END DO
 
-      if(bias_) then
+      IF(bias_) THEN
         CALL PDAF_biased_moments_from_summed_residuals(dim_ens,&
                                                 blk_size,&
                                                 kmax_,&
                                                 moments(blk_lb:blk_ub,1:kmax_),&
                                                 moments(blk_lb:blk_ub,1:kmax_))
-      else
+      ELSE
         CALL PDAF_unbiased_moments_from_summed_residuals(dim_ens,&
                                                 blk_size,&
                                                 kmax_,&
                                                 moments(blk_lb:blk_ub,1:kmax_),&
                                                 moments(blk_lb:blk_ub,1:kmax_))
-      end if
+      END IF
     END DO blocking
     DEALLOCATE(ensemble_residuals)
     DEALLOCATE(exponentiated_residuals)
@@ -1130,7 +1134,7 @@ END SUBROUTINE PDAF_diag_compute_moments
 !! * 2023-08 - Armin Corbin - original code for tiegcm-pdaf
 !! * 2025-03 - Armin Corbin - ported for PDAF 3
 !!
-SUBROUTINE PDAF_unbiased_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,moments)
+SUBROUTINE PDAF_unbiased_moments_from_summed_residuals(dim_ens, dim_p, kmax, sum_expo_resid, moments)
 
   IMPLICIT NONE
 
@@ -1183,7 +1187,7 @@ END SUBROUTINE PDAF_unbiased_moments_from_summed_residuals
 !! __Revision history:__
 !! * 2025-03 - Armin Corbin
 !!
-SUBROUTINE PDAF_biased_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,moments)
+SUBROUTINE PDAF_biased_moments_from_summed_residuals(dim_ens, dim_p, kmax, sum_expo_resid, moments)
 
   IMPLICIT NONE
 
@@ -1196,7 +1200,9 @@ SUBROUTINE PDAF_biased_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo
   REAL, INTENT(INOUT) :: moments(dim_p, kmax)     !  The columns contain the moments of the ensemble
                                   !< (mean, variance, skewness, excess kurtosis)
 
-  moments= sum_expo_resid/REAL(dim_ens)
+  ! biased variance
+  ! k2 = sum(r**2)/n
+  moments(:,2:kmax) = sum_expo_resid(:,2:kmax)/REAL(dim_ens)
 
   ! biased skewness
   IF(kmax>2) THEN
