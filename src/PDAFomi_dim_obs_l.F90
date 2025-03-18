@@ -261,13 +261,19 @@ CONTAINS
     REAL :: slon, slat              ! sine of distance in longitude or latitude
     REAL :: distance2               ! square distance
     REAL :: cradius2                ! squared localization cut-off radius
-    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
-    REAL :: coordsB(thisobs%ncoord) ! Array for coordinates of a single observation
+    REAL :: dists(16)               ! Distance vector between analysis point and observation
+    REAL :: coordsB(16)             ! Array for coordinates of a single observation
 
 
 ! **********************
 ! *** Initialization ***
 ! **********************
+
+    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+       domsize = 0
+    ELSE
+       domsize = 1
+    END IF
 
     scancount: DO i = 1, thisobs%dim_obs_f
 
@@ -282,12 +288,6 @@ CONTAINS
 ! ************************
 ! *** Compute distance ***
 ! ************************
-
-       IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
-          domsize = 0
-       ELSE
-          domsize = 1
-       END IF
 
        norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
             ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
@@ -890,8 +890,8 @@ CONTAINS
     REAL :: cradius2                ! cut-off radius on ellipse or ellipsoid
     REAL :: phi, theta              ! Angles in ellipse or ellipsoid
     REAL :: dist_xy                 ! Distance in xy-plan in 3D case
-    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
-    REAL :: coordsB(thisobs%ncoord) ! Array for coordinates of a single observation
+    REAL :: dists(16)               ! Distance vector between analysis point and observation
+    REAL :: coordsB(16)             ! Array for coordinates of a single observation
     REAL :: cradius                 ! Directional cut-off radius
     REAL :: sradius                 ! Directional support radius
     LOGICAL :: checkdist            ! Flag whether distance is within cut-off radius
@@ -900,6 +900,12 @@ CONTAINS
 ! **********************
 ! *** Initialization ***
 ! **********************
+
+    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+       domsize = 0
+    ELSE
+       domsize = 1
+    END IF
 
     scancount: DO i = 1, thisobs%dim_obs_f
 
@@ -917,12 +923,6 @@ CONTAINS
 ! ************************
 ! *** Compute distance ***
 ! ************************
-
-       IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
-          domsize = 0
-       ELSE
-          domsize = 1
-       END IF
 
        ! Debug output
        IF (debug>0 .AND. verbose==0) THEN
@@ -1468,9 +1468,9 @@ CONTAINS
                 thisobs_l%dist_l_v(cnt_obs) = dists(3)             ! distance in vertical direction
              END if
           END IF
-    END IF dflag
+       END IF dflag
 
- END DO scancount
+    END DO scancount
 
   END SUBROUTINE PDAFomi_check_dist2_noniso_loop
 
