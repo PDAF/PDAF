@@ -1040,7 +1040,7 @@ END SUBROUTINE PDAF_diag_ensstats
 !! * 2023-08 - Armin Corbin - original code for tiegcm-pdaf
 !! * 2025-03 - Armin Corbin - ported for PDAF 3
 !!
-SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments)
+SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments,bias)
 
   IMPLICIT NONE
 
@@ -1051,6 +1051,7 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments)
   INTEGER, INTENT(IN) :: kmax               !< maximum order of central moment that is computed, maximum is 4
   REAL, INTENT(OUT) :: moments(dim_p, kmax) !< The columns contain the moments of the ensemble
                                             !< (mean, variance, skewness, excess kurtosis)
+  LOGICAL, OPTIONAL, INTENT(IN) :: bias     !< if false bias correction is applied (default)
 
   ! *** local variables ***
   INTEGER :: kmax_
@@ -1061,6 +1062,14 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments)
 
   REAL, ALLOCATABLE :: ensemble_residuals(:,:)
   REAL, ALLOCATABLE :: exponentiated_residuals(:,:)
+
+  LOGICAL :: bias_
+
+  if (present(bias)) then
+    bias_ = bias
+  else
+    bias_ = .false.
+  end if
 
   IF(kmax>dim_ens) THEN
     WRITE(*,'(a,i1,a)') 'WARNING not enough samples to compute ', kmax, '-th moment'
@@ -1088,11 +1097,19 @@ SUBROUTINE PDAF_diag_compute_moments(dim_p,dim_ens,ens,kmax,moments)
         moments(blk_lb:blk_ub,i) = SUM(exponentiated_residuals(1:blk_size,:),DIM=2)
       END DO
 
-      CALL PDAF_moments_from_summed_residuals(dim_ens,&
-                                              blk_size,&
-                                              kmax_,&
-                                              moments(blk_lb:blk_ub,1:kmax_),&
-                                              moments(blk_lb:blk_ub,1:kmax_))
+      if(bias_) then
+        CALL PDAF_biased_moments_from_summed_residuals(dim_ens,&
+                                                blk_size,&
+                                                kmax_,&
+                                                moments(blk_lb:blk_ub,1:kmax_),&
+                                                moments(blk_lb:blk_ub,1:kmax_))
+      else
+        CALL PDAF_moments_from_summed_residuals(dim_ens,&
+                                                blk_size,&
+                                                kmax_,&
+                                                moments(blk_lb:blk_ub,1:kmax_),&
+                                                moments(blk_lb:blk_ub,1:kmax_))
+      end if
     END DO blocking
     DEALLOCATE(ensemble_residuals)
     DEALLOCATE(exponentiated_residuals)
@@ -1155,6 +1172,51 @@ SUBROUTINE PDAF_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,
 
 END SUBROUTINE PDAF_moments_from_summed_residuals
 
+!--------------------------------------------------------------------------
+!> Computes the biased estimator for mean, variance, skewness, and excess
+!! kurtosis from the sum of exponentiated residulals
+!!
+!! Computes the biased estimator for mean, variance, skewness, and excess
+!! kurtosis from the sum of exponentiated residulals. You can perform an inplace
+!! moment calculation by using the same input for sum_expo_resid and moments
+!!
+!! __Revision history:__
+!! * 2025-03 - Armin Corbin
+!!
+SUBROUTINE PDAF_biased_moments_from_summed_residuals(dim_ens,dim_p,kmax,sum_expo_resid,moments)
+
+  IMPLICIT NONE
+
+  ! *** Arguments ***
+  INTEGER, INTENT(IN) :: dim_ens  !< number of ensemble members/samples
+  INTEGER, INTENT(IN) :: dim_p    !< local size of the state
+  INTEGER, INTENT(IN) :: kmax     !< maximum order of central moment that is computed, maximum is 4
+  REAL, INTENT(IN) :: sum_expo_resid(dim_p, kmax) ! sum of exponentiated residulals
+                                  !< [sum(r**2) sum(r**3) ... sum(r**kmax)]
+  REAL, INTENT(INOUT) :: moments(dim_p, kmax)     !  The columns contain the moments of the ensemble
+                                  !< (mean, variance, skewness, excess kurtosis)
+
+  moments= sum_expo_resid/REAL(dim_ens)
+
+  ! unbiased skewness
+  IF(kmax>2) THEN
+    WHERE(moments(:,2)/=0)
+      moments(:,3) = moments(:,3)/moments(:,2)**(3./2.)
+    ELSEWHERE
+      moments(:,3) = 0.
+    ENDWHERE
+  END IF
+
+  ! unbiased excess kurtosis
+  IF(kmax>3) THEN
+    WHERE(moments(:,2)/=0)
+      moments(:,4) = moments(:,4)/moments(:,2)**2 - 3
+    ELSEWHERE
+      moments(:,4) = 0.
+    ENDWHERE
+  END IF
+
+END SUBROUTINE PDAF_biased_moments_from_summed_residuals
 
 !--------------------------------------------------------------------------
 !> Increment rank histogram
