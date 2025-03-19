@@ -49,6 +49,7 @@ CONTAINS
 
 ! *** Arguments ***
     INTEGER, INTENT(in) :: diag          !< Value for observation diagnostics mode
+                                         !< >0 activates observation diagnostics
 
     ! Set value for observation diagnostics type
     obs_diag = diag
