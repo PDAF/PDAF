@@ -99,8 +99,6 @@ MODULE PDAFomi_obs_f
        ONLY: mype, npes, COMM_FILTER, MPIerr
   USE PDAF_mod_core, &
        ONLY: screen, obs_member, filterstr, dim_p, dim_ens
-  USE PDAF_mod_core, &
-       ONLY: obs_member
 
   IMPLICIT NONE
   SAVE
@@ -108,7 +106,8 @@ MODULE PDAFomi_obs_f
 ! *** Module internal variables
   INTEGER :: debug=0                      !< Debugging flag
   INTEGER :: error=0                      !< Error flag
-  INTEGER :: obs_diag=1                   !< Whether to store observation diagnostics
+  INTEGER :: obs_diag=0                   !< Whether to store observation diagnostics
+  LOGICAL :: count_mem=.TRUE.             !< Flag for memory counting
 
   REAL, ALLOCATABLE :: domain_limits(:)   !< Limiting coordinates (NSWE) for process domain
   REAL, PARAMETER :: r_earth=6.3675e6     !< Earth radius in meters
@@ -243,6 +242,7 @@ CONTAINS
        ncoord, lradius, dim_obs_f)
 
     USE PDAF_get, ONLY: PDAF_get_localfilter
+    USE PDAF_memcounting, ONLY: PDAF_memcount
 
     IMPLICIT NONE
 
@@ -301,6 +301,10 @@ CONTAINS
           thisobs%ocoord_diag_p(:,:) = ocoord_p(:,:)
           thisobs%hxmean_diag_p(:) = 0.0
           thisobs%hx_diag_p(:,:) = 0.0
+
+          ! Count allocated memory
+          IF (count_mem) &
+               CALL PDAF_memcount(6, 'r', 3*dim_obs_p + ncoord*dim_obs_p + dim_ens*dim_obs_p)
 
        ELSE
           ALLOCATE(thisobs%obs_diag_p(1))
@@ -379,6 +383,10 @@ CONTAINS
              ALLOCATE(thisobs%obs_f(dim_obs_f))
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
              ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+
+             ! Count allocated memory
+             IF (count_mem) &
+                  CALL PDAF_memcount(6, 'r', 2*dim_obs_f + ncoord*dim_obs_f)
           ELSE
              ALLOCATE(thisobs%obs_f(1))
              ALLOCATE(thisobs%ivar_obs_f(1))
@@ -408,6 +416,10 @@ CONTAINS
              ALLOCATE(obs_g(thisobs%dim_obs_g))
              ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
              ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
+
+             ! Count allocated memory
+             IF (count_mem) &
+                  CALL PDAF_memcount(6, 'r', 3*thisobs%dim_obs_g)
           ELSE
              ALLOCATE(obs_g(1))
              ALLOCATE(ivar_obs_g(1))
@@ -426,6 +438,10 @@ CONTAINS
      
           IF (thisobs%dim_obs_g > 0) THEN
              ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
+
+             ! Count allocated memory
+             IF (count_mem) &
+                  CALL PDAF_memcount(6, 'r', thisobs%dim_obs_g)
           ELSE
              ALLOCATE(thisobs%id_obs_f_lim(1))
           END IF
@@ -454,6 +470,10 @@ CONTAINS
              ALLOCATE(thisobs%obs_f(dim_obs_f))
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
              ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+
+             ! Count allocated memory
+             IF (count_mem) &
+                  CALL PDAF_memcount(6, 'r', 2*dim_obs_f + ncoord*dim_obs_f)
 
              ! Get process-relevant full observation arrays
              CALL PDAFomi_limit_obs_f(thisobs, 0, obs_g, thisobs%obs_f)
@@ -510,9 +530,17 @@ CONTAINS
              ! The LEnKF needs the global array ivar_obs_f
              ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
              ALLOCATE(thisobs%ocoord_f(ncoord, thisobs%dim_obs_g))
+
+             ! Count allocated memory
+             IF (count_mem) &
+                  CALL PDAF_memcount(6, 'r', thisobs%dim_obs_g + ncoord*thisobs%dim_obs_g)
           ELSE
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
              ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+
+             ! Count allocated memory
+             IF (count_mem) &
+                  CALL PDAF_memcount(6, 'r', dim_obs_f + ncoord*dim_obs_f)
           END IF
        ELSE
           ALLOCATE(thisobs%obs_f(1))
@@ -522,6 +550,10 @@ CONTAINS
              IF (thisobs%dim_obs_g>0) THEN
                 ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
                 ALLOCATE(thisobs%ocoord_f(ncoord, thisobs%dim_obs_g))
+
+             ! Count allocated memory
+                IF (count_mem) &
+                     CALL PDAF_memcount(6, 'r', 2*thisobs%dim_obs_g)
              ELSE
                 ALLOCATE(thisobs%ivar_obs_f(1))
                 ALLOCATE(thisobs%ocoord_f(ncoord, 1))
@@ -625,9 +657,13 @@ CONTAINS
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
     INTEGER :: obsmember                   ! Ensemble member index for which the routine is called
 
+
 ! **************************************
 ! *** Gather full observation arrays ***
 ! **************************************
+
+    ! Set memory counting flag (no more counting)
+    count_mem = .FALSE.
 
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
@@ -739,7 +775,6 @@ CONTAINS
        END IF
 
     END IF
-
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_gather_obsstate -- END'

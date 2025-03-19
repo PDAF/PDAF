@@ -550,7 +550,7 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i                        ! Counter
-    REAL :: memcount_global(3)          ! Globally counted memory
+    REAL :: memcount_global(4)          ! Globally counted memory
     REAL :: time_omi                    ! Sum of timers for OMI-internal call-back routines
 
 
@@ -719,6 +719,10 @@ CONTAINS
             'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
        WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
             'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
+       IF (omi_was_used) THEN
+          WRITE (*, '(a, 17x, a, 1x, f10.3, a)') &
+            'PDAF', 'PDAF-OMI:', pdaf_memcount_get(6, 'M'), ' MiB (temporary)'
+       END IF
 
     ELSE IF (printtype == 11) THEN ptype
 
@@ -729,6 +733,7 @@ CONTAINS
        memcount_global(1) = pdaf_memcount_get_global(1, 'M', COMM_pdaf)
        memcount_global(2) = pdaf_memcount_get_global(2, 'M', COMM_pdaf)
        memcount_global(3) = pdaf_memcount_get_global(3, 'M', COMM_pdaf)
+       memcount_global(4) = pdaf_memcount_get_global(6, 'M', COMM_pdaf)
 
        IF (mype_world==0) THEN
           WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
@@ -740,6 +745,10 @@ CONTAINS
                'PDAF', 'ensemble array:', memcount_global(2), ' MiB (persistent)'
           WRITE (*, '(a, 12x, a, 1x, f12.3, a)') &
                'PDAF', 'analysis step:', memcount_global(3), ' MiB (temporary)'
+          IF (omi_was_used) THEN
+             WRITE (*, '(a, 17x, a, 1x, f12.3, a)') &
+                  'PDAF', 'PDAF-OMI:', memcount_global(4), ' MiB (temporary)'
+          END IF
        END IF
 
     END IF ptype

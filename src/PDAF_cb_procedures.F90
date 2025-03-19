@@ -40,4 +40,38 @@ MODULE PDAF_cb_procedures
   END INTERFACE
 
 
+!!   U_init_ens
+!   U_collect_state
+!   U_distribute_state
+!   U_next_observation
+!   U_prodRinvA
+! 
+!   U_init_dim_obs
+!   U_obs_op
+!   U_init_obsvar
+!   U_init_obsvars
+!   U_init_obs
+!   U_prepoststep
+!   U_localize
+!   U_localize_covar_serial
+!   U_add_obs_err
+!   U_init_obs_covar
+!   U_init_obserr_f
+!   U_get_obs_f
+! 
+!   U_init_n_domains_p
+!   U_init_dim_l
+!   U_g2l_state
+!   U_l2g_state
+! 
+!   U_init_obs_l
+!   U_prodRinvA_l
+!   U_likelihood_l
+!   U_init_dim_obs_l
+!   U_g2l_obs
+!   U_init_obsvar_l
+! 
+!   U_prodRinvA_hyb_l
+!   U_likelihood_hyb_l
+
 END MODULE PDAF_cb_procedures
