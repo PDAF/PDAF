@@ -18,6 +18,7 @@ PROGRAM generate_covar
 
 ! !USES:
   USE netcdf
+  USE PDAF
 
   IMPLICIT NONE
 !EOP

@@ -18,7 +18,7 @@ SUBROUTINE init_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF, &   ! Interface definitions to PDAF core routines
        ONLY: PDAF_init, PDAF_get_state
   USE parser, &
        ONLY: parse
@@ -31,7 +31,7 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       model_error, model_err_amp, incremental, covartype, &
+       model_error, model_err_amp, covartype, &
        type_forget, forget, rank_analysis_enkf, &
        locweight, cradius, cradius2, sradius, &
        file_ini, type_ensinit, seedset, type_trans, &
@@ -138,7 +138,6 @@ SUBROUTINE init_pdaf()
                     !   NETF/LNETF:
                     !     (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                     !     (1) use identity transformation
-  incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
   forget  = 1.0     ! Forgetting factor
   type_forget = 0   ! Type of forgetting factor in SEIK/LSEIK
                     ! (0): fixed; (1) global adaptive; (2) local adaptive for LSEIK
@@ -413,7 +412,7 @@ SUBROUTINE init_pdaf()
      ! *** SEIK with init by 2nd order exact sampling ***
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
@@ -442,7 +441,7 @@ SUBROUTINE init_pdaf()
      ! *** LSEIK with init by 2nd order exact sampling ***
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
@@ -459,7 +458,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_r(1) = forget      ! Forgetting factor
@@ -475,7 +474,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_r(1) = forget      ! Forgetting factor
@@ -491,7 +490,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
@@ -508,7 +507,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
@@ -538,7 +537,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_winf   ! Type of weights inflation
@@ -556,7 +555,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_winf   ! Type of weights inflation

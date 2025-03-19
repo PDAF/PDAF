@@ -47,7 +47,7 @@ CONTAINS
          ONLY: screen, flag, dim_p, dim_ens, local_dim_ens, &
          nsteps, step_obs, step, member, member_save, &
          subtype_filter, initevol, state, ens, Ainv, &
-         sens, dim_lag, cnt_maxlag, offline_mode
+         sens, dim_lag, cnt_maxlag, offline_mode, assim_flag
     USE PDAF_mod_parallel, &          ! Variables for parallelization
          ONLY: mype_world, filterpe, &
          dim_ens_l, modelpe, filter_no_model
@@ -151,6 +151,10 @@ CONTAINS
     completeforecast: IF (member == local_dim_ens + 1 &
          .OR. offline_mode) THEN
 
+       ! Set flag for assimilation
+       assim_flag = 1
+
+
        ! ****************************************************
        ! *** Gather forecast ensemble on filter processes ***
        ! ****************************************************
@@ -186,6 +190,8 @@ CONTAINS
           WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
           WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
           WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)
+       ELSE IF (.NOT.offline_mode .AND. mype_world==0 .AND. screen > 0) THEN
+          WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
        ENDIF
      
        OnFilterPE: IF (filterpe) THEN

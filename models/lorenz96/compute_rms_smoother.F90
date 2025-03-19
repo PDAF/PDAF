@@ -30,7 +30,7 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim, dim_ens, state, &
        ONLY: memcount
   USE mod_assimilation, &
        ONLY: delt_obs, stepnull_means, fileid_state, state_true
-  USE PDAF_interfaces_module, &    ! Required to get pointer to smoother state array
+  USE PDAF, &                        ! Routine to get pointer to smoother ensemble array
        ONLY: PDAF_get_smootherens
 
   IMPLICIT NONE

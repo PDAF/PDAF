@@ -84,7 +84,6 @@ MODULE mod_assimilation
                           !     (0) standard LNETF 
                           !   PF:
                           !     (0) standard PF 
-  INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
 
 ! ! Filter settings - available as command line options

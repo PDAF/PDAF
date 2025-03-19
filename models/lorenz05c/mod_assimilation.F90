@@ -77,7 +77,6 @@ MODULE mod_assimilation
                           !     (0) standard LESTKF 
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to LSEIK subtypes 2/3
-  INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
 
 ! ! Filter settings - available as command line options

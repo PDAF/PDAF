@@ -33,7 +33,7 @@ CONTAINS
        U_init_obsvar, U_next_observation, U_prepoststep, outflag)
 
     USE PDAF_mod_core,   &            ! Variables for framework functionality
-         ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
+         ONLY: cnt_steps, nsteps, assim_flag, reset_fcst_flag, use_PDAF_assim
     USE PDAF_mod_parallel, &          ! Variables for parallelization
          ONLY: mype_world
     USE PDAF_forecast, &              ! Routine for operations during forecast phase
@@ -100,10 +100,9 @@ CONTAINS
 
     IF (cnt_steps == nsteps) THEN
 
-       IF (mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
-
-       ! Set flag for assimilation
-       assim_flag = 1
+       ! Set flags for assimilation and forecast
+       assim_flag = 0
+       reset_fcst_flag = 1
 
        ! *** Call analysis step ***
 
@@ -122,6 +121,7 @@ CONTAINS
 
     ELSE
        assim_flag = 0
+       reset_fcst_flag = 0
        outflag = 0
     END IF
 

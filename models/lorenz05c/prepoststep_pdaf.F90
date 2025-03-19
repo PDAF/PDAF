@@ -49,6 +49,8 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
        ONLY: subtype, covartype, stepnull_means, dim_lag
   USE output_netcdf_asml, &
        ONLY: write_netcdf_asml
+  USE PDAF, &
+       ONLY: PDAF_seik_ttimesa
 
   IMPLICIT NONE
 

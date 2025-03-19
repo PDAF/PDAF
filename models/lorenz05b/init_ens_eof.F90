@@ -34,6 +34,8 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
        ONLY: memcount
   USE mod_assimilation, &
        ONLY: file_ini
+  USE PDAF, &
+       ONLY: PDAF_sampleens
 
   IMPLICIT NONE
 
