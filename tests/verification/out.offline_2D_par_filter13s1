@@ -139,33 +139,42 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.002 MiB (persistent)
 PDAF           ensemble array:      0.013 MiB (persistent)
-PDAF            analysis step:      0.006 MiB (temporary)
+PDAF            analysis step:      0.005 MiB (temporary)
+PDAF                 PDAF-OMI:      0.002 MiB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                 Globally allocated memory  (MiB)
+PDAF              state and A:        0.005 MiB (persistent)
+PDAF           ensemble array:        0.040 MiB (persistent)
+PDAF            analysis step:        0.014 MiB (temporary)
+PDAF                 PDAF-OMI:        0.005 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.003 s
-PDAF          ENSRF analysis:                        0.037 s
+PDAF          ENSRF analysis:                        0.036 s
 PDAF            PDAF-internal operations:             0.000 s
 PDAF            OMI-internal routines:                0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:               0.012 s
-PDAF              obs_op_pdafomi:                     0.050 s
-PDAF              localize_covar_serial_pdafomi:      0.001 s
+PDAF              obs_op_pdafomi:                     0.024 s
+PDAF              localize_covar_serial_pdafomi:      0.000 s
 PDAF          prepoststep_pdaf:                     0.009 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF          Initialize PDAF (1):                 0.003 s
-PDAF          EnSRF analysis (3):                  0.037 s
-PDAF            prepare observations (6):            0.062 s
+PDAF          EnSRF analysis (3):                  0.036 s
+PDAF            prepare observations (6):            0.036 s
 PDAF            compute ensemble mean (9):           0.000 s
-PDAF              HXpert, var(hx), covars (10):      0.001 s
+PDAF              HXpert, var(hx), covars (10):      0.000 s
 PDAF              HXpert, HXbar, var(hx) (30):         0.000 s
 PDAF              covariances X(HX), HX(HX) (31):      0.000 s
-PDAF              Apply localization (45):             0.001 s
+PDAF              Apply localization (45):             0.000 s
 PDAF            transform obs. ensemble (13):        0.000 s
 PDAF            ensemble transformation (14):        0.000 s
 PDAF          Prepoststep (5):                     0.009 s

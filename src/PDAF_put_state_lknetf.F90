@@ -61,7 +61,7 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_core, &
-       ONLY: dim_p, dim_ens, local_dim_ens, &
+       ONLY: dim_p, dim_ens, local_dim_ens, assim_flag, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, Ainv, screen, flag, &
        sens, dim_lag, cnt_maxlag, offline_mode
@@ -153,6 +153,10 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
   completeforecast: IF (member == local_dim_ens + 1 &
        .OR. offline_mode) THEN
 
+     ! Set flag for assimilation
+     assim_flag = 1
+
+
      ! ***********************************************
      ! *** Collect forecast ensemble on filter PEs ***
      ! ***********************************************
@@ -187,6 +191,8 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
         WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
         WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
         WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)
+     ELSE IF (.NOT.offline_mode .AND. mype_world==0 .AND. screen > 0) THEN
+        WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
      ENDIF
      
      OnFilterPE: IF (filterpe) THEN

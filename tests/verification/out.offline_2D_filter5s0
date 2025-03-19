@@ -150,7 +150,16 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.014 MiB (temporary)
+PDAF            analysis step:      0.011 MiB (temporary)
+PDAF                 PDAF-OMI:      0.002 MiB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                 Globally allocated memory  (MiB)
+PDAF              state and A:        0.005 MiB (persistent)
+PDAF           ensemble array:        0.040 MiB (persistent)
+PDAF            analysis step:        0.011 MiB (temporary)
+PDAF                 PDAF-OMI:        0.002 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -158,7 +167,7 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LETKF analysis:                      0.002 s
-PDAF            PDAF-internal operations:            0.002 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
@@ -185,12 +194,12 @@ PDAF              localize observations (11):          0.000 s
 PDAF                init_dim_obs_l_pdaf (38):            0.000 s
 PDAF                g2l_obs_pdaf (46):                   0.000 s
 PDAF                init_obs_l_pdaf (47):                0.000 s
-PDAF              local analysis (12):                 0.002 s
+PDAF              local analysis (12):                 0.001 s
 PDAF                compute Ainv (16):                   0.000 s
 PDAF                  init innovation (20):                0.000 s
 PDAF                  prodRinvA_pdaf (48):                 0.000 s
 PDAF                  complete Ainv (21):                  0.000 s
-PDAF                compute ensemble weights (17):       0.002 s
+PDAF                compute ensemble weights (17):       0.001 s
 PDAF                  get state weight vector (22):        0.001 s
 PDAF                  complete transform matrix (23):      0.000 s
 PDAF                transform ensemble (18):             0.000 s

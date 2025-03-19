@@ -149,7 +149,16 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.002 MiB (persistent)
 PDAF           ensemble array:      0.013 MiB (persistent)
-PDAF            analysis step:      0.100 MiB (temporary)
+PDAF            analysis step:      0.098 MiB (temporary)
+PDAF                 PDAF-OMI:      0.001 MiB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                 Globally allocated memory  (MiB)
+PDAF              state and A:        0.005 MiB (persistent)
+PDAF           ensemble array:        0.040 MiB (persistent)
+PDAF            analysis step:        0.293 MiB (temporary)
+PDAF                 PDAF-OMI:        0.002 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -157,7 +166,7 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LEnKF analysis:                      0.027 s
-PDAF            PDAF-internal operations:            0.037 s
+PDAF            PDAF-internal operations:            0.019 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.007 s

@@ -60,7 +60,9 @@ MODULE PDAF_mod_core
   INTEGER :: member=1             !< Which member of sub-ensemble to evolve
   INTEGER :: member_get=1         !< Which member of sub-ensemble to evolve (used in PDAF_get_state)
   INTEGER :: end_forecast         !< Whether to exit the forecasting
-  INTEGER :: assim_flag=0         !< (1) if assimilation was done at this time stepn in PDAF_assimilate, (0) if not
+  INTEGER :: assim_flag=0         !< (1) if assimilation was done at this time step in PDAF_assimilate, (0) if not
+  INTEGER :: reset_fcst_flag=0    !< For flexible mode with PDAF_assimilation: (1) reset forecast time, (0) no reset
+  REAL :: time_pdaf=0.0           !< Time input from call to PDAF_get_state
 
   ! *** Specification of type and subtype of DA method ***
   INTEGER :: type_filter          !< Type of Filter

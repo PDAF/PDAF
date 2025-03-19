@@ -139,32 +139,42 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and U:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.010 MiB (temporary)
+PDAF            analysis step:      0.007 MiB (temporary)
 PDAF               resampling:      0.013 MiB (temporary)
+PDAF                 PDAF-OMI:      0.001 MiB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                 Globally allocated memory  (MiB)
+PDAF              state and U:        0.005 MiB (persistent)
+PDAF           ensemble array:        0.040 MiB (persistent)
+PDAF            analysis step:        0.007 MiB (temporary)
+PDAF               resampling:        0.013 MiB (temporary)
+PDAF                 PDAF-OMI:        0.001 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
 PDAF          SEIK analysis/transform:             0.001 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.000 s
+PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.003 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.003 s
+PDAF                     Initialize PDAF (1):      0.002 s
 PDAF                       SEIK analysis (3):      0.001 s
 PDAF                        get mean state (9):      0.000 s
-PDAF                  prepare observations (6):      0.000 s
+PDAF                  prepare observations (6):      0.001 s
 PDAF                      init innovation (10):      0.000 s
 PDAF                         compute Ainv (11):      0.000 s
-PDAF              get state weight vector (12):      0.001 s
+PDAF              get state weight vector (12):      0.000 s
 PDAF                         update state (13):      0.000 s
 PDAF             ensemble transformation (7):      0.000 s
 PDAF             prepare ensemble weights (20):      0.000 s
@@ -173,6 +183,6 @@ PDAF                             init Omega (33):      0.000 s
 PDAF                      compute Ct OmegaT (34):      0.000 s
 PDAF                       complete weights (35):      0.000 s
 PDAF                      update ensemble (21):      0.000 s
-PDAF                         Prepoststep (5):      0.003 s
+PDAF                         Prepoststep (5):      0.004 s
 
  PDAF offline mode: END

@@ -51,9 +51,7 @@ SUBROUTINE PDAF_assimilate_etkf(U_collect_state, U_distribute_state, &
      U_init_obsvar, U_next_observation, outflag)
 
   USE PDAF_mod_core, &
-       ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_parallel, &
-       ONLY: mype_world
+       ONLY: cnt_steps, nsteps, assim_flag, reset_fcst_flag, use_PDAF_assim
   USE PDAF_forecast, &
        ONLY: PDAF_fcst_operations
   USE PDAFget_state, &
@@ -108,10 +106,9 @@ SUBROUTINE PDAF_assimilate_etkf(U_collect_state, U_distribute_state, &
 
   IF (cnt_steps == nsteps) THEN
 
-     IF (mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
-
-     ! Set flag for assimilation
-     assim_flag = 1
+     ! Set flags for assimilation and forecast
+     assim_flag = 0
+     reset_fcst_flag = 1
 
      ! *** Call analysis step ***
 
@@ -129,6 +126,7 @@ SUBROUTINE PDAF_assimilate_etkf(U_collect_state, U_distribute_state, &
 
   ELSE
      assim_flag = 0
+     reset_fcst_flag = 0
      outflag = 0
   END IF
 

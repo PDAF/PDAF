@@ -363,9 +363,9 @@ CONTAINS
     CALL PDAF_timeit(4, 'old')
 
 
-! *******************************************
-! *** Update ensemble incremental for IAU ***
-! *******************************************
+! *****************************************
+! *** Update ensemble increment for IAU ***
+! *****************************************
 
     CALL PDAF_iau_update_inc(ens)
 

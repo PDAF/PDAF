@@ -63,7 +63,7 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_core, &
-       ONLY: dim_p, dim_ens, local_dim_ens, &
+       ONLY: dim_p, dim_ens, local_dim_ens, assim_flag, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, Ainv, &
        screen, flag, offline_mode
@@ -149,6 +149,10 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
   completeforecast: IF (member == local_dim_ens + 1 &
        .OR. offline_mode) THEN
 
+     ! Set flag for assimilation
+     assim_flag = 1
+
+
      ! ***********************************************
      ! *** Collect forecast ensemble on filter PEs ***
      ! ***********************************************
@@ -183,6 +187,8 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
         WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
         WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
         WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)
+     ELSE IF (.NOT.offline_mode .AND. mype_world==0 .AND. screen > 0) THEN
+        WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
      ENDIF
 
      OnFilterPE: IF (filterpe) THEN

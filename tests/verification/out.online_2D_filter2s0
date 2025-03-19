@@ -120,8 +120,8 @@ PDAF     --- Distribute sub-ensembles
  step           7
  step           8
  step           9
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       9
         Analyze and write forecasted state ensemble
@@ -157,8 +157,8 @@ PDAF     --- Distribute sub-ensembles
  step          16
  step          17
  step          18
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
@@ -189,7 +189,8 @@ PDAF          ---------------------------------------------
 PDAF                 Globally allocated memory  (MiB)
 PDAF              state and A:        0.005 MiB (persistent)
 PDAF           ensemble array:        0.035 MiB (persistent)
-PDAF            analysis step:        0.027 MiB (temporary)
+PDAF            analysis step:        0.024 MiB (temporary)
+PDAF                 PDAF-OMI:        0.001 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -200,10 +201,10 @@ PDAF          Ensemble forecast:                   0.003 s
 PDAF            MPI communication in PDAF:           0.003 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          EnKF analysis:                       0.002 s
+PDAF          EnKF analysis:                       0.001 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.002 s
+PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF          prepoststep_pdaf:                    0.008 s

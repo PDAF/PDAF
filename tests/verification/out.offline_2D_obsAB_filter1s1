@@ -144,8 +144,18 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and U:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.013 MiB (temporary)
+PDAF            analysis step:      0.009 MiB (temporary)
 PDAF               resampling:      0.013 MiB (temporary)
+PDAF                 PDAF-OMI:      0.001 MiB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                 Globally allocated memory  (MiB)
+PDAF              state and U:        0.005 MiB (persistent)
+PDAF           ensemble array:        0.040 MiB (persistent)
+PDAF            analysis step:        0.009 MiB (temporary)
+PDAF               resampling:        0.013 MiB (temporary)
+PDAF                 PDAF-OMI:        0.001 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines

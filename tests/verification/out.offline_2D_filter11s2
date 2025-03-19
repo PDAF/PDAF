@@ -172,13 +172,22 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.021 MiB (temporary)
+PDAF            analysis step:      0.018 MiB (temporary)
+PDAF                 PDAF-OMI:      0.002 MiB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                 Globally allocated memory  (MiB)
+PDAF              state and A:        0.005 MiB (persistent)
+PDAF           ensemble array:        0.040 MiB (persistent)
+PDAF            analysis step:        0.018 MiB (temporary)
+PDAF                 PDAF-OMI:        0.002 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ------------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          LKNETF analysis:                     0.004 s
 PDAF            PDAF-internal operations:            0.003 s
 PDAF            OMI-internal routines:               0.000 s
@@ -188,21 +197,21 @@ PDAF            Time in OMI observation module routines
 PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.003 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
 
 PDAF                       PDAF Timing information
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF (1):                 0.002 s
+PDAF          Initialize PDAF (1):                 0.003 s
 PDAF          LKNETF analysis (3):                 0.004 s
 PDAF            prepare observations (6):            0.000 s
 PDAF            compute mean state (9):              0.000 s
 PDAF            global preparations (7):             0.001 s
 PDAF            local analysis loop (8):             0.003 s
 PDAF              global to local (10):                0.000 s
-PDAF              localize observations (11):          0.001 s
-PDAF              local analysis (12):                 0.002 s
+PDAF              localize observations (11):          0.000 s
+PDAF              local analysis (12):                 0.003 s
 PDAF              local to global (14):                0.000 s
-PDAF            Prepoststep (5):                   0.003 s
+PDAF            Prepoststep (5):                   0.004 s
 
  PDAF offline mode: END

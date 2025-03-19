@@ -60,7 +60,7 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_core, &
-       ONLY: dim_p, dim_ens, local_dim_ens, &
+       ONLY: dim_p, dim_ens, local_dim_ens, assim_flag, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, &
        Ainv, screen, flag, sens, dim_lag, cnt_maxlag, offline_mode
@@ -139,6 +139,12 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
 ! ********************************************************
   completeforecast: IF (member == local_dim_ens + 1 &
        .OR. offline_mode) THEN
+
+     IF (mype_world==0 .AND. .NOT.offline_mode) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
+
+     ! Set flag for assimilation
+     assim_flag = 1
+
 
      ! ***********************************************
      ! *** Collect forecast ensemble on filter PEs ***

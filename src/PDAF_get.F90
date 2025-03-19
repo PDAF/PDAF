@@ -45,11 +45,65 @@ SUBROUTINE PDAF_get_assim_flag(did_assim)
   INTEGER,INTENT(out) :: did_assim    !< Flag: (1) for assimilation; (0) else
 
 
-! *** Set ensemble member ***
+! *** Return asimilation flag value ***
 
   did_assim = assim_flag
 
 END SUBROUTINE PDAF_get_assim_flag
+
+!--------------------------------------------------------------------------
+!> Query whether assimilation was performed at current time step
+!!
+!! This is function variant of the subroutine PDAF_get_assim_flag
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2025-03 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+INTEGER FUNCTION PDAF_assim_flag()
+
+  USE PDAF_mod_core, &
+       ONLY: assim_flag
+
+  IMPLICIT NONE
+
+! *** Return asimilation flag value ***
+
+  PDAF_assim_flag = assim_flag
+
+END FUNCTION PDAF_assim_flag
+
+!--------------------------------------------------------------------------
+!> Query whether the model time in the forecast should be reset
+!!
+!! This is function returns the flag whether the model time 
+!! should be reset on the user side. This is used when the
+!! flexible parallelization mode is used with PDAF_assimilate_X
+!! instead of PDAF_put_state_X.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2025-03 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+INTEGER FUNCTION PDAF_reset_fcst_flag()
+
+  USE PDAF_mod_core, &
+       ONLY: reset_fcst_flag
+
+  IMPLICIT NONE
+
+! *** Return asimilation flag value ***
+
+  PDAF_reset_fcst_flag = reset_fcst_flag
+
+END FUNCTION PDAF_reset_fcst_flag
+
 
 !--------------------------------------------------------------------------
 !> Set pointer to ensemble statistics
@@ -366,5 +420,41 @@ SUBROUTINE PDAF_get_smootherens(sens_point, maxlag, status)
   END IF
 
 END SUBROUTINE PDAF_get_smootherens
+
+
+!--------------------------------------------------------------------------
+!> Get forecast information for flexible mode using PDAF_assimilate
+!!
+!! Routine to return the numnber of time steps, model time and 
+!! the exit flag doexit. This is used when running PDAF's 
+!! flexible parallelization mode using PDAF_assimilation_X routines
+!! instead of PDAF_put_state_X.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_get_fcst_info(steps, time, doexit)
+
+  USE PDAF_mod_core, &
+       ONLY: time_pdaf, nsteps, end_forecast
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: steps   !< Flag and number of time steps
+  REAL, INTENT(inout)    :: time    !< current model time
+  INTEGER, INTENT(inout) :: doexit  !< Whether to exit from forecasts
+
+
+! *** Initialize outputs
+  steps = nsteps
+  time = time_pdaf
+  doexit = end_forecast
+
+END SUBROUTINE PDAF_get_fcst_info
 
 END MODULE PDAF_get

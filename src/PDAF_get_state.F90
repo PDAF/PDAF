@@ -51,7 +51,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_core, &
        ONLY: dim_p, dim_eof, dim_ens, local_dim_ens, nsteps, &
-       step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
+       step_obs, step, time_pdaf, &
+       member_get, member_put=>member, member_save, subtype_filter, &
        ensemblefilter, initevol, state, ens, Ainv, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
        cnt_maxlag, cnt_steps, debug, offline_mode, use_PDAF_assim
@@ -199,6 +200,9 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
      ! *** Set time step of next observation ***
      step_obs = step + nsteps - 1
+
+     ! *** Store time information ***
+     time_pdaf = time
 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug get_state: ', debug, 'time step of next observation', &

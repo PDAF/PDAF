@@ -125,8 +125,8 @@ PDAF     --- Distribute sub-ensembles
  step           7
  step           8
  step           9
-PDAF     Perform assimilation with PDAF - LKNETF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       9
         Analyze and write forecasted state ensemble
@@ -156,7 +156,7 @@ PDAF     --- gamma_lin: (1 - N_eff/N)*scale, scale=   0.950
 PDAF     Compute LNETF update
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
-PDAFomi     --- Apply tempering with 1.0-gamma=      1.00000
+PDAFomi     --- Apply tempering with 1.0-gamma=      0.99999
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
@@ -203,8 +203,8 @@ PDAF     --- Distribute sub-ensembles
  step          16
  step          17
  step          18
-PDAF     Perform assimilation with PDAF - LKNETF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
@@ -245,7 +245,7 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     --- use blocking with size   200
 PDAF     Compute LETKF update
 PDAF     --- Use OpenMP parallelization with     4 threads
-PDAFomi     --- hybrid gamma=     0.00001
+PDAFomi     --- hybrid gamma=     0.00000
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
@@ -276,24 +276,25 @@ PDAF          ---------------------------------------------
 PDAF                 Globally allocated memory  (MiB)
 PDAF              state and A:        0.005 MiB (persistent)
 PDAF           ensemble array:        0.035 MiB (persistent)
-PDAF            analysis step:        0.042 MiB (temporary)
+PDAF            analysis step:        0.040 MiB (temporary)
+PDAF                 PDAF-OMI:        0.001 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ------------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.005 s
-PDAF            MPI communication in PDAF:           0.005 s
+PDAF          Ensemble forecast:                   0.004 s
+PDAF            MPI communication in PDAF:           0.004 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LKNETF analysis:                     0.010 s
-PDAF            PDAF-internal operations:            0.006 s
-PDAF            OMI-internal routines:               0.000 s
+PDAF          LKNETF analysis:                     0.009 s
+PDAF            PDAF-internal operations:            0.005 s
+PDAF            OMI-internal routines:               0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.010 s
+PDAF          prepoststep_pdaf:                    0.008 s
