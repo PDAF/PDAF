@@ -1,0 +1,292 @@
+
+                +++++ PDAF test suite +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ PDAF: Initializing communicators
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: step_null=      1000
+  PARSER: total_steps=        20
+ INITIALIZE MODEL
+                      MODEL: Lorenz 96
+     Global model dimension:     40
+          Forcing parameter:  8.00E+00
+                 Time steps:     20  (final step:   1020)
+          Initial time step:   1000
+             Time step size:     0.050
+
+ INITIALIZE PDAF
+  PARSER: delt_obs=        10
+  PARSER: dim_ens=         4
+  PARSER: filtertype=         4
+  PARSER: incremental=         0
+  PARSER: forget=  9.5000E-01
+  PARSER: cradius=  1.0000E+01
+  PARSER: write_ens=T
+  PARSER: file_asml= t4_N30_f0.95_noiau.nc
+                     Filter: ETKF
+                 --> Variant using T-matrix
+              ensemble size:    4
+      Assimilation interval:   10
+          forgetting factor: 0.95
+        File names:
+           Initialization: covar.nc
+           Observations:   obs.nc
+           Output:         t4_N30_f0.95_noiau.nc
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                       PDAF                         +++
+PDAF    +++       Parallel Data Assimilation Framework         +++
+PDAF    +++                                                    +++
+PDAF    +++                  Version 2.3.1                     +++
+PDAF    +++                                                    +++
+PDAF    +++                   Please cite                      +++
+PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
+PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++
+PDAF    +++   when publishing work resulting from using PDAF   +++
+PDAF    +++                                                    +++
+PDAF    +++          PDAF itself can also be cited as          +++
+PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++
+PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++     Ensemble Transform Kalman Filter (ETKF)     +++
+PDAF    +++                                                 +++
+PDAF    +++   Bishop et al., Mon. Wea. Rev. 129 (2001) 420  +++
+PDAF    +++    A symmetric square root is used following    +++
+PDAF    +++      Hunt et al. Physica D 230 (2007) 112       +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+     PDAF-WARNING: Invalid real parameter index  2
+
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N     4
+
+PDAF: Call ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:      4
+         --- number of EOFs:     3
+         --- Reading covariance information from covar.nc
+         --- generate state ensemble
+PDAF     ******************************************************
+PDAF     *                  PDAF_SampleEns                    *
+PDAF     *                                                    *
+PDAF     *  Sample an ensemble with 2nd-order exact sampling  *
+PDAF     *    based on the Sangoma tool Sangoma_SampleEns.    *
+PDAF     ******************************************************
+
+PDAF     Sample state ensemble from covariance matrix
+PDAF     given as EOF vectors and singular values
+PDAF     --- Ensemble size:      4
+PDAF     --- number of EOFs:     3
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+PDAF     --- duration of PDAF initialization:     0.002 s
+
+ Initialize NetCDF output
+     Writing interval (steps)      1
+     --> Write model states
+     --> Write ensemble states
+     --> Write higher-order ensemble statistics
+
+ PDAF test suite: START ASSIMILATION
+
+PDAF    ETKF configuration
+PDAF          ensemble size:    4
+PDAF          filter sub-type= 0
+PDAF            --> ETKF using T-matrix
+PDAF          param_int(5) type_forget=  0
+PDAF            --> Use fixed forgetting factor: 0.95
+PDAF          param_int(6) type_trans=  0
+PDAF            --> Deterministic symmetric ensemble transformation
+PDAF          param_int(8) observe_ens
+PDAF            --> 0: Apply H to ensemble mean to compute innovation
+PDAF          param_int(9) type_obs_init=  1
+PDAF            --> Initialize observations after PDAF prestep
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine at initial time
+   1000   Analize initial state ensemble
+        --- compute ensemble mean
+ Prepost   1.7652779357492241        1.0641459920128806        1.7902448334397096        2.9407398259231909        3.6048044171844476     
+        --- Read true state at file position  1001
+        --- RMS errors
+            Estimated:   1.5551E+00 time mean (from 0,  3001):   0.0000E+00  0.0000E+00
+                 True:   3.6445E+00 time mean (from 0,  3001):   0.0000E+00  0.0000E+00
+PDAF     --- duration of prestep:     0.001 s
+PDAF Forecast -------------------------------------------------------
+   1000   Next observation at time step   1010
+PDAF     Evolve state ensemble
+ DIST state           1   1.7652779357492241        1.0641459920128806        1.7902448334397096        2.9407398259231909        3.6048044171844476     
+ COLLECT state           1   2.2847741694725543        5.7700921836133015        7.3973728832980408        1.8350277396970525      -0.43321579974789659     
+ DIST state           2   3.0871181014606237        4.5046432543945194        2.2560406894459479       0.24835170075470225        1.3760486014815732     
+ COLLECT state           2   6.5423607878068086       -1.3455910381931442      -0.52062346190925568        1.8790662349603804        7.1922344232421027     
+ DIST state           3   3.6081183486458839        1.1670378034842441        1.1548807675957631        2.7347358251906164        3.3920790107243377     
+ COLLECT state           3  -2.3974119336666204        1.5131210307950900        5.1553522249932326        7.6650920401028593       0.67444037786604283     
+ DIST state           4  0.54394109156924442        2.0059379467866845        4.4824449066161023        3.6558868485424503       0.77126314198614443     
+ COLLECT state           4   4.8813583564730934        6.8924673206160367       -5.6676679548731845E-002  -1.7365037371912433        1.3821345689245872     
+PDAF     --- duration of forecast phase:     0.000 s
+PDAF Prepoststep ----------------------------------------------------
+PDAF     Call pre-post routine after forecast; step    1010
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+ Prepost   2.2847741694725543        5.7700921836133015        7.3973728832980408        1.8350277396970525      -0.43321579974789659     
+        --- Read true state at file position  1011
+        --- RMS errors
+            Estimated:   3.5853E+00 time mean (from 0,  3001):   3.5853E+00  0.0000E+00
+                 True:   3.5055E+00 time mean (from 0,  3001):   3.5055E+00  0.0000E+00
+PDAF     --- duration of prestep:     0.000 s
+PDAF Prepare observations -------------------------------------------
+        Assimilate observations - OBS_GP
+        --- Read observation at file position  1010
+PDAFomi     --- Initialize observation type ID   1
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      40
+PDAF     --- duration of observation preparation:     0.001 s
+PDAF Analysis -------------------------------------------------------
+PDAF    1010   Assimilating observations - ETKF using T-matrix
+PDAF     --- apply multiplicative inflation with fixed forget   0.95
+PDAF     Perform ensemble transformation
+PDAF     --- use blocking with size   200
+PDAF     --- update duration:     0.000 s
+PDAF Prepoststep ----------------------------------------------------
+PDAF     Call pre-post routine after analysis step
+        Analize assimilated state ensemble
+        --- compute ensemble mean
+ Prepost   1.1124141205983191        3.7122110455973503        1.9381960534961324        3.2807518332151306        1.3924758235797001     
+        --- Read true state at file position  1011
+        --- RMS errors
+            Estimated:   2.7308E-01 time mean (from 0,  3001):   2.7308E-01  0.0000E+00
+                 True:   2.8612E+00 time mean (from 0,  3001):   2.8612E+00  0.0000E+00
+PDAF     --- duration of poststep:     0.000 s
+PDAF Forecast -------------------------------------------------------
+   1010   Final observation at time step   1020
+PDAF     Evolve state ensemble
+ DIST state           1   1.1124141205983191        3.7122110455973503        1.9381960534961324        3.2807518332151306        1.3924758235797001     
+ COLLECT state           1   3.4842741488218292        6.5997752653155990        5.6376984352720747        3.2686285932808037        4.9527355692976336     
+ DIST state           2   1.4324286343572490        3.2103346735508982        1.3673002516532662        3.2673258311956603        1.9408119554636241     
+ COLLECT state           2   1.4830959118100424        5.3239728838343297        8.4261553007789267        4.8037172059060653        2.8219597053735987     
+ DIST state           3  0.68870129064464924        3.4289075499128923        1.7996802404380734        3.7552710230871620        1.4180060374993582     
+ COLLECT state           3   2.9204691589664096        7.4444524831811343        6.5612264029085106        1.6989059264908943        3.9996516676557348     
+ DIST state           4   1.2623256054357443        3.8082602778771326        1.4020737692459242        3.0426930850291454        1.4985121576636109     
+ COLLECT state           4   2.1759008141108822        5.4954327772953500        6.9743273146619069        4.9096789169846868        4.2219926082251211     
+PDAF     --- duration of forecast phase:     0.000 s
+PDAF Prepoststep ----------------------------------------------------
+PDAF     Call pre-post routine after forecast; step    1020
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+ Prepost   3.4842741488218292        6.5997752653155990        5.6376984352720747        3.2686285932808037        4.9527355692976336     
+        --- Read true state at file position  1021
+        --- RMS errors
+            Estimated:   8.6736E-01 time mean (from 0,  3001):   2.2264E+00  0.0000E+00
+                 True:   3.1766E+00 time mean (from 0,  3001):   3.3410E+00  0.0000E+00
+PDAF     --- duration of prestep:     0.000 s
+PDAF Prepare observations -------------------------------------------
+        Assimilate observations - OBS_GP
+        --- Read observation at file position  1020
+PDAFomi     --- Initialize observation type ID   1
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      40
+PDAF     --- duration of observation preparation:     0.000 s
+PDAF Analysis -------------------------------------------------------
+PDAF    1020   Assimilating observations - ETKF using T-matrix
+PDAF     --- apply multiplicative inflation with fixed forget   0.95
+PDAF     Perform ensemble transformation
+PDAF     --- use blocking with size   200
+PDAF     --- update duration:     0.000 s
+PDAF Prepoststep ----------------------------------------------------
+PDAF     Call pre-post routine after analysis step
+        Analize assimilated state ensemble
+        --- compute ensemble mean
+ Prepost   2.7554511818534939        6.0413477371892714        6.6650154109244646        3.9743531627235309        4.1753679758220414     
+        --- Read true state at file position  1021
+        --- RMS errors
+            Estimated:   2.5817E-01 time mean (from 0,  3001):   2.6562E-01  0.0000E+00
+                 True:   3.1440E+00 time mean (from 0,  3001):   3.0026E+00  0.0000E+00
+PDAF     --- duration of poststep:     0.000 s
+PDAF Forecast -------------------------------------------------------
+   1020   No more observations, exit filtering
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00031 MB (persistent)
+            ensemble init:   0.00094 MB (temporary)
+             Pre-Poststep:   0.00061 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.000 MiB (persistent)
+PDAF           ensemble array:      0.001 MiB (persistent)
+PDAF            analysis step:      0.012 MiB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF                  Initialize PDAF:      0.002 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                    ETKF analysis:      0.001 s
+PDAF                      Prepoststep:      0.001 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          ETKF analysis:                       0.001 s
+PDAF            PDAF-internal operations:            0.000 s
+PDAF            OMI-internal routines:               0.000 s
+PDAF            Time in OMI observation module routines 
+PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.001 s
+
+                 Model - Timing information
+          ---------------------------------------------
+                   Time of forecasts:     0.000 s
+                 ------------ Summary ------------
+                   initialize model:      0.001 s
+                  initialize filter:      0.004 s
+                       assimilation:      0.003 s
+                   total run time:      0.008 s
+
+ PDAF test suite: END
