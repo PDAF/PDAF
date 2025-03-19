@@ -1,4 +1,5 @@
 build
 external/**/*.mod
 external/**/*.o
+src/*~
 Srcfiles

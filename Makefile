@@ -31,9 +31,13 @@ LIBDIR:=lib
 SRCDIR:=src
 EXTDIR:=external
 
-## Alternative specifications if you like to place the
-## Makefile in src/ for a pre-PDAF3 workflow
-## In this case also change in the include line above using ../
+## /src/Makefile - please note:
+## If you like to place the Makefile in src/ for a pre-PDAF3
+## workflow, you can use this alternative specifications. 
+## In this case also change in the include line above to
+##     include ../make.arch/$(PDAF_ARCH).h
+## To generate the dependences file in src/ see the
+## comment at the end of this file
 
 #OBJDIR:=.
 #INCDIR:=../include
