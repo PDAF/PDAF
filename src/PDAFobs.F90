@@ -71,6 +71,8 @@ CONTAINS
          ONLY: obs_member, localfilter
     USE PDAFomi_obs_f, &
          ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs
+    USE PDAFomi_obs_diag, &
+         ONLY: PDAFomi_diag_omit_by_inno
 
     IMPLICIT NONE
 
@@ -229,7 +231,7 @@ CONTAINS
 
        ! *** Omit observations with too high innovation ***
 
-       IF (omi_omit_obs .AND. do_HXbar .AND. do_init_obs &
+       IF (omi_n_obstypes>0 .AND. omi_omit_obs .AND. do_HXbar .AND. do_init_obs &
             .AND. localfilter/=1)  THEN
 
           ALLOCATE(resid_p(dim_obs_p))
@@ -250,6 +252,16 @@ CONTAINS
 
           DEALLOCATE(resid_p)
        END IF
+
+       ! *** Set omitted observations for observation diagnostics
+
+       IF (omi_n_obstypes>0 .AND. omi_omit_obs &
+            .AND. (do_HXbar .OR. do_HX) .AND. do_init_obs)  THEN
+          CALL PDAF_timeit(51, 'new')
+          CALL PDAFomi_diag_omit_by_inno()
+          CALL PDAF_timeit(51, 'new')
+       END IF
+
 
     ELSE IF (dim_obs_p == 0) THEN
 

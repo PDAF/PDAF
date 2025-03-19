@@ -318,6 +318,50 @@ CONTAINS
   END SUBROUTINE PDAFomi_diag_get_HX
 
 
+!-------------------------------------------------------------------------------
+!!> Return pointer to observed ensemble
+!!
+!! This routine returns the pointer to the PE-local
+!! observed ensemble.
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_diag_get_ivar(id_obs, dim_obs_diag, ivar_ptr)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: id_obs                    !< Index of observation type to return
+    INTEGER, INTENT(out) :: dim_obs_diag             !< Observation dimension
+    REAL, POINTER, INTENT(out) :: ivar_ptr(:)        !< Pointer to inverse observation error variances
+
+
+! *******************************************************************
+! *** Set pointer to vectorof inverse observation error variances ***
+! *******************************************************************
+
+    ! Pre-initialize observation dimension
+    dim_obs_diag = 0
+
+    ! Check whether OMI is used and observation diagnostics are used
+    IF (n_obstypes >= 0 .AND. n_obstypes >= id_obs &
+         .AND. (have_obsmean_diag>0 .OR. have_obsens_diag>0)) THEN
+
+       IF (obs_f_all(id_obs)%ptr%dim_obs_p >0) THEN
+          ! Set observation dimension
+          dim_obs_diag = obs_f_all(id_obs)%ptr%dim_obs_p
+       END IF
+ 
+       ! Set pointer
+       ivar_ptr => obs_f_all(id_obs)%ptr%ivar_obs_diag_p
+
+    END IF
+
+  END SUBROUTINE PDAFomi_diag_get_ivar
+
+
 
 !-------------------------------------------------------------------------------
 !!> Compute RMS deviation beetween observation and observed ensemble mean
@@ -393,7 +437,7 @@ CONTAINS
           ! Get global state dimension
           CALL MPI_Allreduce(obs_f_all(id_obs)%ptr%dim_obs_p, dim_g, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
 
-          IF (have_obsens_diag>0) THEN
+          IF (have_obsmean_diag==0 .AND. have_obsens_diag>0) THEN
 
              ! *** When only the observed ensemble is initialized ***
              ! *** we need to compute the observed ensemble mean   ***
@@ -637,5 +681,75 @@ CONTAINS
     END IF habeobs
 
   END SUBROUTINE PDAFomi_diag_stats
+
+!-------------------------------------------------------------------------------
+!!> Set omitted observation by high observation error for diagnistics only
+!!
+!! This routine checks the difference between observations and observed
+!! ensemble mean and sets the inverse observation error to a very 
+!! small value is the difference is too large.
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_diag_omit_by_inno()
+
+    USE PDAF_diag, &
+         ONLY: PDAF_diag_ensmean
+    USE PDAF_mod_core, &
+         ONLY: dim_ens
+
+    IMPLICIT NONE
+
+! *** Local variables ***
+    INTEGER :: i, id_obs, cnt       ! Counters
+    INTEGER :: status               ! Status flag
+    REAL :: inno2                   ! Squared innovation
+    REAL :: limit2                  ! Squared limit
+
+
+    allobs: DO id_obs = 1, n_obstypes
+
+       omit: IF (obs_f_all(id_obs)%ptr%inno_omit > 0.0) THEN
+
+          IF (have_obsmean_diag==0 .AND. have_obsens_diag>0) THEN
+
+             ! *** When only the observed ensemble is initialized ***
+             ! *** we need to compute the observed ensemble mean   ***
+
+             CALL PDAF_diag_ensmean(obs_f_all(id_obs)%ptr%dim_obs_p, dim_ens, obs_f_all(id_obs)%ptr%HXmean_diag_p, &
+                  obs_f_all(id_obs)%ptr%HX_diag_p, status)
+          END IF
+          
+          haveobs: IF (have_obsmean_diag>0 .OR. have_obsens_diag>0) THEN
+
+             ! Squared limit factor
+             limit2 = obs_f_all(id_obs)%ptr%inno_omit * obs_f_all(id_obs)%ptr%inno_omit
+
+             ! Check for observations to be excluded
+             cnt = 0
+             DO i = 1, obs_f_all(id_obs)%ptr%dim_obs_p
+
+                ! Squared innovation
+                inno2 = (obs_f_all(id_obs)%ptr%obs_diag_p(i) - obs_f_all(id_obs)%ptr%HXmean_diag_p(i))**2
+
+                IF (inno2 > limit2 / obs_f_all(id_obs)%ptr%ivar_obs_diag_p(i)) THEN
+
+                   ! Exclude observation by increased its observation error
+                   obs_f_all(id_obs)%ptr%ivar_obs_diag_p(i) = obs_f_all(id_obs)%ptr%inno_omit_ivar
+
+                   ! Count excluded obs
+                   cnt = cnt + 1
+                END IF
+             ENDDO
+
+          END IF haveobs
+
+       END IF omit
+
+    END DO allobs
+
+  END SUBROUTINE PDAFomi_diag_omit_by_inno
 
 END MODULE PDAFomi_obs_diag
