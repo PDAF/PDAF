@@ -5,7 +5,7 @@
 !! their consistency.
 !!
 !! This variant is for the flexible parallelization
-!! variant of PDAF using PDAF3_assimilate routines. 
+!! variant of PDAF using PDAF_3_put_state routines.
 !! It shows the structure of the required outper loop
 !! which enables to integrate an ensemble of model states.
 !! 
@@ -14,7 +14,7 @@
 !! inserted in the actual model code.
 !!
 !! __Revision history:__
-!! * 2025-03 - Lars Nerger - Initial code using PDAF3_assimilate
+!! * 2021-11 - Lars Nerger - Initial code
 !!
 PROGRAM MAIN
 
@@ -27,7 +27,7 @@ PROGRAM MAIN
   USE mod_model, &             ! Module provided by model code
        ONLY: dt
   USE PDAF , &                 ! Interface definitions to PDAF core routines
-       ONLY: PDAF_get_state, PDAF_get_fcst_info
+       ONLY: PDAF_get_state
 
   IMPLICIT NONE
 
@@ -80,40 +80,50 @@ PROGRAM MAIN
   CALL init_pdaf()
 
 
-! *** PDAF: Get state and forecast information (nsteps,time) at initial time ***
-
-  CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
-
 ! *** Ensemble forecasting and analysis steps ***
 
   ! PDAF: External loop around model time stepper loop
   pdaf_modelloop: DO  
 
-     ! *** Forecast ensemble state ***
- 
-     ! Initialize current model time
-     time = timenow
+     ! *** PDAF: Get state and forecast information (nsteps,time)  ***
+     CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
-     ! *** run time stepper ***  
+     ! Check whether forecast has to be performed
+     checkforecast: IF (doexit /= 1 .AND. status_pdaf == 0) THEN
 
-     ! MODEL: Here the model code would do the time stepping
-     DO istep = 1, nsteps
-        WRITE (*,'(3x, a, f6.2)') 'main.F90: Do stepping, time', time
+        ! *** Forecast ensemble state ***
+      
+        IF (nsteps > 0) THEN
 
-        ! The model would increment the time information
-        time = time + dt  
+           ! Initialize current model time
+           time = timenow
 
-        ! *** Let PDAF check forecast progress and perform analysis ***
-        CALL assimilate_pdaf()
+           ! *** call time stepper ***  
 
-     ENDDO
+            ! MODEL: Here the model code would do the time stepping
+           DO istep = 1, nsteps
+              WRITE (*,'(3x, a, f6.2)') 'main.F90: Do stepping, time', time
 
-     ! *** PDAF: Get forecast information ***
-     CALL PDAF_get_fcst_info(nsteps, timenow, doexit)
+              ! The model would increment the time information
+              time = time + dt  
+           ENDDO
 
-     ! *** Check exit flag ***
-     IF (doexit==1) EXIT pdaf_modelloop
+        END IF
+
+        ! *** Perform analysis ***
+
+        ! This step is inserted after the inner time stepping loop
+
+        CALL put_state_pdaf()
+
+
+     ELSE checkforecast
+
+        ! *** No more work, exit modeling loop
+        EXIT pdaf_modelloop
+
+     END IF checkforecast
 
   END DO pdaf_modelloop
 
