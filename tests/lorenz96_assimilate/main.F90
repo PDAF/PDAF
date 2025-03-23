@@ -1,29 +1,23 @@
-!$Id$
-!BOP
-!
-! !ROUTINE: main --- Main driver for PDAF testsuite
-!
-! !INTERFACE:
+!> Main driver for PDAF testsuite
+!!
+!! This is the main program for the PDAF testsuite
+!! The additions to the model code when PDAF is attached
+!! are visible from the preprocessor directives for USE_PDAF.
+!!
+!! Parameters can be set in the code, or - preferably -
+!! by command line arguments that are parsed by the 
+!! module PARSER. The format for this is
+!! EXECUTABLE -HANDLE1 VALUE1 -HANDLE2 VALUE2 ...
+!! The handles are defined in the code before the calls to
+!! the routine PARSE.
+!!
+!! __Revision history:__
+!! 2009-05 - Lars Nerger - Initial code based on dummy model example
+!! 2025-03 - Lars Nerger - Adaption for PDAF3
+!! Other revisions - see repository log
+!!
 PROGRAM MAIN
 
-! !DESCRIPTION:
-! This is the main program for the PDAF testsuite for
-! PDAF with domain-decomposition. 
-! The additions to the model code when PDAF is attached
-! are visible from the preprocessor directives for USE_PDAF.
-!
-! Parameters can be set in the code, or - preferably -
-! by command line arguments that are parsed by the 
-! module PARSER. The format for this is
-! EXECUTABLE -HANDLE1 VALUE1 -HANDLE2 VALUE2 ...
-! The handles are defined in the code before the calls to
-! the routine PARSE.
-!
-! !REVISION HISTORY:
-! 2009-05 - Lars Nerger - Initial code based on dummy model example
-! Later revisions - see svn log
-!
-! !USES:
   USE mpi
   USE mod_parallel, &     ! Parallelization variables
        ONLY: MPIerr, npes_world, mype_world, n_modeltasks, &
@@ -46,10 +40,8 @@ PROGRAM MAIN
 #endif
 
   IMPLICIT NONE
-!EOP
 
-
-! Local variables
+! *** Local variables ***
   INTEGER :: i                         ! Counter
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
 !$OMP THREADPRIVATE(mythread, nthreads)
@@ -134,15 +126,21 @@ PROGRAM MAIN
 
   ! *** Perform integration
 #ifndef USE_PDAF
+
   ! Normal integration without assimilation
+
   IF (mype_world == 0) WRITE (*, '(/1x, a)') 'PDAF test suite: START INTEGRATION'
   CALL integration(time, total_steps)
+
 #else
+
   ! With PDAF perform assimilation with ensemble integration
   ! Note: As we have the model time stepper as a subroutine, we simply push the
   ! routine assimilation_pdaf between the main program and the integration routine.
+
   IF (mype_world == 0) WRITE (*, '(/1x, a)') 'PDAF test suite: START ASSIMILATION'
-  CALL assimilation_pdaf(time)
+  CALL integration_pdaf(time, total_steps)
+
 #endif
 
   ! Syncronize at barrier for exit

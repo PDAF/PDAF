@@ -664,7 +664,7 @@ SUBROUTINE init_pdaf()
 ! *** Initialize IAU ***
 ! **********************
 
-!   CALL PDAF_iau_init(incremental, 1, status_pdaf)
+!  CALL PDAF_iau_init(incremental, 1, status_pdaf)
 !  allocate(ens_inc(dim_state_p,1))
 !  ens_inc = 1.0
 !  CALL PDAF_iau_init_inc(dim_state_p, 1, ens_inc, status_pdaf)

@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: assimilation_pdaf - Routine controlling ensemble integration for PDAF
+! !ROUTINE: assimilate_pdaf - Routine controlling ensemble integration for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE assimilation_pdaf(time)
+SUBROUTINE assimilate_pdaf()
 
 ! !DESCRIPTION:
 ! This routine performs the ensemble forcasts.
@@ -41,7 +41,7 @@ SUBROUTINE assimilation_pdaf(time)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  REAL, INTENT(INOUT) :: time  ! Model time
+!  REAL, INTENT(INOUT) :: time  ! Model time
 
 ! ! External subroutines 
 ! !  (subroutine names are passed over to PDAF in the calls to 
@@ -75,20 +75,11 @@ SUBROUTINE assimilation_pdaf(time)
 ! Calls: integration
 ! Calls: PDAF_put_state_seek
 ! Calls: PDAF_put_state_seik
-! Calls: PDAF_put_state_enkf
-! Calls: PDAF_put_state_lseik
-! Calls: PDAF_put_state_etkf
-! Calls: PDAF_put_state_letkf
-! Calls: PDAF_put_state_estkf
-! Calls: PDAF_put_state_lestkf
-! Calls: PDAF_put_state_netf
-! Calls: PDAF_put_state_lnetf
-! Calls: PDAF_put_state_generate_obs
-! Calls: PDAF_put_state_pf
 ! Calls: MPI_barrier (MPI)
 !EOP
 
 ! local variables
+  INTEGER :: i           ! Counter
   INTEGER :: nsteps      ! Number of time steps to be performed in current forecast
   INTEGER :: doexit      ! Whether to exit forecasting (1=true)
   INTEGER :: status      ! Status flag for filter routines
@@ -101,57 +92,53 @@ SUBROUTINE assimilation_pdaf(time)
 ! *************************
 
   ! *** PDAF: Get state and forecast information (nsteps,time)  ***
-  CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_pdaf, status)
+!   CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
+!        distribute_state_pdaf, prepoststep_pdaf, status)
 
   ! PDAF: External loop around model time stepper loop
-  pdaf_modelloop: DO  
+!  pdaf_modelloop: DO  
 
 
      ! Check whether forecast has to be performed
-     checkforecast: IF (doexit /= 1 .AND. status == 0) THEN
+!     checkforecast: IF (doexit /= 1 .AND. status == 0) THEN
 
         ! *** Forecast ensemble state ***
 
-        IF (nsteps > 0) THEN
+!        DO i = 1, nsteps
 
-           ! Initialize current model time
-           time = timenow
+!            ! Initialize current model time
+!            time = timenow
+! 
+!            ! *** call time stepper ***  
+!            CALL integration(time, 1)
 
-           ! *** call time stepper ***  
-           CALL integration(time, 1)
 
-        END IF
+           ! *** PDAF: Perform assimilation if ensemble forecast is completed   ***
 
-        ! *** PDAF: Send state forecast to filter;                           ***
-        ! *** PDAF: Perform assimilation if ensemble forecast is completed   ***
-        ! *** PDAF: Distinct calls due to different name of analysis routine ***
+  IF (PDAF_localfilter() == 1) THEN
+     CALL PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+          g2l_state_pdaf, l2g_state_pdaf, next_observation_pdaf, status)
+  ELSE
+     CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
+          next_observation_pdaf, status)
+  END IF
 
-        IF (PDAF_localfilter() == 1) THEN
-           CALL PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
-                init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
-                init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
-                g2l_state_pdaf, l2g_state_pdaf, next_observation_pdaf, status)
-        ELSE
-           CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
-                init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
-                next_observation_pdaf, status)
-        END IF
-           
-        ! *** PDAF: Get state and forecast information (nsteps,time)  ***
+!END DO
 
-        IF (PDAF_reset_fcst_flag() == 1) THEN
-           CALL PDAF_get_fcst_info(nsteps, timenow, doexit)
-        END IF
-
-     ELSE checkforecast
-
-        ! *** No more work, exit modeling loop
-        EXIT pdaf_modelloop
-
-     END IF checkforecast
-
-  END DO pdaf_modelloop
+!         ! *** PDAF: Get state and forecast information (nsteps,time)  ***
+!         CALL PDAF_get_fcst_info(nsteps, timenow, doexit)
+! 
+!      ELSE checkforecast
+! 
+!         ! *** No more work, exit modeling loop
+!         EXIT pdaf_modelloop
+! 
+!      END IF checkforecast
+! 
+!   END DO pdaf_modelloop
 
 
 ! ************************
@@ -165,4 +152,4 @@ SUBROUTINE assimilation_pdaf(time)
      CALL abort_parallel()
   END IF
 
-END SUBROUTINE assimilation_pdaf
+END SUBROUTINE assimilate_pdaf
