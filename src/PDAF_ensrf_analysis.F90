@@ -16,13 +16,13 @@
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
 !
-!> Analysis step for Kalman fitler with serial observation processing
+!> Analysis step for Kalman filter with serial observation processing
 !!
 !! Analysis step of ensemble squre-root filter with 
 !! serial observation processing. The two routines 
 !! are for two subtypes:
-!! * 0: ENSRF of Whitaber and Hamill (2002)
-!! * 1: local least squares formulation of Anderson (2003)
+!! * 0: ENSRF of Whitaker and Hamill (2002)
+!! * 1: local least squares formulation of EAKF by Anderson (2003)
 !!
 !! !  This is a core file of PDAF and
 !!    should not be changed by the user   !

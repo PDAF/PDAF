@@ -145,7 +145,7 @@ SUBROUTINE PDAFomi_init_obsvars_f_cb(step, dim_obs_f, var_f)
 ! *** Arguments ***
   INTEGER, INTENT(in) :: step           !< Current time step
   INTEGER, INTENT(in) :: dim_obs_f      !< Dimension of full observation vector
-  REAL, INTENT(out) :: var_f(dim_obs_f) !< Mean observation error variance
+  REAL, INTENT(out) :: var_f(dim_obs_f) !< vector of observation error variances
 
 ! *** Local variables ***
   INTEGER :: i                ! Loop counter

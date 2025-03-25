@@ -274,7 +274,7 @@ END SUBROUTINE PDAF_diag_stddev
 !> Compute ensemble variance field
 !!
 !! This routine computes the ensemble variance field and mean 
-!! ensmeble standard deviation.
+!! ensemble standard deviation.
 !!
 !! __Revision history:__
 !! * 2025-03 - Lars Nerger - Initial code

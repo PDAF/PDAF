@@ -554,7 +554,7 @@ CONTAINS
     nobs = 0
 
     ! Number of observation statistics
-    nstats = 7
+    nstats = 6
 
 
     ! Allocate RMSD vector

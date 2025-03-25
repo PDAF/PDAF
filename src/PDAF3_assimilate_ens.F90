@@ -251,8 +251,8 @@ END SUBROUTINE PDAF3_assimilate_global
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
-     init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, localize_covar_pdaf, &
-     next_observation_pdaf, outflag)
+     init_dim_obs_pdaf, obs_op_pdaf, localize_covar_pdaf, &
+     prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc

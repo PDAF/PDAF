@@ -70,20 +70,19 @@ CONTAINS
     IF (verbose > 0) THEN
 
        WRITE (*,'(a,5x,a)') 'PDAF','Available named filtertypes'
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_SEIK  ', PDAF_DA_SEIK
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_SEIK  ', PDAF_DA_SEIK
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LSEIK ', PDAF_DA_LSEIK
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_ENKF  ', PDAF_DA_ENKF
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LENKF ', PDAF_DA_LENKF
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_ETKF  ', PDAF_DA_ETKF
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LETKF ', PDAF_DA_LETKF
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_ESTKF ', PDAF_DA_ESTKF
        WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LESTKF', PDAF_DA_LESTKF
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_NETF  ', PDAF_DA_NETF
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LNETF ', PDAF_DA_LNETF
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LKNETF', PDAF_DA_LKNETF
-       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_PF    ', PDAF_DA_PF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_ESTKF ', PDAF_DA_ESTKF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LETKF ', PDAF_DA_LETKF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_ETKF  ', PDAF_DA_ETKF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LENKF ', PDAF_DA_LENKF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_ENKF  ', PDAF_DA_ENKF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LSEIK ', PDAF_DA_LSEIK
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_SEIK  ', PDAF_DA_SEIK
        WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_ENSRF ', PDAF_DA_ENSRF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LNETF ', PDAF_DA_LNETF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_NETF  ', PDAF_DA_NETF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_PF    ', PDAF_DA_PF
+       WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_LKNETF', PDAF_DA_LKNETF
        WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_GENOBS', PDAF_DA_GENOBS
        WRITE (*,'(a,8x,a,i4)') 'PDAF','PDAF_DA_3DVAR ', PDAF_DA_3DVAR
        WRITE (*,'(a,5x,a,i4)') 'PDAF','Note: DA methods can be specified by their value or the named parameter'

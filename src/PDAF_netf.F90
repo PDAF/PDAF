@@ -459,8 +459,10 @@ CONTAINS
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard implementation with ensemble integration'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1) dim_p'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Dimension of state vector (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2) dim_ens'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Ensemble size (>0), required'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): dim_lag'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Size of smoothing lag (>=0), optional'
     WRITE(*, '(a, 12x, a)') 'PDAF', '0: no smoothing (default)'

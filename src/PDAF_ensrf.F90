@@ -385,8 +385,10 @@ CONTAINS
     WRITE(*, '(a, 7x, a)') 'PDAF', '1: EAKF/2-step local least squares filter (cf. Anderson, 2003)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1) dim_p'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Dimension of state vector (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2) dim_ens'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Ensemble size (>0), required'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): not used'

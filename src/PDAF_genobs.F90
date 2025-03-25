@@ -264,8 +264,10 @@ END SUBROUTINE PDAF_genobs_init
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard implementation with ensemble integration'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1) dim_p'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Dimension of state vector (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2) dim_ens'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Ensemble size (>0), required'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): seedset'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'seed set index for random number generator, optional'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'valid are values between 1 and 20; default=1'
