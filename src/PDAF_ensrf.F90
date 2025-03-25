@@ -381,7 +381,7 @@ CONTAINS
     WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for ENSRF:'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '0: ENSRF with serial observation processing (cf. Houtekamer/Mitchell, 2002)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: ENSRF with serial observation processing (cf. Houtekamer/Hamill, 2002)'
     WRITE(*, '(a, 7x, a)') 'PDAF', '1: EAKF/2-step local least squares filter (cf. Anderson, 2003)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
