@@ -59,13 +59,13 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!!> Return number of observation type in diagnostics
+!!> Return number of observation types in diagnostics
 !!
 !! __Revision history:__
 !! * 2025-03 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_diag_nobs(nobs)
+  SUBROUTINE PDAFomi_diag_nobstypes(nobs)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -89,7 +89,7 @@ CONTAINS
        nobs = n_obstypes
     END IF
 
-  END SUBROUTINE PDAFomi_diag_nobs
+  END SUBROUTINE PDAFomi_diag_nobstypes
 
 
 
