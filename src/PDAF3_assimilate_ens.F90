@@ -37,6 +37,162 @@ MODULE PDAF3_assimilate_ens
 CONTAINS
 
 !-------------------------------------------------------------------------------
+!!> Universal interface routine to PDAF for all filters
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code combining existing global and local routines
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF3_assimilate(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
+          prepoststep_pdaf, next_observation_pdaf, outflag)
+
+  USE PDAF_mod_core, ONLY: filterstr, debug
+  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFlocal, &
+       ONLY: PDAFlocal_g2l_cb, &             !< Project global to local state vector
+       PDAFlocal_l2g_cb                      !< Project local to global state vecto
+  USE PDAFassimilate_lseik, ONLY: PDAF_assimilate_lseik
+  USE PDAFassimilate_letkf, ONLY: PDAF_assimilate_letkf
+  USE PDAFassimilate_lestkf, ONLY: PDAF_assimilate_lestkf
+  USE PDAFassimilate_lnetf, ONLY: PDAF_assimilate_lnetf
+  USE PDAFassimilate_lknetf, ONLY: PDAF_assimilate_lknetf
+  USE PDAFassimilate_ensrf, ONLY: PDAF_assimilate_ensrf
+  USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
+  USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
+  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
+  USE PDAFassimilate_etkf, ONLY: PDAF_assimilate_etkf
+  USE PDAFassimilate_estkf, ONLY: PDAF_assimilate_estkf
+  USE PDAFassimilate_netf, ONLY: PDAF_assimilate_netf
+  USE PDAFassimilate_pf, ONLY: PDAF_assimilate_pf
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: outflag          !< Status flag
+
+! *** Names of external subroutines ***
+  EXTERNAL :: collect_state_pdaf, &          !< Routine to collect a state vector
+       distribute_state_pdaf, &              !< Routine to distribute a state vector
+       next_observation_pdaf, &              !< Provide time step, time and dimension of next observation
+       prepoststep_pdaf                      !< User supplied pre/poststep routine
+  EXTERNAL :: init_n_domains_pdaf, &         !< Provide number of local analysis domains
+       init_dim_l_pdaf, &                    !< Init state dimension for local ana. domain
+       init_dim_obs_f_pdaf, &                !< Initialize dimension of full observation vector
+       obs_op_f_pdaf, &                      !< Full observation operator
+       init_dim_obs_l_pdaf                   !< Initialize local dimimension of obs. vector
+  EXTERNAL :: PDAFomi_init_obs_f_cb, &       !< Initialize full observation vector
+       PDAFomi_init_obs_l_cb, &              !< Initialize local observation vector
+       PDAFomi_init_obsvar_cb, &             !< Initialize mean observation error variance
+       PDAFomi_init_obsvar_l_cb, &           !< Initialize local mean observation error variance
+       PDAFomi_init_obsvars_f_cb, &          !< Initialize vector of observation error variances
+       PDAFomi_localize_covar_serial_cb, &   !< Apply localization to HP and BXY
+       PDAFomi_g2l_obs_cb, &                 !< Restrict full obs. vector to local analysis domain
+       PDAFomi_prodRinvA_l_cb, &             !< Provide product R^-1 A on local analysis domain
+       PDAFomi_likelihood_l_cb               !< Compute likelihood and apply localization
+  EXTERNAL :: PDAFomi_init_obscovar_cb, &    !< Initialize mean observation error variance
+       PDAFomi_localize_covar_cb, &          !< Apply localization to HP and HPH^T
+       PDAFomi_add_obs_error_cb, &           !< Add observation error covariance matrix
+       PDAFomi_prodRinvA_cb, &               !< Provide product R^-1 A
+       PDAFomi_likelihood_cb                 !< Compute likelihood
+  EXTERNAL :: PDAFomi_prodRinvA_hyb_l_cb, &  !< Product R^-1 A on local analysis domain with hybrid weight
+       PDAFomi_likelihood_hyb_l_cb           !< Compute likelihood and apply localization with tempering
+
+
+! **************************************************
+! *** Call the full put_state interface routine  ***
+! **************************************************
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate -- START'
+
+  IF (TRIM(filterstr) == 'LSEIK') THEN
+     CALL PDAF_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, &
+          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
+          next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'LETKF') THEN
+     CALL PDAF_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, &
+          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
+          next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
+     CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, &
+          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
+          next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'LNETF') THEN
+     CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, PDAFomi_likelihood_l_cb, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, &
+          PDAFomi_g2l_obs_cb, next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
+     CALL PDAF_assimilate_lknetf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+          PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
+          PDAFomi_prodRinvA_l_cb, PDAFomi_prodRinvA_hyb_l_cb, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, &
+          next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
+     CALL PDAF_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, &
+          PDAFomi_localize_covar_serial_cb, prepoststep_pdaf, next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'SEIK') THEN
+     CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'ENKF') THEN
+     CALL PDAF_assimilate_enkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'LENKF') THEN
+     CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_localize_covar_cb, PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, &
+          next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'ETKF') THEN
+     CALL PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'ESTKF') THEN
+     CALL PDAF_assimilate_estkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'NETF') THEN
+     CALL PDAF_assimilate_netf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_likelihood_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'PF') THEN
+     CALL PDAF_assimilate_pf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_likelihood_cb, next_observation_pdaf, outflag)
+  END IF
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate -- END'
+
+END SUBROUTINE PDAF3_assimilate
+
+
+
+!-------------------------------------------------------------------------------
 !!> Interface routine to PDAF for local filters
 !!
 !! __Revision history:__
@@ -94,7 +250,7 @@ SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate -- START'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFlocalomi_assimilate -- START'
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
      CALL PDAF_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
@@ -146,7 +302,7 @@ SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate -- END'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate -- END'
 
 END SUBROUTINE PDAF3_assimilate_local
 
@@ -198,7 +354,7 @@ SUBROUTINE PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_global -- START'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate_global -- START'
 
   IF (TRIM(filterstr) == 'SEIK') THEN
      CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
@@ -239,7 +395,7 @@ SUBROUTINE PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_global -- END'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate_global -- END'
 
 END SUBROUTINE PDAF3_assimilate_global
 
@@ -282,7 +438,7 @@ SUBROUTINE PDAF3_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf -- START'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate_lenkf -- START'
 
   CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
@@ -297,7 +453,7 @@ SUBROUTINE PDAF3_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf -- END'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate_lenkf -- END'
 
 END SUBROUTINE PDAF3_assimilate_lenkf
 
@@ -340,7 +496,7 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_ensrf -- START'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate_ensrf -- START'
 
   CALL PDAF_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, &
@@ -354,7 +510,7 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_ensrf -- END'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assimilate_ensrf -- END'
 
 END SUBROUTINE PDAF3_assimilate_ensrf
 
