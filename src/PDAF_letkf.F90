@@ -147,7 +147,7 @@ CONTAINS
 ! *********************
 
     ! Check if subtype is valid
-    IF (.NOT.(subtype==0 .OR. subtype==10 .OR. subtype==11)) THEN
+    IF (.NOT.(subtype==0 .OR. subtype==1 .OR. subtype==10 .OR. subtype==11)) THEN
        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
        outflag = 3
     END IF
