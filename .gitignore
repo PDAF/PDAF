@@ -1,4 +1,4 @@
-build
+build/*.o
 external/**/*.mod
 external/**/*.o
 src/*~
