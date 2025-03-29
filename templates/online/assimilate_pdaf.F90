@@ -15,8 +15,7 @@
 SUBROUTINE assimilate_pdaf()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_assimilate_local, PDAF3_assimilate_global, &
-       PDAF3_generate_obs, PDAF_localfilter
+       ONLY: PDAF_DA_GENOBS, PDAF3_assimilate, PDAF3_generate_obs
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
@@ -55,25 +54,25 @@ SUBROUTINE assimilate_pdaf()
 ! *** Call assimilation routine ***
 ! *********************************
 
-  ! Call assimilate routine for global or local filter
-  IF (PDAF_localfilter() == 1) THEN
-     ! Call generic routine for domain-localized filters and ENSRF
-     CALL PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
+! +++ Note: The universal routine PDAF3_assimilate can be used to
+! +++ execute all filter methods. The specified routines for localization
+! +++ are only executed if a local filter is used. If one uses
+! +++ exclusively global filters or the LEnKF, one can use the specific
+! +++ routine PDAF3_assimilate_global which does not include the
+! +++ arguments for localization. This would avoid to include routines
+! +++ that are never called for global filters. 
+
+  IF (filtertype /= PDAF_DA_GENOBS) THEN
+     ! Call universal PDAF3 interface routine
+     CALL PDAF3_assimilate(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   ELSE
-     IF (filtertype /= 100) THEN
-        ! Call generic routine for global filters and LEnKF
-        CALL PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, &
-             prepoststep_pdaf, next_observation_pdaf, status_pdaf)
-     ELSE IF (filtertype == 100) THEN
-        ! Observation generation has its own OMI interface routine
-        CALL PDAF3_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, get_obs_f_pdaf, &
-             prepoststep_pdaf, next_observation_pdaf, status_pdaf)
-     END IF
+     ! Observation generation has its own OMI interface routine
+     CALL PDAF3_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, get_obs_f_pdaf, &
+          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   END IF
 
 

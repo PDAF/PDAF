@@ -65,9 +65,9 @@ CONTAINS
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
-           next_observation_pdaf, outflag)
+          prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
@@ -161,7 +161,8 @@ END SUBROUTINE PDAF3_assimilate_local_nondiagR
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_assimilate_global_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-     init_dim_obs_pdaf, obs_op_pdaf, prodRinvA_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
+     init_dim_obs_pdaf, obs_op_pdaf, prodRinvA_pdaf, &
+     prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
@@ -243,9 +244,9 @@ END SUBROUTINE PDAF3_assimilate_global_nondiagR
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, likelihood_l_pdafomi,  &
-          next_observation_pdaf, outflag)
+          prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
@@ -317,10 +318,10 @@ END SUBROUTINE PDAF3_assimilate_lnetf_nondiagR
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_assimilate_lknetf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, prodRinvA_hyb_l_pdafomi, &
           likelihood_l_pdafomi, likelihood_hyb_l_pdafomi,  &
-          next_observation_pdaf, outflag)
+          prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
@@ -468,8 +469,8 @@ END SUBROUTINE PDAF3_assimilate_enkf_nondiagR
 !! Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_assimilate_nonlin_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-     init_dim_obs_pdafomi, obs_op_pdafomi, likelihood_pdafomi, prepoststep_pdaf, &
-     next_observation_pdaf, outflag)
+     init_dim_obs_pdafomi, obs_op_pdafomi, likelihood_pdafomi, &
+     prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc

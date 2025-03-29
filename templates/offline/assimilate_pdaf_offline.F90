@@ -15,8 +15,7 @@
 SUBROUTINE assimilate_pdaf_offline()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_put_state_local, PDAF3_put_state_global, &
-       PDAF_localfilter
+       ONLY: PDAF3_put_state
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
 
@@ -51,27 +50,27 @@ SUBROUTINE assimilate_pdaf_offline()
 ! *** Perform analysis step ***
 ! *****************************
 
-! *** Note on PDAF_get_state for offline implementation: ***
-! *** For the offline mode of PDAF the call to           ***
-! *** PDAF_get_state is not required as no forecasting   ***
-! *** is performed in this mode. However, it is save     ***
-! *** to call PDAF_get_state, even it is not necessary.  ***
-! *** The functionality of PDAF_get_state is deactivated ***
-! *** for the offline mode.                              ***
+! +++ Note on PDAF_get_state for offline implementation:
+! +++ For the offline mode of PDAF the call to
+! +++ PDAF_get_state is not required as no forecasting
+! +++ is performed in this mode. However, it is save
+! +++ to call PDAF_get_state, even it is not necessary.
+! +++ The functionality of PDAF_get_state is deactivated
+! +++ for the offline mode.
 
-  ! Call assimilate routine for global or local filter
-  IF (PDAF_localfilter() == 1) THEN
-     ! Call generic routine for domain-localized filters and ENSRF
-     CALL PDAF3_put_state_local(collect_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
-          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
-          prepoststep_ens_offline, status_pdaf)
-  ELSE
-     ! Call generic routine for global filters and LEnKF
-     CALL PDAF3_put_state_global(collect_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
-          prepoststep_ens_offline, status_pdaf)
-  END IF
+  ! Call universal PDAF3 interface routine
+  CALL PDAF3_put_state(collect_state_pdaf, &
+       init_dim_obs_pdafomi, obs_op_pdafomi, &
+       init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+       prepoststep_ens_offline, status_pdaf)
+
+! +++ Note: The universal routine PDAF3_put_state can be used to
+! +++ execute all filter methods. The specified routines for localization
+! +++ are only executed if a local filter is used. If one uses
+! +++ exclusively global filters or the LEnKF, one can use the specific
+! +++ routine PDAF3_put_state_global which does not include the
+! +++ arguments for localization. This would avoid to include routines
+! +++ that are never called for global filters. 
 
 
 ! ************************

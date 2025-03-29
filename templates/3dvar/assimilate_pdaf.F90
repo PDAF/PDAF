@@ -13,8 +13,7 @@ SUBROUTINE assimilate_pdaf()
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_3dvar, &
-       PDAFomi_assimilate_en3dvar_lestkf, PDAFomi_assimilate_en3dvar_estkf, &
-       PDAFomi_assimilate_hyb3dvar_lestkf, PDAFomi_assimilate_hyb3dvar_estkf
+       PDAFomi_assimilate_en3dvar, PDAFomi_assimilate_hyb3dvar
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
@@ -61,41 +60,36 @@ SUBROUTINE assimilate_pdaf()
 ! *** Call assimilation routine ***
 ! *********************************
 
+! +++ Note: We use here the universal interface routines for en3dvar and hyb3dvar.
+! +++ These can be used to use both the local and global filters. If one uses
+! +++ exclusively the global ESTKF for the update of the ensemble perturbations
+! +++ one can use the specific routines PDAFomi_assimilate_en3dvar_estkf and
+! +++ PDAFomi_assimilate_hyb3dvar_estkf, which do not include the arguments
+! +++ for localization.  This would avoid to include routines that are never called
+! +++ for global filters.
+
   IF (subtype==0) THEN
      ! parameterized 3D-Var
      CALL PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           prepoststep_3dvar_pdaf, next_observation_pdaf, status_pdaf)
-  ELSEIF (subtype==1) THEN
-     ! Ensemble 3D-Var with local ESTKF update of ensemble perturbations
-     CALL PDAFomi_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+  ELSEIF (subtype==1 .OR. subtype==2) THEN
+     ! Ensemble 3D-Var with local or global ESTKF update of ensemble perturbations
+     CALL PDAFomi_assimilate_en3dvar(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, &
           prepoststep_pdaf, next_observation_pdaf, status_pdaf)
-  ELSEIF (subtype==4) THEN
-     ! Ensemble 3D-Var with global ESTKF update of ensemble perturbations
-     CALL PDAFomi_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
-          cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
-          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
-  ELSEIF (subtype==6) THEN
-     ! Hybrid 3D-Var with local ESTKF update of ensemble perturbations
-     CALL PDAFomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+  ELSEIF (subtype==3 .OR. subtype==4) THEN
+     ! Hybrid 3D-Var with local or global ESTKF update of ensemble perturbations
+     CALL PDAFomi_assimilate_hyb3dvar(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
           obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, &
-          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
-  ELSEIF (subtype==7) THEN
-     ! Hybrid 3D-Var with global ESTKF update of ensemble perturbations
-     CALL PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
-          cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
-          obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   END IF
 
