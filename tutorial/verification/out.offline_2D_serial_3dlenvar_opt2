@@ -34,7 +34,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                 Version 3.0beta                    +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -113,7 +113,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.2465E-01
 PDAF     --- duration of prestep:     0.000 s
 PDAF Prepare observations -------------------------------------------
@@ -172,11 +171,10 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of En3D-Var update:     0.001 s
+PDAF     --- duration of En3D-Var update:     0.000 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.2210E-01
         --- write ensemble and state estimate
 PDAF     --- duration of poststep:     0.004 s
@@ -191,14 +189,15 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.044 MiB (persistent)
 PDAF            analysis step:      0.033 MiB (temporary)
+PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          En3DVAR analysis:                    0.003 s
-PDAF            PDAF-internal operations:            0.002 s
+PDAF          Hyb3DVAR analysis:                   0.002 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Solver:                              0.000 s
 PDAF            cvt_ens_pdaf:                        0.000 s

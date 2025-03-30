@@ -36,8 +36,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: nx, ny
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: n_fields, fields, id
+  USE mod_parallel_pdaf, &     ! Parallelization variables
+       ONLY: COMM_filter
   USE PDAF, &                  ! PDAF diagnostic routine
-       ONLY: PDAF_diag_stddev_nompi
+       ONLY: PDAF_diag_stddev
 
   IMPLICIT NONE
 
@@ -100,9 +102,9 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      istart = 1 + fields(j)%off
      iend = fields(j)%dim + fields(j)%off
 
-     CALL PDAF_diag_stddev_nompi(fields(j)%dim, dim_ens, &
+     CALL PDAF_diag_stddev(fields(j)%dim, dim_ens, &
           state_p(istart:iend), ens_p(istart:iend,:), &
-          ens_stddev(j), 1, pdaf_status)
+          ens_stddev(j), 1, COMM_filter, pdaf_status)
   END DO
 
 

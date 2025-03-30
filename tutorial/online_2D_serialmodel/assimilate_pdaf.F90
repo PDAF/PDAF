@@ -12,8 +12,7 @@
 SUBROUTINE assimilate_pdaf()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_assimilate_local, PDAF3_assimilate_global, &
-       PDAF_localfilter
+       ONLY: PDAF3_assimilate
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
 
@@ -48,19 +47,11 @@ SUBROUTINE assimilate_pdaf()
 ! *** Call assimilation routine ***
 ! *********************************
 
-  ! Call assimilate routine for global or local filter
-  IF (PDAF_localfilter() == 1) THEN
-     ! Call generic routine for domain-localized filters and ENSRF
-     CALL PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
-          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
-          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
-  ELSE
-     ! Call generic routine for global filters and LEnKF
-     CALL PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
-          next_observation_pdaf, status_pdaf)
-  END IF
+  ! Call universal PDAF3 assimilation routine
+  CALL PDAF3_assimilate(collect_state_pdaf, distribute_state_pdaf, &
+       init_dim_obs_pdafomi, obs_op_pdafomi, &
+       init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+       prepoststep_pdaf, next_observation_pdaf, status_pdaf)
 
 
 ! ************************

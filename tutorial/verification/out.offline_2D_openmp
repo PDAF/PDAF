@@ -28,14 +28,13 @@
                      Filter: LESTKF
       -- Standard mode
               ensemble size:    9
-      Assimilation interval:    0
           forgetting factor: 1.00
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                 Version 3.0beta                    +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -90,9 +89,10 @@ PDAF            --> Transform ensemble with deterministic Omega (default)
 PDAF          param_int(7) type_sqrt=  0
 PDAF            --> symmetric square root (default)
 PDAF          param_int(8) observe_ens
-PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
+PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
+PDAF          param_real(1) forget=     1.000
 
   PDAF offline mode: START ASSIMILATION
 
@@ -103,7 +103,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.2465E-01
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
@@ -136,7 +135,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.2210E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -150,6 +148,7 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.044 MiB (persistent)
 PDAF            analysis step:      0.069 MiB (temporary)
+PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -157,7 +156,7 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.003 s
 PDAF          LESTKF analysis:                     0.001 s
-PDAF            PDAF-internal operations:            0.003 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
@@ -165,6 +164,6 @@ PDAF            Time in OMI observation module routines
 PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.005 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
  PDAF offline mode: END

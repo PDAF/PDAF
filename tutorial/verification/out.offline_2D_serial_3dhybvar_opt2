@@ -25,7 +25,7 @@
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: dim_ens=         9
   PARSER: filtertype=       200
-  PARSER: subtype=         7
+  PARSER: subtype=         4
   PARSER: type_opt=         2
   PARSER: dim_cvec=         9
                      Assimilation using 3D-Var
@@ -35,7 +35,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                 Version 3.0beta                    +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -76,12 +76,12 @@ PDAF: Call ensemble initialization
          Initialize B^1/2 for 3D-Var
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.003 s
+PDAF     --- duration of PDAF initialization:     0.002 s
 
 PDAF    Activate PDAF offline mode
 
 PDAF    3DVAR configuration
-PDAF          filter sub-type= 7
+PDAF          filter sub-type= 4
 PDAF            --> hybrid 3DVAR using ESTKF for ensemble transformation
 PDAF            --> hybrid weight     0.500
 PDAF            --> total size of control vector     18
@@ -118,7 +118,6 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   3.2465E-01
 PDAF     --- duration of prestep:     0.000 s
 PDAF Prepare observations -------------------------------------------
@@ -127,7 +126,7 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- duration of observation preparation:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - hybrid 3DVAR with ESTKF
 PDAF     Step 1: Update state estimate with variational solver
@@ -161,10 +160,9 @@ PDAF     --- duration of hyb3D-Var update:     0.000 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   1.0503E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.004 s
+PDAF     --- duration of poststep:     0.003 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -176,23 +174,24 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.044 MiB (persistent)
 PDAF            analysis step:      0.041 MiB (temporary)
+PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.003 s
-PDAF          Hyb3DVAR analysis:                   0.001 s
-PDAF            PDAF-internal operations:            0.000 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Hyb3DVAR analysis:                   0.002 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
-PDAF            Solver:                              0.001 s
+PDAF            Solver:                              0.000 s
 PDAF            cvt_ens_pdaf:                        0.000 s
 PDAF            cvt_ens_adj_pdaf:                    0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.000 s
+PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF          Prepoststep (5):                     0.004 s
+PDAF          Prepoststep (5):                     0.003 s
 
  PDAF offline mode: END

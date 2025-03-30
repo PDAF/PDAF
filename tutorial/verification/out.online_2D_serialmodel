@@ -10,9 +10,9 @@
      6              7      0      1      6       F
      5              6      0      1      5       F
      4              5      0      1      4       F
+     1              2      0      1      1       F
      2              3      0      1      2       F
      7              8      0      1      7       F
-     1              2      0      1      1       F
      8              9      0      1      8       F
      0       0      1      0      1      0       T
  INITIALIZE 2D TUTORIAL MODEL
@@ -22,18 +22,18 @@
           Grid size:  36 x   18
           Time steps  18
  INITIALIZE 2D TUTORIAL MODEL
- INITIALIZE 2D TUTORIAL MODEL
-          Grid size:  36 x   18
-          Time steps  18
           Grid size:  36 x   18
           Time steps  18
  INITIALIZE 2D TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
  INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
  INITIALIZE 2D TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
+ INITIALIZE 2D TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
 
@@ -47,9 +47,6 @@
  INITIALIZE 2D TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
- INITIALIZE 2D TUTORIAL MODEL
-          Grid size:  36 x   18
-          Time steps  18
 
  INITIALIZE PDAF - ONLINE MODE
   PARSER: screen=         1
@@ -58,14 +55,16 @@
                      Filter: LESTKF
       -- Standard mode
               ensemble size:    9
-      Assimilation interval:    2
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
           forgetting factor: 1.00
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                 Version 3.0beta                    +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -118,9 +117,10 @@ PDAF            --> Transform ensemble with deterministic Omega (default)
 PDAF          param_int(7) type_sqrt=  0
 PDAF            --> symmetric square root (default)
 PDAF          param_int(8) observe_ens
-PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
+PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
+PDAF          param_real(1) forget=     1.000
 
 
 PDAF ----------------------------------------------------------------
@@ -128,7 +128,6 @@ PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine at initial time
         Analyze initial state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.7637E-01
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      2
@@ -144,13 +143,12 @@ PDAF     --- Distribute sub-ensembles
  START INTEGRATION
  step           1
  step           2
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  START INTEGRATION
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -184,7 +182,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.6883E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -193,12 +190,11 @@ PDAF     Evolve state ensemble
 PDAF     --- Distribute sub-ensembles
  step           3
  step           4
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       4
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.6883E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -232,7 +228,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.6119E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -241,12 +236,11 @@ PDAF     Evolve state ensemble
 PDAF     --- Distribute sub-ensembles
  step           5
  step           6
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       6
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.6119E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -280,7 +274,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5793E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -289,12 +282,11 @@ PDAF     Evolve state ensemble
 PDAF     --- Distribute sub-ensembles
  step           7
  step           8
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       8
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5793E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -328,7 +320,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5609E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -337,12 +328,11 @@ PDAF     Evolve state ensemble
 PDAF     --- Distribute sub-ensembles
  step           9
  step          10
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      10
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5609E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -376,7 +366,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5473E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -385,12 +374,11 @@ PDAF     Evolve state ensemble
 PDAF     --- Distribute sub-ensembles
  step          11
  step          12
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      12
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5473E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -424,7 +412,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5387E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -433,12 +420,11 @@ PDAF     Evolve state ensemble
 PDAF     --- Distribute sub-ensembles
  step          13
  step          14
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      14
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5387E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -472,7 +458,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5309E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -481,12 +466,11 @@ PDAF     Evolve state ensemble
 PDAF     --- Distribute sub-ensembles
  step          15
  step          16
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      16
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5309E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -520,7 +504,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5259E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -529,12 +512,11 @@ PDAF     Evolve state ensemble
 PDAF     --- Distribute sub-ensembles
  step          17
  step          18
-PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5259E-01
         --- write ensemble and state estimate
 PDAF Prepare observations -------------------------------------------
@@ -568,7 +550,6 @@ PDAF        Avg. for domains with observations:          1.0
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-        --- compute ensemble mean
             RMS error according to sampled variance:   5.5208E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
@@ -580,23 +561,24 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.044 MiB (persistent)
 PDAF            analysis step:      0.039 MiB (temporary)
+PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.010 s
-PDAF            init_ens_pdaf:                       0.006 s
-PDAF          Ensemble forecast:                   0.046 s
-PDAF            MPI communication in PDAF:           0.045 s
+PDAF          Initialize PDAF:                     0.009 s
+PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Ensemble forecast:                   0.056 s
+PDAF            MPI communication in PDAF:           0.055 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.017 s
-PDAF            PDAF-internal operations:            0.118 s
-PDAF            OMI-internal routines:               0.000 s
+PDAF          LESTKF analysis:                     0.019 s
+PDAF            PDAF-internal operations:            0.114 s
+PDAF            OMI-internal routines:               0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_l_pdaf:                     0.002 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.005 s
-PDAF              obs_op_pdafomi:                    0.001 s
-PDAF              init_dim_obs_l_pdafomi:            0.002 s
-PDAF          prepoststep_pdaf:                    0.106 s
+PDAF              init_dim_obs_pdafomi:              0.003 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF              init_dim_obs_l_pdafomi:            0.003 s
+PDAF          prepoststep_pdaf:                    0.105 s

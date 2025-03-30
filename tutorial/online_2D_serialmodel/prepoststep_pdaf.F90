@@ -34,8 +34,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   USE mod_model, &             ! Model variables
        ONLY: nx, ny
+  USE mod_parallel_pdaf, &     ! Parallelization variables
+       ONLY: COMM_filter
   USE PDAF, &                  ! PDAF diagnostic routine
-       ONLY: PDAF_diag_stddev_nompi
+       ONLY: PDAF_diag_stddev
 
   IMPLICIT NONE
 
@@ -89,8 +91,8 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** (=RMS errors according to sampled covar matrix)      ***
 ! ************************************************************
 
-  CALL PDAF_diag_stddev_nompi(dim_p, dim_ens, state_p, ens_p, &
-        ens_stddev, 1, pdaf_status)
+  CALL PDAF_diag_stddev(dim_p, dim_ens, state_p, ens_p, &
+        ens_stddev, 1, COMM_filter, pdaf_status)
 
 
 ! *****************
