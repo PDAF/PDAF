@@ -42,7 +42,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                 Version 3.0beta                    +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -153,11 +153,11 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          EnKF analysis:                       0.001 s
+PDAF          EnKF analysis:                       0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF          prepoststep_pdaf:                    0.004 s
 
@@ -165,9 +165,9 @@ PDAF          prepoststep_pdaf:                    0.004 s
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                     Initialize PDAF (1):      0.002 s
-PDAF                       EnKF analysis (3):      0.001 s
+PDAF                       EnKF analysis (3):      0.000 s
 PDAF                        get mean state (9):      0.000 s
-PDAF                  prepare observations (6):      0.001 s
+PDAF                  prepare observations (6):      0.000 s
 PDAF                        compute HPH+R (10):      0.000 s
 PDAF                                 HXpert (30):      0.000 s
 PDAF                                    HPH (32):      0.000 s

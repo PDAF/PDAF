@@ -11,8 +11,8 @@
      5              3      1      2      2       F
      3              2      1      2      1       F
      2              2      0      1      1       F
-     1       1      1      1      2      0       T
      4              3      0      1      2       F
+     1       1      1      1      2      0       T
      0       0      1      0      1      0       T
 
 
@@ -49,7 +49,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                 Version 3.0beta                    +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -165,7 +165,6 @@ PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
-PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
@@ -219,6 +218,7 @@ PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAF     --- use blocking with size   200
 PDAFomi        --- Localization cut-off radius   5.000E+00
+PDAF     --- use blocking with size   200
 PDAFomi        --- Support radius   5.000E+00
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
@@ -228,6 +228,7 @@ PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
@@ -255,19 +256,19 @@ PDAF                 PDAF-OMI:        0.002 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.006 s
+PDAF          Initialize PDAF:                     0.007 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          Ensemble forecast:                   0.009 s
 PDAF            MPI communication in PDAF:          0.009 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LNETF analysis:                      0.089 s
-PDAF            PDAF-internal operations:            0.003 s
+PDAF          LNETF analysis:                      0.082 s
+PDAF            PDAF-internal operations:            0.002 s
 PDAF            OMI-internal routines:               0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_l_pdaf:                     0.001 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.033 s
-PDAF              obs_op_pdafomi:                    0.047 s
+PDAF              obs_op_pdafomi:                    0.042 s
 PDAF              init_dim_obs_l_pdafomi:            0.001 s
-PDAF          prepoststep_pdaf:                    0.026 s
+PDAF          prepoststep_pdaf:                    0.025 s
