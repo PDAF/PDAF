@@ -16,7 +16,7 @@
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
 !
-!> Interfaces to PDAF for flexible parallelization mode for ensemble filters
+!> Interfaces to PDAF for offline mode for ensemble filters
 !!
 !! The interface routines provide the advanced compact
 !! interfaces for using PDAF-OMI and PDAF-Local. The routines
