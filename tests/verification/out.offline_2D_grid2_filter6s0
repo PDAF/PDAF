@@ -44,7 +44,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                 Version 3.0beta                    +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -153,23 +153,23 @@ PDAF                 PDAF-OMI:        0.261 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     2.739 s
-PDAF            init_ens_pdaf:                       2.739 s
-PDAF          ESTKF analysis:                      0.357 s
-PDAF            PDAF-internal operations:            0.047 s
+PDAF          Initialize PDAF:                     4.100 s
+PDAF            init_ens_pdaf:                       4.099 s
+PDAF          ESTKF analysis:                      0.556 s
+PDAF            PDAF-internal operations:            0.046 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.336 s
-PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    4.318 s
+PDAF              init_dim_obs_pdafomi:              0.535 s
+PDAF              obs_op_pdafomi:                    0.001 s
+PDAF          prepoststep_pdaf:                    4.393 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      2.739 s
-PDAF                      ESTKF analysis (3):      0.357 s
+PDAF                     Initialize PDAF (1):      4.100 s
+PDAF                      ESTKF analysis (3):      0.556 s
 PDAF                        get mean state (9):      0.003 s
-PDAF                  prepare observations (6):      0.336 s
+PDAF                  prepare observations (6):      0.536 s
 PDAF                        init residual (10):      0.000 s
 PDAF                         compute Ainv (11):      0.001 s
 PDAF              get state weight vector (12):      0.000 s
@@ -178,7 +178,7 @@ PDAF                             SQRT(Ainv) (32):      0.000 s
 PDAF                             init Omega (33):      0.000 s
 PDAF                     compute C^T OmegaT (34):      0.000 s
 PDAF                       complete weights (35):      0.000 s
-PDAF                   transform ensemble (21):      0.017 s
-PDAF                         Prepoststep (5):      4.318 s
+PDAF                   transform ensemble (21):      0.016 s
+PDAF                         Prepoststep (5):      4.393 s
 
  PDAF offline mode: END
