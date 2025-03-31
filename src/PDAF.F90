@@ -30,7 +30,6 @@
 MODULE PDAF
 
   USE PDAF_DA
-  USE PDAF_cb_procedures
   USE PDAF_set
   USE PDAF_get
   USe PDAF_utils
@@ -54,7 +53,6 @@ MODULE PDAF
 
   ! Interfaces for init and get_state
   USE PDAFinit
-  USE PDAF_init_mod
   USE PDAFget_state
 
   ! Full put_state interfaces
