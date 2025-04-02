@@ -64,6 +64,9 @@ MODULE PDAFomi_dim_obs_l
   IMPLICIT NONE
   SAVE
 
+  PRIVATE :: obs_f, r_earth, pi, debug, n_obstypes, error, &
+       obs_l, obs_l_all, firstobs, offset_obs_l, mype, npes_filter
+
   INTERFACE PDAFomi_init_dim_obs_l
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_iso
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso

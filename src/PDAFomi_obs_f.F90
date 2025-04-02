@@ -97,11 +97,11 @@ MODULE PDAFomi_obs_f
   USE mpi
   USE PDAF_mod_parallel, &
        ONLY: mype, npes, COMM_FILTER, MPIerr
-  USE PDAF_mod_core, &
-       ONLY: screen, obs_member, filterstr, dim_p, dim_ens
 
   IMPLICIT NONE
   SAVE
+
+  PRIVATE :: mype, npes, COMM_FILTER, MPIerr
 
 ! *** Module internal variables
   INTEGER :: debug=0                      !< Debugging flag
@@ -243,6 +243,7 @@ CONTAINS
 
     USE PDAF_get, ONLY: PDAF_get_localfilter
     USE PDAF_memcounting, ONLY: PDAF_memcount
+    USE PDAF_mod_core, ONLY: filterstr, screen, dim_ens, dim_p
 
     IMPLICIT NONE
 
@@ -643,6 +644,7 @@ CONTAINS
   SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
 
     USE PDAF_get, ONLY: PDAF_get_localfilter, PDAF_get_obsmemberid
+    USE PDAF_mod_core, ONLY: obs_member
 
     IMPLICIT NONE
 
@@ -1609,6 +1611,9 @@ CONTAINS
 !! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim, disttype, domainsize)
+
+    USE PDAF_mod_core, &
+         ONLY: screen
 
     IMPLICIT NONE
 

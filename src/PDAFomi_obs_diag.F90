@@ -30,6 +30,9 @@ MODULE PDAFomi_obs_diag
 
   IMPLICIT NONE
 
+  PRIVATE :: obs_diag, obs_f_all, n_obstypes, have_obsmean_diag, &
+       have_obsens_diag, rmsd, dim_obs_diag_p, obsstats
+
 CONTAINS
 
 !-------------------------------------------------------------------------------

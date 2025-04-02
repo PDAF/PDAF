@@ -70,6 +70,10 @@ MODULE PDAFomi_obs_op
 
   USE PDAFomi_obs_f, ONLY: obs_f, PDAFomi_gather_obsstate, debug
 
+  IMPLICIT NONE
+
+  PRIVATE :: obs_f, PDAFomi_gather_obsstate, debug
+
 CONTAINS
 
 !-------------------------------------------------------------------------------

@@ -106,6 +106,9 @@ MODULE PDAFomi_obs_l
 
 ! *** Module internal variables
 
+  PRIVATE :: obs_f, r_earth, pi, debug, n_obstypes, &
+       error, obs_diag, screen, obs_member, mype, npes_filter
+
   ! Data type to define the local observations by internally shared variables of the module
   TYPE obs_l
      INTEGER :: dim_obs_l                 !< number of local observations
