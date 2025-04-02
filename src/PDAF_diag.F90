@@ -451,6 +451,124 @@ SUBROUTINE PDAF_diag_variance(dim_p, dim_ens, &
 END SUBROUTINE PDAF_diag_variance
 
 
+!--------------------------------------------------------------------------
+!> Compute root mean square difference without MPI
+!!
+!! This routine computes the root mean square difference between
+!! stateA and stateB
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!!
+SUBROUTINE PDAF_diag_rmsd_nompi(dim_p, stateA_p, stateB_p, &
+     rmsd_p, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  USE MPI
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p                 !< state dimension
+  REAL, INTENT(in)    :: stateA_p(dim_p)       !< State vector A
+  REAL, INTENT(in)    :: stateB_p(dim_p)       !< State vector B
+  REAL, INTENT(out)   :: rmsd_p                !< RSMD
+  INTEGER, INTENT(out) :: status               !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: i                      ! Counters
+  INTEGER :: MPIerr                 ! MPI status flag
+
+
+! *******************************************
+! *** Compute root mean square difference ***
+! *******************************************
+
+  rmsd_p = 0.0
+
+  DO i = 1, dim_p
+     rmsd_p = rmsd_p + (stateA_p(i) - stateB_p(i))**2
+  END DO
+
+  ! normalize PE-local rmsd
+  rmsd_p = rmsd_p / REAL(dim_p)
+
+  ! Set status flag for success
+  status = 0
+  
+END SUBROUTINE PDAF_diag_rmsd_nompi
+
+
+!--------------------------------------------------------------------------
+!> Compute global root mean square difference
+!!
+!! This routine computes the root mean square difference between
+!! stateA and stateB
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!!
+SUBROUTINE PDAF_diag_rmsd(dim_p, stateA_p, stateB_p, &
+     rmsd_g, COMM_filter, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  USE MPI
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p                 !< state dimension
+  REAL, INTENT(in)    :: stateA_p(dim_p)       !< State vector A
+  REAL, INTENT(in)    :: stateB_p(dim_p)       !< State vector B
+  REAL, INTENT(out)   :: rmsd_g                !< Global RSMD
+  INTEGER, INTENT(in) :: COMM_filter           !< Filter communicator
+  INTEGER, INTENT(out) :: status               !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: i                      ! Counters
+  INTEGER :: dim_g                  ! Global state dimension
+  INTEGER :: MPIerr                 ! MPI status flag
+  REAL    :: rmsd_p                 ! PE-local part of rmsd
+
+
+! *******************************************
+! *** Compute root mean square difference ***
+! *******************************************
+
+  ! *** Local part of RMSD ***
+
+  rmsd_p = 0.0
+
+  DO i = 1, dim_p
+     rmsd_p = rmsd_p + (stateA_p(i) - stateB_p(i))**2
+  END DO
+
+
+  ! *** Global RMSD ***
+
+  ! Get global state dimension
+  CALL MPI_Allreduce(dim_p, dim_g, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+
+  ! normalize PE-local rmsd
+  rmsd_p = rmsd_p / REAL(dim_g)
+
+  ! Get global rmsd
+  CALL MPI_Allreduce(rmsd_p, rmsd_g, 1, MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
+
+  rmsd_g = SQRT(rmsd_g)
+
+  ! Set status flag for success
+  status = 0
+
+END SUBROUTINE PDAF_diag_rmsd
+
+
 
 !--------------------------------------------------------------------------
 !> Computation of CRPS
