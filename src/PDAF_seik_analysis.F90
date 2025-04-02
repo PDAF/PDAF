@@ -36,7 +36,7 @@ MODULE PDAF_seik_analysis
 CONTAINS
 SUBROUTINE PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Uinv, ens_p, HL_p, HXbar_p, obs_p, &
-     forget, U_prodRinvA, screen, debug, flag)
+     forget, U_prodRinvA, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -67,7 +67,6 @@ SUBROUTINE PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
   REAL, INTENT(in)    :: forget       !< Forgetting factor
-  INTEGER, INTENT(in) :: screen       !< Verbosity flag
   INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      !< Status flag
 

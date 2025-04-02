@@ -90,11 +90,15 @@ SUBROUTINE PDAFhyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: v_ens_p(:)      ! PE-local analysis increment control vector (ensemble)
   REAL, ALLOCATABLE :: state_inc_ens_p(:) ! State increment for ensmeble part
   INTEGER :: opt_parallel              ! Whether to run solver with decomposed control vector
- 
+  REAL :: dummy                        ! Dummy variable
+
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ! Dummy initialization presenting compiler warning
+  dummy = state_p(1)
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- START'

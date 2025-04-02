@@ -58,8 +58,7 @@ SUBROUTINE PDAF_put_state_ensrf(U_collect_state, U_init_dim_obs, U_obs_op,  &
   USE PDAF_mod_core, &
        ONLY: dim_p, dim_ens, local_dim_ens, nsteps, assim_flag, &
        step_obs, step, member, member_save, subtype_filter, initevol, &
-       state, ens, screen, flag, sens, &
-       dim_lag, cnt_maxlag, offline_mode
+       state, ens, screen, flag, offline_mode
   USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -177,7 +176,7 @@ SUBROUTINE PDAF_put_state_ensrf(U_collect_state, U_init_dim_obs, U_obs_op,  &
         CALL  PDAFensrf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
              ens, U_init_dim_obs, U_obs_op, U_init_obs, &
              U_init_obsvars, U_localize_covar_serial, U_prepoststep, screen, &
-             subtype_filter, dim_lag, sens, cnt_maxlag, flag)
+             subtype_filter, flag)
      END IF OnFilterPE
 
 

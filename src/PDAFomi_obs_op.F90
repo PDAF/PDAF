@@ -951,6 +951,7 @@ CONTAINS
     REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
 
 ! *** Local variables ***
+    REAL :: dummy                ! Dummy variable
 
 
 ! *********************************************
@@ -959,6 +960,10 @@ CONTAINS
 ! *********************************************
 
     doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Dummy initialization preventing compiler warning
+       dummy = obs_f_all(1)
+       dummy = state_p(1)
 
        ! Print debug information
        IF (debug>0) &

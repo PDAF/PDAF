@@ -480,7 +480,6 @@ SUBROUTINE PDAF_diag_rmsd_nompi(dim_p, stateA_p, stateB_p, &
 
 ! *** local variables ***
   INTEGER :: i                      ! Counters
-  INTEGER :: MPIerr                 ! MPI status flag
 
 
 ! *******************************************

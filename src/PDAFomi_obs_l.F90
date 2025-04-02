@@ -4844,8 +4844,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id, have_obsmean_diag, &
-         have_obsens_diag, rmsd, dim_obs_diag_p, obsstats
+         offset_obs_g, obsdims, map_obs_id
 
     IMPLICIT NONE
 
@@ -4915,11 +4914,15 @@ CONTAINS
     INTEGER :: cnt                  ! Counter
     REAL :: inno2                   ! Squared innovation
     REAL :: limit2                  ! Squared limit
+    INTEGER :: dummy                ! Dummy variable
 
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+    ! Dummy initialization preventing compiler warning
+    dummy = verbose
 
     doassim: IF (thisobs%doassim == 1) THEN
 

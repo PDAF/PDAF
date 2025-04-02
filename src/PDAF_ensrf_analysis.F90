@@ -42,7 +42,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_ensrf_ana(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
-       U_localize_covar_serial, screen, debug, flag)
+       U_localize_covar_serial, screen, debug)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -71,7 +71,6 @@ CONTAINS
     REAL, INTENT(in)    :: var_obs_p(dim_obs_p)     !< PE-local vector of observation eror variances
     INTEGER, INTENT(in) :: screen        !< Verbosity flag
     INTEGER, INTENT(in) :: debug         !< Flag for writing debug output
-    INTEGER, INTENT(inout) :: flag       !< Status flag
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
@@ -106,9 +105,6 @@ CONTAINS
        WRITE (*, '(a, i7, 3x, a)') &
             'PDAF ', step, 'ENSRF analysis with serial observation processing'
     END IF
-
-    ! Set status flag
-    flag = 0
 
     ! init numbers
     invdim_ensm1 = 1.0 / (REAL(dim_ens - 1))
@@ -337,7 +333,7 @@ CONTAINS
 !!
   SUBROUTINE PDAF_ensrf_ana_2step(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
-       U_localize_covar_serial, screen, debug, flag)
+       U_localize_covar_serial, screen, debug)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -366,7 +362,6 @@ CONTAINS
     REAL, INTENT(in)    :: var_obs_p(dim_obs_p)     !< PE-local vector of observation eror variances
     INTEGER, INTENT(in) :: screen        !< Verbosity flag
     INTEGER, INTENT(in) :: debug         !< Flag for writing debug output
-    INTEGER, INTENT(inout) :: flag       !< Status flag
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
@@ -383,13 +378,16 @@ CONTAINS
     REAL, ALLOCATABLE :: HXinc_i(:)      ! ensemble of observation increments for single observation
     REAL, ALLOCATABLE :: cov_xy_p(:)     ! covariances between state and single observation
     REAL, ALLOCATABLE :: cov_hxy_p(:)    ! covariances between full observed state and single observation
-
+    REAL :: dummy                        ! dummy variable
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
 
     CALL PDAF_timeit(51, 'new')
+
+    ! Dummy initialization to present compiler warning
+    dummy = state_p(1)
 
     IF (debug>0) &
          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_ensrf_analysis -- START'

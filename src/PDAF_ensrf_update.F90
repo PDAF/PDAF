@@ -37,7 +37,7 @@ CONTAINS
 SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
      U_init_obsvars, U_localize_covar_serial, U_prepoststep, screen, &
-     subtype, dim_lag, sens_p, cnt_maxlag, flag)
+     subtype, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -68,9 +68,6 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local state ensemble
   INTEGER, INTENT(in) :: screen     !< Verbosity flag
   INTEGER, INTENT(in) :: subtype    !< Specification of filter subtype
-  INTEGER, INTENT(in) :: dim_lag    !< Number of past time instances for smoother
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
   INTEGER, INTENT(inout) :: flag    !< Status flag
 
 ! *** External subroutines ***
@@ -260,12 +257,12 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      ! ENSRF in formulation of Whitaker/Hamill (2002)
      CALL PDAF_ensrf_ana(step, dim_p, dim_obs_p, dim_ens, &
           state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
-          U_localize_covar_serial, screen, debug, flag)
+          U_localize_covar_serial, screen, debug)
   ELSEIF (subtype == 1) THEN
      ! 2-step update with local least squares formulation by Anderson (2003)
      CALL PDAF_ensrf_ana_2step(step, dim_p, dim_obs_p, dim_ens, &
           state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
-          U_localize_covar_serial, screen, debug, flag)
+          U_localize_covar_serial, screen, debug)
   END IF
 
   IF (debug>0) THEN

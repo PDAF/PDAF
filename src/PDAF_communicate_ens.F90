@@ -221,11 +221,15 @@ CONTAINS
     INTEGER :: pe_rank, col_frst, col_last  ! Counters
     INTEGER, ALLOCATABLE :: MPIreqs(:)      ! Array of MPI requests
     INTEGER, ALLOCATABLE :: MPIstats(:,:)   ! Array of MPI statuses
+    INTEGER :: dummy                        ! Dummy variable
 
 
 ! *************************************************
 ! *** Scatter forecast ensemble from filter PEs ***
 ! *************************************************
+
+    ! Dummy initialization preventing compiler warning
+    dummy = dim_ens_p
 
     CALL PDAF_timeit(4, 'new')
 

@@ -247,7 +247,7 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** SEIK analysis with forgetting factor ***
      CALL PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, HX_p, HXbar_p, obs_p, &
-          forget_ana, U_prodRinvA, screen, debug, flag)
+          forget_ana, U_prodRinvA, debug, flag)
   ELSE IF (subtype == 2) THEN
 ! *** SEIK analysis with ensemble transformation ***
      CALL PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &

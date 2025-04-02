@@ -47,7 +47,7 @@ SUBROUTINE  PDAFlknetf_update_sync(step, dim_p, dim_obs_f, dim_ens, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_likelihood_l, &
      U_prepoststep, screen, subtype, &
-     dim_lag, sens_p, cnt_maxlag, flag)
+     flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -94,9 +94,6 @@ SUBROUTINE  PDAFlknetf_update_sync(step, dim_p, dim_obs_f, dim_ens, &
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)  !< PE-local ensemble matrix
   INTEGER, INTENT(in) :: screen        !< Verbosity flag
   INTEGER, INTENT(in) :: subtype       !< Filter subtype
-  INTEGER, INTENT(in) :: dim_lag       !< Number of past time instances for smoother
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
   INTEGER, INTENT(inout) :: flag       !< Status flag
 
 ! *** External subroutines ***
@@ -464,7 +461,7 @@ SUBROUTINE  PDAFlknetf_update_sync(step, dim_p, dim_obs_f, dim_ens, &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- Enter local analysis loop'
 
 !$OMP BARRIER
-!$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag) schedule(runtime)
+!$OMP DO schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p
 
      ! Set flag that we are in the local analysis loop

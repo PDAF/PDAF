@@ -723,7 +723,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, Ainv, screen, flag, &
-       sens, dim_lag, cnt_maxlag, offline_mode
+       offline_mode
   USE PDAF_mod_parallel, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFlocal, &
@@ -852,7 +852,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
                 U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
                 PDAFlocal_l2g_cb, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
                 U_likelihood_l, U_prepoststep, screen, subtype_filter, &
-                dim_lag, sens, cnt_maxlag, flag)
+                flag)
         ELSE
            CALL PDAFlknetf_update_step(step_obs, dim_p, dim_obs, dim_ens, &
                 state, Ainv, ens, &
@@ -860,7 +860,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
                 U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
                 PDAFlocal_l2g_cb, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
                 U_likelihood_l, U_likelihood_hyb_l, U_prepoststep, screen, subtype_filter, &
-                dim_lag, sens, cnt_maxlag, flag)
+                flag)
         END IF
      END IF OnFilterPE
 
