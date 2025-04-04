@@ -264,8 +264,8 @@ CONTAINS
     REAL :: slon, slat              ! sine of distance in longitude or latitude
     REAL :: distance2               ! square distance
     REAL :: cradius2                ! squared localization cut-off radius
-    REAL :: dists(16)               ! Distance vector between analysis point and observation
-    REAL :: coordsB(16)             ! Array for coordinates of a single observation
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+    REAL :: coordsB(thisobs%ncoord) ! Array for coordinates of a single observation
 
 
 ! **********************
@@ -893,8 +893,8 @@ CONTAINS
     REAL :: cradius2                ! cut-off radius on ellipse or ellipsoid
     REAL :: phi, theta              ! Angles in ellipse or ellipsoid
     REAL :: dist_xy                 ! Distance in xy-plan in 3D case
-    REAL :: dists(16)               ! Distance vector between analysis point and observation
-    REAL :: coordsB(16)             ! Array for coordinates of a single observation
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+    REAL :: coordsB(thisobs%ncoord) ! Array for coordinates of a single observation
     REAL :: cradius                 ! Directional cut-off radius
     REAL :: sradius                 ! Directional support radius
     LOGICAL :: checkdist            ! Flag whether distance is within cut-off radius
