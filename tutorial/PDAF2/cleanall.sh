@@ -10,6 +10,11 @@ make clean
 make cleandata
 cd ..
 
+cd online_2D_serialmodel_2fields
+make clean
+make cleandata
+cd ..
+
 cd online_2D_parallelmodel
 make clean
 make cleandata
