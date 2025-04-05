@@ -18,9 +18,8 @@ SUBROUTINE init_pdaf()
 
   USE PDAF, &                     ! PDAF interfaces and parameters
        ONLY: PDAF_init, PDAF_set_iparam, PDAF_set_rparam, &
-       PDAF_set_offline_mode, PDAF_DA_ENKF, PDAF_DA_PF
-  USE PDAFomi, &
-       ONLY: PDAFomi_set_domain_limits, PDAFomi_set_obs_diag
+       PDAF_set_offline_mode, PDAF_DA_ENKF, PDAF_DA_PF, &
+       PDAFomi_set_domain_limits, PDAFomi_set_obs_diag
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, mype_filter, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel

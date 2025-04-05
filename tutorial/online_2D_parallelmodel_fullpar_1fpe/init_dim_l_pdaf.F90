@@ -16,7 +16,7 @@
 !!
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
-  USE PDAFlocal, &             ! Routine to provide local indices to PDAF
+  USE PDAF, &                  ! Routine to provide local indices to PDAF
        ONLY: PDAFlocal_set_indices
   USE mod_model, &             ! Model variables
        ONLY: ny, nx_p

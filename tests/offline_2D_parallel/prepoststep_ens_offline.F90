@@ -40,10 +40,9 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: nx, ny, dim_state, local_dims, do_omi_obsstats
-  USE PDAF, & 
-       ONLY: PDAF_diag_stddev, PDAF_set_debug_flag
-  USE PDAFomi, &
-       ONLY: PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
+  USE PDAF , & 
+       ONLY: PDAF_diag_stddev, PDAF_set_debug_flag, &
+       PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats, PDAFomi_diag_get_obs, PDAFomi_diag_get_HXmean
 
   IMPLICIT NONE
 
@@ -77,6 +76,11 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL, ALLOCATABLE :: ens_p_tmp(:,:) ! Temporary ensemble for some PE-domain
   REAL, ALLOCATABLE :: state_p_tmp(:) ! Temporary state for some PE-domain
+REAL, pointer :: obs_ptr(:)
+real, pointer :: oc_ptr(:,:)
+REAL, pointer :: HXmean_ptr(:)
+integer :: dim_obs, ncoord, status
+real :: rmsd
 
 
 ! **********************
@@ -104,9 +108,12 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** Compute observation statistics ***
 ! **************************************
 
+
   IF (do_omi_obsstats) THEN
      CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1/(mype_filter+1))
      CALL PDAFomi_diag_stats(nobs, obsstats, 1/(mype_filter+1))
+     CALL PDAFomi_diag_get_obs(1, dim_obs, ncoord, obs_ptr, oc_ptr)
+     CALL PDAFomi_diag_get_HXmean(1, dim_obs, HXmean_ptr)
   END IF
 
 

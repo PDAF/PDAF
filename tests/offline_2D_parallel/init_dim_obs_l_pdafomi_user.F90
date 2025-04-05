@@ -21,7 +21,7 @@
 SUBROUTINE init_dim_obs_l_pdafomi_user(thisobs_l, thisobs, coords_l, locweight, cradius, &
      sradius, cnt_obs_l_all)
 
-  USE PDAFomi, &
+  USE PDAF, &
        ONLY: obs_f, obs_l, PDAFomi_set_dim_obs_l, PDAFomi_set_localization
 
   IMPLICIT NONE

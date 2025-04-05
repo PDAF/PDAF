@@ -34,8 +34,6 @@ SUBROUTINE init_pdaf()
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
-  USE PDAFomi, &
-       ONLY: PDAFomi_set_domain_limits
 
   IMPLICIT NONE
 

@@ -38,10 +38,8 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_state, do_omi_obsstats
-  USE PDAF, &                  ! PDAF diagnostic routine
-       ONLY: PDAF_diag_stddev
-  USE PDAFomi, &               ! PDAF-OMI diagnostics
-       ONLY: PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
+  USE PDAF, &                  ! PDAF and PDAF-OMI diagnostic routines
+       ONLY: PDAF_diag_stddev, PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
 
   IMPLICIT NONE
 

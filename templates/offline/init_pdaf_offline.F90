@@ -17,8 +17,6 @@
 SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
-  USE PDAFomi, &                  ! PDAF-OMI routine
-       ONLY: PDAFomi_set_obs_diag
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel

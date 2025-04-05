@@ -18,9 +18,8 @@ SUBROUTINE init_pdaf()
 
   USE PDAF, &                     ! PDAF interfaces and parameters
        ONLY: PDAF_init, PDAF_get_state, PDAF_iau_init, PDAF_set_iparam, &
-       PDAF_set_rparam, PDAF_DA_ENKF, PDAF_DA_PF
-  USE PDAFomi, &
-       ONLY: PDAFomi_set_domain_limits, PDAFomi_set_obs_diag
+       PDAF_set_rparam, PDAF_DA_ENKF, PDAF_DA_PF, &
+       PDAFomi_set_domain_limits, PDAFomi_set_obs_diag, PDAFomi_set_domain_limits
   USE mod_parallel_model, &       ! Parallelization variables for model
        ONLY: mype_world, COMM_model, abort_parallel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
@@ -38,8 +37,6 @@ SUBROUTINE init_pdaf()
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
-  USE PDAFomi, &
-       ONLY: PDAFomi_set_domain_limits
 
   IMPLICIT NONE
 

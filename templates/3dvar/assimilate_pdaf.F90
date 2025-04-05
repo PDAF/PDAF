@@ -12,8 +12,8 @@
 SUBROUTINE assimilate_pdaf()
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAFomi_assimilate_3dvar, &
-       PDAFomi_assimilate_en3dvar, PDAFomi_assimilate_hyb3dvar
+       ONLY: PDAFomi_assimilate_3dvar_all, PDAFomi_assimilate_3dvar, &
+       PDAFomi_assimilate_en3dvar
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
@@ -84,7 +84,8 @@ SUBROUTINE assimilate_pdaf()
           prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   ELSEIF (subtype==3 .OR. subtype==4) THEN
      ! Hybrid 3D-Var with local or global ESTKF update of ensemble perturbations
-     CALL PDAFomi_assimilate_hyb3dvar(collect_state_pdaf, distribute_state_pdaf, &
+     !   (This routine can also be use to run all 3D-Var methods)
+     CALL PDAFomi_assimilate_3dvar_all(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
           obs_op_lin_pdafomi, obs_op_adj_pdafomi, &

@@ -52,7 +52,7 @@ MODULE obs_A_pdafomi
 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
-  USE PDAFomi, &
+  USE PDAF, &
        ONLY: obs_f, obs_l   ! Declaration of observation data types
  
   IMPLICIT NONE
@@ -143,7 +143,7 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_A(step, dim_obs)
 
-    USE PDAFomi, &
+    USE PDAF, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
          ONLY: nx, ny, filtertype, cradius
@@ -307,7 +307,7 @@ CONTAINS
 !!
   SUBROUTINE obs_op_A(dim_p, dim_obs, state_p, ostate)
 
-    USE PDAFomi, &
+    USE PDAF, &
          ONLY: PDAFomi_obs_op_gridpoint
 
     IMPLICIT NONE
@@ -349,7 +349,7 @@ CONTAINS
   SUBROUTINE init_dim_obs_l_A(domain_p, step, dim_obs, dim_obs_l)
 
     ! Include PDAFomi function
-    USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
+    USE PDAF, ONLY: PDAFomi_init_dim_obs_l
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   

@@ -36,29 +36,19 @@
 !!           initialize coordinate array and index array for indices of
 !!           observed elements of the state vector.
 !! * obs_op_OBSTYPE \n
-!!           Observation operator to get full observation vector of this type. Here
+!!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
 !!
-!! In addition, there is one optional routine, which is required if filters 
+!! In addition, there are two optional routines, which are required if filters 
 !! with localization are used:
 !! * init_dim_obs_l_OBSTYPE \n
 !!           Only required if domain-localized filters (e.g. LESTKF, LETKF) are used:
 !!           Count number of local observations of module-type according to
 !!           their coordinates (distance from local analysis domain). Initialize
 !!           module-internal distances and index arrays.
-!!
-!! For 3D-Var methods two additional observation operators are required
-!! * obs_op_lin_OBSTYPE \n
-!!           Linearized observation operator for this type. Since OMI currently
-!!           includes only linear observation operators this routine can be identical 
-!!           to obs_op_OBSTYPE (or one can call obs_op_OBSTYPE directly in
-!!           obs_op_lin_pdafomi in callback_ob_pdafomi.F90
-!!           one has to choose a proper observation operator or implement one.
-!! * obs_op_adj_OBSTYPE \n
-!!           Adjoint observation operator for this type. Here one has to 
-!!           choose a proper adjiont observation operator or implement one. 
-!!           PDAF-OMI provides an adjoint operator for all of its forward
-!!           operators.
+!! * localize_covar_OBSTYPE \n
+!!           Only required if the localized EnKF is used:
+!!           Apply covariance localization in the LEnKF.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -68,7 +58,7 @@ MODULE obs_OBSTYPE_pdafomi
 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
-  USE PDAFomi, &
+  USE PDAF, &
        ONLY: obs_f, obs_l   ! Declaration of observation data types
  
   IMPLICIT NONE
@@ -164,10 +154,10 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_OBSTYPE(step, dim_obs)
 
-    USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs
-    USE mod_assimilation, &
-         ONLY: filtertype, cradius
+    USE PDAF, &                ! Include PDAF and PDAF-OMI routines
+         ONLY: PDAF_local_type, PDAFomi_gather_obs, PDAFomi_set_localize_covar
+    USE mod_assimilation, &    
+         ONLY: filtertype, cradius, sradius, locweight !, coords_p
 
     IMPLICIT NONE
 
@@ -347,6 +337,29 @@ CONTAINS
          thisobs%ncoord, cradius, dim_obs)
 
 
+! ************************************************************
+! *** Provide localization information for LEnKF and ENSRF ***
+! ************************************************************
+
+    ! If one uses the LEnKF or ENSRF methods, one has to set the
+    ! localization information. The three localization variables
+    ! (locweight, cradius, sradius) can be different for each
+    ! observation type.
+    ! One also need to initialize of coordinate array (coords_p)
+    ! for the state vector. 
+
+    ! For cradius and sradius:
+    ! If these are defined as scalar values, isotropic localization is used.
+    ! If these are vectors, nonisotropic localization is used
+    !   (their length has to be equal to thisobs%ncoord)
+
+
+!     IF (PDAF_local_type() > 1) THEN
+!        CALL PDAFomi_set_localize_covar(thisobs, dim_state_p, ndim, coords_p, &
+!             locweight, cradius, sradius)
+!     END IF
+
+
 ! *********************************************************
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
@@ -384,7 +397,7 @@ CONTAINS
 !!
   SUBROUTINE obs_op_OBSTYPE(dim_p, dim_obs, state_p, ostate)
 
-    USE PDAFomi, &
+    USE PDAF, &                ! Include PDAF-OMI routine
          ONLY: PDAFomi_obs_op_gridpoint
 
     IMPLICIT NONE
@@ -431,8 +444,8 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_l_OBSTYPE(domain_p, step, dim_obs, dim_obs_l)
 
-    ! Include PDAFomi function
-    USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
+    USE PDAF, &                ! Include PDAF-OMI routine
+         ONLY: PDAFomi_init_dim_obs_l
 
     ! Include localization radius and local coordinates
     ! one can also set observation-specific values for the localization.
@@ -469,95 +482,5 @@ CONTAINS
          locweight, cradius, sradius, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_OBSTYPE
-
-
-
-!-------------------------------------------------------------------------------
-!> Implementation of linearized observation operator 
-!!
-!! This routine applies the linearized observation operator
-!! for the type of observations handled in this module. 
-!! This is only required for the 3D-Var methods.
-!!
-!! One can choose a proper observation operator from
-!! PDAFOMI_OBS_OP or add one to that module or 
-!! implement another observation operator here.
-!! PDAF-OMI provides so far only linear observation
-!! operators. Thus this routine can be identical to
-!! obs_op_OBSTYPE.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE obs_op_lin_OBSTYPE(dim_p, dim_obs, state_p, ostate)
-
-    USE PDAFomi, &
-         ONLY: PDAFomi_obs_op_gridpoint
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
-    INTEGER, INTENT(in) :: dim_obs               !< Dimension of full observed state (all observed fields)
-    REAL, INTENT(in)    :: state_p(dim_p)        !< PE-local model state
-    REAL, INTENT(inout) :: ostate(dim_obs)       !< Full observed state
-
-
-    ! Template reminder - delete when implementing functionality
-    WRITE (*,*) 'TEMPLATE init_OBSTYPE_pdafomi_TEMPLATE.F90: Apply linearized observation operator'
-
-! ******************************************************
-! *** Apply observation operator H on a state vector ***
-! ******************************************************
-
-    !+++  Choose suitable observation operator from the
-    !+++  module PDAFomi_obs_op or implement your own
-
-    ! Example: Observation operator for observed grid point values
-    CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
-
-  END SUBROUTINE obs_op_lin_OBSTYPE
-
-
-
-!-------------------------------------------------------------------------------
-!> Implementation of adjoint observation operator 
-!!
-!! This routine applies the adjoint observation operator
-!! for the type of observations handled in this module.
-!!
-!! One can choose a proper adjont observation operator
-!! from PDAFOMI_OBS_OP or add one to that module or 
-!! implement another observation operator here.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE obs_op_adj_OBSTYPE(dim_p, dim_obs, ostate, state_p)
-
-    USE PDAFomi, &
-         ONLY: PDAFomi_obs_op_gridpoint
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
-    INTEGER, INTENT(in) :: dim_obs               !< Dimension of full observed state (all observed fields)
-    REAL, INTENT(in)    :: ostate(dim_obs)       !< Full observed state
-    REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
-
-
-    ! Template reminder - delete when implementing functionality
-    WRITE (*,*) 'TEMPLATE init_OBSTYPE_pdafomi_TEMPLATE.F90: Apply adjoint observation operator'
-
-! ******************************************************
-! *** Apply observation operator H on a state vector ***
-! ******************************************************
-
-    !+++  Choose suitable observation operator from the
-    !+++  module PDAFomi_obs_op or implement your own
-
-    ! Example: Observation operator for observed grid point values
-    CALL PDAFomi_obs_op_adj_gridpoint(thisobs, ostate, state_p)
-
-  END SUBROUTINE obs_op_adj_OBSTYPE
 
 END MODULE obs_OBSTYPE_pdafomi

@@ -63,6 +63,7 @@ SUBROUTINE assimilate_pdaf()
 ! +++ that are never called for global filters. 
 
   IF (filtertype /= PDAF_DA_GENOBS) THEN
+     ! Call universal PDAF3 interface routine
      CALL PDAF3_assimilate(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &

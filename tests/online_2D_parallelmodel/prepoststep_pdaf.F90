@@ -40,9 +40,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_parallel_pdaf, &  ! Assimilation parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE PDAF, &               ! Diagnostic routines 
-       ONLY: PDAF_diag_stddev
-  USE PDAFomi, &            ! Observation diagnostics
-       ONLY: PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
+       ONLY: PDAF_diag_stddev, PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
 
   IMPLICIT NONE
 
