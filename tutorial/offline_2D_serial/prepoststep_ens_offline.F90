@@ -36,10 +36,10 @@
 SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
-  USE mod_assimilation, &      ! Model variables
-       ONLY: nx, ny
   USE mod_parallel_pdaf, &     ! Parallelization variables
        ONLY: COMM_filter
+  USE mod_assimilation, &      ! Model variables
+       ONLY: nx, ny
   USE PDAF, &                  ! PDAF diagnostic routine
        ONLY: PDAF_diag_stddev
 
@@ -63,7 +63,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER :: i, j, member             ! Counters
   INTEGER :: pdaf_status              ! status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
-  REAL :: ens_stddev                  ! estimated RMS error
+  REAL :: ens_stddev                  ! ensemble STDDEV = estimated RMS error
   INTEGER :: nobs                     ! Number of observations in diagnostics
   REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
@@ -74,10 +74,12 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (firsttime) THEN
-     WRITE (*, '(8x, a)') 'Analyze forecasted state ensemble'
-  ELSE
-     WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
+  IF (mype_filter == 0) THEN
+     IF (firsttime) THEN
+        WRITE (*, '(8x, a)') 'Analyze forecasted state ensemble'
+     ELSE
+        WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
+     END IF
   END IF
 
 
@@ -95,8 +97,10 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *****************
 
   ! Output RMS errors given by sampled covar matrix
-  WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', ens_stddev
+  IF (mype_filter == 0) THEN
+     WRITE (*, '(12x, a, es12.4)') &
+          'RMS error according to sampled standard deviation: ', ens_stddev
+  END IF
 
 
 ! *******************

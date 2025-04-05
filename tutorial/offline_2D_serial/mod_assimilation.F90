@@ -37,6 +37,8 @@ MODULE mod_assimilation
      INTEGER :: fieldA 
   END TYPE field_ids
 
+  !---- The next variables usually do not need editing -----
+
   !< Type variable holding field IDs in state vector
   TYPE(field_ids) :: id
 

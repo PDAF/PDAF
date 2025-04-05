@@ -11,8 +11,10 @@
 !!
 SUBROUTINE initialize()
 
-  USE mod_assimilation, &   ! Model variables
+  USE mod_assimilation, &   ! Variables for state vector dimension and model grid
        ONLY: dim_state_p, nx, ny
+  USE mod_parallel_pdaf, &  ! Parallelization variables
+       ONLY: mype_world
 
   IMPLICIT NONE
 
@@ -29,10 +31,12 @@ SUBROUTINE initialize()
   dim_state_p = nx * ny
 
 ! *** Screen output ***
-  WRITE (*, '(1x, a)') 'INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE'
-  WRITE (*, '(22x,a)') 'MODEL: 2D Offline Example for Tutorial'
-  WRITE (*, '(24x,a,i4,1x,a1,1x,i4)') 'Grid size:',nx,'x',ny
-  WRITE (*, '(5x, a, i7)') &
-       'Global model state dimension:', dim_state_p
+  screen2: IF (mype_world == 0) THEN
+     WRITE (*, '(1x, a)') 'INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE'
+     WRITE (*, '(22x,a)') 'MODEL: 2D Offline Example for Tutorial'
+     WRITE (*, '(24x,a,i4,1x,a1,1x,i4)') 'Grid size:',nx,'x',ny
+     WRITE (*, '(5x, a, i7)') &
+          'Global model state dimension:', dim_state_p
+  END IF screen2
 
 END SUBROUTINE initialize

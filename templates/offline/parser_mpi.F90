@@ -47,7 +47,7 @@
 !!         to be specified as 'T' or 'F'.          
 !!
 !! __Revision history:__
-!! * 2019-06 - Stephan Frickenhaus, Lars Nerger - Initial code
+!! * 2003-02 - Stephan Frickenhaus, Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
 MODULE parser

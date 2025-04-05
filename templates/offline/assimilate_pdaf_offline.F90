@@ -34,8 +34,6 @@ SUBROUTINE assimilate_pdaf_offline()
 
   ! Interface between model and PDAF, and prepoststep
   EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
-       distribute_state_pdaf, &       ! Distribute a state vector to model fields
-       next_observation_pdaf, &       ! Provide time step of next observation
        prepoststep_ens_offline        ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
@@ -58,7 +56,7 @@ SUBROUTINE assimilate_pdaf_offline()
 ! +++ The functionality of PDAF_get_state is deactivated
 ! +++ for the offline mode.
 
-  ! Call universal PDAF3 interface routine
+  ! Call universal PDAF3 put_state routine
   CALL PDAF3_put_state(collect_state_pdaf, &
        init_dim_obs_pdafomi, obs_op_pdafomi, &
        init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
