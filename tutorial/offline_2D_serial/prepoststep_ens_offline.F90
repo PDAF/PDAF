@@ -37,7 +37,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
   USE mod_parallel_pdaf, &     ! Parallelization variables
-       ONLY: COMM_filter
+       ONLY: COMM_filter, mype_filter
   USE mod_assimilation, &      ! Model variables
        ONLY: nx, ny
   USE PDAF, &                  ! PDAF diagnostic routine
