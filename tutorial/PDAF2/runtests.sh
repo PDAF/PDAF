@@ -70,28 +70,10 @@ then
     make model_pdaf
     cd ..
 
-    echo "------------ online_2D_parallelmodel_fullpar ---------------"
-    export PDAF_ARCH=$ARCH
-    echo PDAF_ARCH: $PDAF_ARCH
-    cd online_2D_parallelmodel_fullpar
-    make clean
-    make cleandata
-    make model_pdaf
-    cd ..
-
-    echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
-    export PDAF_ARCH=$ARCH
-    echo PDAF_ARCH: $PDAF_ARCH
-    cd online_2D_parallelmodel_fullpar_1fpe
-    make clean
-    make cleandata
-    make model_pdaf
-    cd ..
-
 else
     echo "Compilation is deactivated!"
 fi
-
+pwd
 echo  " "
 echo "-------------------- RUNNING ----------------"
 
