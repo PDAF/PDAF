@@ -55,6 +55,9 @@ MODULE PDAF
   USE PDAFinit
   USE PDAFget_state
 
+  ! PDAF-OMI
+  USE PDAFomi
+
   ! Full put_state interfaces
   USE PDAFput_state_enkf
   USE PDAFput_state_ensrf
@@ -115,16 +118,6 @@ MODULE PDAF
   USE PDAF3_put_state_3dvars
   USE PDAF3_assimilate_3dvars_nondiagR
   USE PDAF3_put_state_3dvars_nondiagR
-
-
-  ! PDAF-2 OMI interfaces
-  USE PDAFomi_assimilate_ens
-  USE PDAFomi_put_state_ens
-  USE PDAFomi_assimilate_ens_nondiagR
-  USE PDAFomi_put_state_ens_nondiagR
-
-  USE PDAFomi_assimilate_3dvars
-  USE PDAFomi_put_state_3dvars
 
   ! PDAF-2 LOCALOMI interfaces
   USE PDAFlocalomi_assimilate_ens
