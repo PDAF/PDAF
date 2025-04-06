@@ -12,7 +12,7 @@
 !! domains for the PE-local domain.
 !!
 !! __Revision history:__
-!! * 2013-02 - Lars Nerger - Initial code
+!! * 2005-09 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
 SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
