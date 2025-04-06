@@ -3,7 +3,7 @@
 !! User-supplied call-back routine for PDAF.
 !!
 !! Used in the filters: LSEIK/LETKF/LESTKF/LNETF/LKNETF
-!! and the 3DEnVar and hybbrid 3DVAR
+!! and the 3DEnVar and hybrid 3DVAR
 !!
 !! The routine is called in PDAF_X_update 
 !! at the beginning of the analysis step before 

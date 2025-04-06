@@ -23,7 +23,7 @@ SUBROUTINE init_pdaf()
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        type_forget, forget, &
-       rank_ana_enkf, locweight, cradius, sradius, &
+       locweight, cradius, sradius, &
        type_trans, type_sqrt, &
        observe_ens, type_obs_init
   USE obs_A_pdafomi, &            ! Variables for observation type A

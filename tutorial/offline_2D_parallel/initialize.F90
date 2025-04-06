@@ -1,11 +1,11 @@
 !>  Initialize model
 !!
 !! Routine to perform initialization of the 2D offline example for
-!! PDAF. Implementation with parallelization.
-!! Here, only the global size of the model domain, the global size
-!! of the model state vector and the sizes for decomposition of the 
-!! state vector need to be initialized.
-!! Generally, this could also be joined with the routine init_pdaf().
+!! PDAF. Here, only the global size of the model domain, the
+!! global size of the model state vector and the sizes for
+!! decomposition of the state vector need to be initialized. Further
+!! we initialize the process-local dimension of the state vector.
+!! Generally, this routine could also be joined with the routine init_pdaf().
 !!
 !! __Revision history:__
 !! * 2013-02 - Lars Nerger - Initial code

@@ -41,12 +41,12 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
   INTEGER, INTENT(inout) :: flag                   !< PDAF status flag
 
 ! *** local variables ***
-  INTEGER :: i, j, col, member        ! Counters
+  INTEGER :: i, j, member             ! Counters
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
-  REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble array
+  REAL, ALLOCATABLE :: state(:)       ! global model state vector
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   ! variables and arrays for domain decomposition
-  INTEGER :: offset                   ! Row-offset according to domain decomposition
+  INTEGER :: off_p                    ! offset in state veector according to domain decomposition
   INTEGER :: domain                   ! domain counter
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
 
@@ -63,89 +63,49 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   END IF mype0a
 
+  ! Determine offset of PE-local part in global state vector
+  off_p = 0
+  DO i = 1, mype_filter
+     off_p = off_p + local_dims(i)
+  END DO
+
 
 ! ********************************
 ! *** Read ensemble from files ***
 ! ********************************
 
-  mype0b: IF (mype_filter==0) THEN
-  
-     ! *** Generate full ensemble on filter-PE 0 ***
+  ! allocate memory for temporary fields
+  ALLOCATE(field(ny, nx))
+  ALLOCATE(state(dim_state))
 
-     ! allocate memory for temporary fields
-     ALLOCATE(field(ny, nx))
-     ALLOCATE(ens(dim_state, dim_ens))
+  DO member = 1, dim_ens
+     WRITE (ensstr, '(i1)') member
+     OPEN(11, file = '../inputs_offline/ens_'//TRIM(ensstr)//'.txt', status='old')
 
-     DO member = 1, dim_ens
-        WRITE (ensstr, '(i1)') member
-        OPEN(11, file = '../inputs_offline/ens_'//TRIM(ensstr)//'.txt', status='old')
-
-        DO i = 1, ny
-           READ (11, *) field(i, :)
-        END DO
-        DO j = 1, nx
-           ens(1 + (j-1)*ny : j*ny, member) = field(1:ny, j)
-        END DO
-
-        CLOSE(11)
-     END DO
-  END IF mype0b
-
-
-! ****************************
-! *** Distribute substates ***
-! ****************************
-
-  mype0c: IF (mype_filter == 0) THEN
-     ! *** Initialize and send sub-state on PE 0 ***
-
-     ! Initialize sub-ensemble for PE 0
-     DO col = 1, dim_ens
-        DO i=1, dim_p
-           ens_p(i, col) = ens(i, col)
-        END DO
+     ! Read global field
+     DO i = 1, ny
+        READ (11, *) field(i, :)
      END DO
 
-     ! Define offset in state vectors
-     offset = local_dims(1)
-
-     DO domain = 2, npes_filter
-        ! Initialize sub-ensemble for other PEs and send sub-arrays
-
-        ! Allocate temporary buffer array
-        ALLOCATE(ens_p_tmp(local_dims(domain), dim_ens))
-
-        ! Initialize MPI buffer for local ensemble
-        DO col = 1, dim_ens
-           DO i = 1, local_dims(domain)
-              ens_p_tmp(i, col) = ens(i + offset, col)
-           END DO
-        END DO
-
-        ! Send sub-arrays
-        CALL MPI_send(ens_p_tmp, dim_ens * local_dims(domain), &
-             MPI_DOUBLE_PRECISION, domain - 1, 1, COMM_filter, MPIerr)
-
-        DEALLOCATE(ens_p_tmp)
-
-        ! Increment offset
-        offset = offset + local_dims(domain)
-
+     ! Write field into global state vector format
+     DO j = 1, nx
+        state(1 + (j-1)*ny : j*ny) = field(1:ny, j)
      END DO
 
-  ELSE mype0c
-     ! *** Receive ensemble substates on filter-PEs with rank > 0 ***
+     CLOSE(11)
 
-     CALL MPI_recv(ens_p, dim_p * dim_ens, MPI_DOUBLE_PRECISION, &
-          0, 1, COMM_filter, MPIstatus, MPIerr)
-     
-  END IF mype0c
+     ! Initialize PE-local part of ensemble state
+     DO i = 1, dim_p
+        ens_p(i, member) = state(i + off_p)
+     END DO
+
+  END DO
 
 
 ! ****************
 ! *** clean up ***
 ! ****************
 
-  IF (mype_filter==0) DEALLOCATE(field, ens)
+  DEALLOCATE(field, state)
 
 END SUBROUTINE init_ens_offline

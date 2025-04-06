@@ -57,6 +57,7 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
+
   IF (assim_A) CALL init_dim_obs_A(step, dim_obs_A)
   IF (assim_B) CALL init_dim_obs_B(step, dim_obs_B)
 
@@ -95,6 +96,7 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   ! The order of these calls is not relevant as the setup
   ! of the overall observation vector is defined by the
   ! order of the calls in init_dim_obs_pdafomi
+
   CALL obs_op_A(dim_p, dim_obs, state_p, ostate)
   CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
 
@@ -128,6 +130,7 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
 ! **********************************************
 
   ! Call init_dim_obs_l specific for each observation
+
   CALL init_dim_obs_l_A(domain_p, step, dim_obs, dim_obs_l)
   CALL init_dim_obs_l_B(domain_p, step, dim_obs, dim_obs_l)
 
