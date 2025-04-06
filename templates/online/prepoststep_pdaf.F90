@@ -16,7 +16,7 @@
 !! operations can be performed here. For example 
 !! the forecast and the analysis states and ensemble
 !! covariance matrix can be analyzed, e.g. by 
-!! computing the estimated variances. 
+!! computing the estimated variances.
 !!
 !! If a user considers to perform adjustments to the 
 !! estimates (e.g. for balances), this routine is 
@@ -56,13 +56,12 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** local variables ***
   INTEGER :: i, j, member, domain     ! Counters
   INTEGER :: pdaf_status              ! status flag
-  LOGICAL, SAVE :: firstio = .TRUE.   ! File output is peformed for first time?
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
   REAL :: ens_stddev                  ! ensemble STDDEV = estimated RMS error
-  REAL, ALLOCATABLE :: field(:,:)     ! global model field
-  CHARACTER(len=2) :: ensstr          ! String for ensemble member
   INTEGER :: nobs                     ! Number of observations in diagnostics
   REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
+  REAL, ALLOCATABLE :: field(:,:)     ! global model field
+  CHARACTER(len=2) :: ensstr          ! String for ensemble member
   REAL, POINTER :: obsstats(:,:)      ! Array of observation statistics
   ! Variables for parallelization - global fields
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
@@ -119,10 +118,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ! Output RMS errors given by sampled covar matrix
   IF (mype_filter == 0) THEN
      WRITE (*, '(12x, a, es12.4)') &
-       'sampled ensemble standard deviation: ', ens_stddev
+          'RMS error according to sampled standard deviation: ', ens_stddev
   END IF
 
- 
+
 ! *******************
 ! *** File output ***
 ! *******************

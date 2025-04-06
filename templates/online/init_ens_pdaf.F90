@@ -10,13 +10,13 @@
 !!
 !! This template shows how the ensemble of dim_ens 
 !! states can be initializated by exact 2nd order 
-!! sampling using the routien PDAF_SampleEns.
+!! sampling using the routine PDAF_SampleEns.
 !!
 !! More information on this initialization variant can be
 !! found on the PDAF web site on ensemble initialization.
 !!
 !! The routine is called by all filter processes and 
-!! initializes the ensemble for the local domain.
+!! initializes the ensemble for the process-local domain.
 !!
 !! __Revision history:__
 !! * 2004-10 - Lars Nerger - Initial code
@@ -38,19 +38,17 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
 
 ! *** local variables ***
-  INTEGER :: i, row, col              ! counters
-  INTEGER, SAVE :: allocflag = 0      ! Flag for memory counting
+  INTEGER :: i, row, col              ! Counters
+  INTEGER :: rank                     ! Rank of approximated covariance matrix
+  REAL :: fac                         ! Square-root of dim_ens-1 or dim_ens
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL, ALLOCATABLE :: eofV(:,:)      ! matrix of eigenvectors V 
   REAL, ALLOCATABLE :: svals(:)       ! singular values
-  INTEGER :: rank                     ! Rank of approximated covariance matrix
-  REAL :: fac                         ! Square-root of dim_ens-1 or dim_ens
   ! variables and arrays for domain decomposition
   INTEGER :: offset                   ! Row-offset according to domain decomposition
   INTEGER :: domain                   ! domain counter
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
-  REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state vector for some PE-domain
 
 
 ! **********************

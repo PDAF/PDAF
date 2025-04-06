@@ -10,7 +10,7 @@
 !!
 SUBROUTINE finalize_pdaf()
 
-  USE PDAF, &                     ! PDAF routines
+  USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAF_print_info, PDAF_deallocate
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, finalize_parallel

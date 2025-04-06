@@ -35,8 +35,8 @@ SUBROUTINE init_pdaf()
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(3) ! Real parameter array for filter
+  INTEGER :: filter_param_i(2) ! Integer parameter array for filter
+  REAL    :: filter_param_r(1) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
@@ -161,7 +161,7 @@ SUBROUTINE init_pdaf()
 ! ***                                               ***
 ! *** Here, the full selection of filters is        ***
 ! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
+! *** reduces this to selected filters.             ***
 ! ***                                               ***
 ! *** For all filters, PDAF_init is first called    ***
 ! *** specifying only the required parameters.      ***
