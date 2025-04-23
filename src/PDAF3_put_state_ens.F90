@@ -185,13 +185,10 @@ END SUBROUTINE PDAF3_put_state
 SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, &
      init_dim_obs_f_pdaf, obs_op_f_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-     prepoststep_pdaf, outflag)
+     g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
-  USE PDAFlocal, &
-       ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
-       PDAFlocal_l2g_cb                !< Project local to global state vecto
   USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
   USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
   USE PDAFput_state_lestkf, ONLY: PDAF_put_state_lestkf
@@ -209,6 +206,8 @@ SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, &
        prepoststep_pdaf                      !< User supplied pre/poststep routine
   EXTERNAL :: init_n_domains_pdaf, &         !< Provide number of local analysis domains
        init_dim_l_pdaf, &                    !< Init state dimension for local ana. domain
+       g2l_state_pdaf, &                     !< Get state on local ana. domain from full state
+       l2g_state_pdaf, &                     !< Init full state from local state
        init_dim_obs_f_pdaf, &                !< Initialize dimension of full observation vector
        obs_op_f_pdaf, &                      !< Full observation operator
        init_dim_obs_l_pdaf                   !< Initialize local dimimension of obs. vector
@@ -233,31 +232,31 @@ SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, &
      CALL PDAF_put_state_lseik(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LETKF') THEN
      CALL PDAF_put_state_letkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
      CALL PDAF_put_state_lestkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
      CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, PDAFomi_likelihood_l_cb, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
-          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, outflag)
+          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
      CALL PDAF_put_state_lknetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, PDAFomi_prodRinvA_hyb_l_cb, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
      CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
