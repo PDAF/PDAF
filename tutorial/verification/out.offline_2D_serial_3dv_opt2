@@ -78,7 +78,7 @@ PDAF: Call ensemble initialization
 PDAF: Initialization completed
 PDAF     --- duration of PDAF initialization:     0.002 s
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    3DVAR configuration
 PDAF          filter sub-type= 0
@@ -93,8 +93,6 @@ PDAF          param_int(7) solver-specific parameter: number of restarts=      1
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(3) solver-specific parameter: eps= 1.000E-05
-
-  PDAF offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------
@@ -159,7 +157,7 @@ PDAF            init_ens_pdaf:                       0.002 s
 PDAF          3DVAR analysis:                      0.001 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
-PDAF            Solver:                              0.001 s
+PDAF            Solver:                              0.000 s
 PDAF            cvt_pdaf:                            0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 

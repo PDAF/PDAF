@@ -74,7 +74,7 @@ PDAF: Call ensemble initialization
 
 PDAF: Initialization completed
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    ESTKF configuration
 PDAF          ensemble size:    9
@@ -92,8 +92,6 @@ PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     1.000
 
-  PDAF offline mode: START ASSIMILATION
-
 
 PDAF ----------------------------------------------------------------
 PDAF                    +++++ ASSIMILATION +++++
@@ -101,7 +99,7 @@ PDAF ----------------------------------------------------------------
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
-            RMS error according to sampled variance:   3.2465E-01
+            RMS error according to sampled standard deviation:   3.2465E-01
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
         --- number of full observations    28
@@ -118,7 +116,7 @@ PDAF     --- Ensemble update: use blocking with size   200
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
-            RMS error according to sampled variance:   1.0503E-01
+            RMS error according to sampled standard deviation:   1.0503E-01
         --- write ensemble and state estimate
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
@@ -138,12 +136,12 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          ESTKF analysis:                      0.001 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF          ESTKF analysis:                      0.000 s
+PDAF            PDAF-internal operations:            0.002 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.004 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
  PDAF offline mode: END
