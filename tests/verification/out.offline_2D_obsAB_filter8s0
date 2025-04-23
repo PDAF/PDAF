@@ -90,7 +90,7 @@ PDAF: Call ensemble initialization
 
 PDAF: Initialization completed
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    LEnKF configuration
 PDAF          ensemble size:    8
@@ -104,8 +104,6 @@ PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
-
-  PDAF offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------
@@ -165,31 +163,31 @@ PDAF                 PDAF-OMI:        0.001 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
+PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          LEnKF analysis:                      0.003 s
-PDAF            PDAF-internal operations:            0.002 s
+PDAF          LEnKF analysis:                      0.002 s
+PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              localize_covar_pdafomi:            0.001 s
+PDAF              localize_covar_pdafomi:            0.002 s
 PDAF          prepoststep_pdaf:                    0.004 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.002 s
-PDAF                      LEnKF analysis (3):      0.003 s
+PDAF                     Initialize PDAF (1):      0.003 s
+PDAF                      LEnKF analysis (3):      0.002 s
 PDAF                        get mean state (9):      0.000 s
-PDAF                  prepare observations (6):      0.001 s
-PDAF                 compute HPH+R and HP (10):      0.001 s
+PDAF                  prepare observations (6):      0.000 s
+PDAF                 compute HPH+R and HP (10):      0.002 s
 PDAF                                 HXpert (30):      0.000 s
 PDAF                                   HP_p (31):      0.000 s
 PDAF                                    HPH (32):      0.000 s
-PDAF                  localize HP_p and HPH (45):      0.001 s
+PDAF                  localize HP_p and HPH (45):      0.002 s
 PDAF                           add matrix R (46):      0.000 s
-PDAF                 sample obs. ensemble (11):      0.001 s
+PDAF                 sample obs. ensemble (11):      0.000 s
 PDAF             init innovation ensemble (12):      0.000 s
 PDAF             compute transform matrix (13):      0.000 s
 PDAF                 solve for representers (33):      0.000 s

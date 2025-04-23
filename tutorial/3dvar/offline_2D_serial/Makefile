@@ -60,7 +60,6 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 
 # Generic user-supplied routines
 OBJ_USER_GEN  = init_ens_offline.o \
-		collect_state_pdaf_offline.o \
 		prepoststep_ens_offline.o
 
 

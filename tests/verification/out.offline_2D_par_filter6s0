@@ -87,7 +87,7 @@ PDAF: Call ensemble initialization
 
 PDAF: Initialization completed
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    ESTKF configuration
 PDAF          ensemble size:    8
@@ -104,8 +104,6 @@ PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
-
-  PDAF offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------

@@ -111,13 +111,17 @@ MODULE PDAF
   ! PDAF-3 advanced interfaces
   USE PDAF3_assimilate_ens
   USE PDAF3_put_state_ens
+  USE PDAF3_assim_offline_ens
   USE PDAF3_assimilate_ens_nondiagR
   USE PDAF3_put_state_ens_nondiagR
+  USE PDAF3_assim_offline_ens_nondiagR
 
   USE PDAF3_assimilate_3dvars
   USE PDAF3_put_state_3dvars
+  USE PDAF3_assim_offline_3dvars
   USE PDAF3_assimilate_3dvars_nondiagR
   USE PDAF3_put_state_3dvars_nondiagR
+  USE PDAF3_assim_offline_3dvars_nondiagR
 
   ! PDAF-2 LOCALOMI interfaces
   USE PDAFlocalomi_assimilate_ens

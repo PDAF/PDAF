@@ -15,8 +15,8 @@
 SUBROUTINE assimilate_pdaf_offline()
 
   USE PDAF, &                     ! Interface definitions to PDAF core routines
-       ONLY: PDAF3_put_state_3dvar, PDAF3_put_state_en3dvar, &
-       PDAF3_put_state_3dvar_all
+       ONLY: PDAF3_assim_offline_3dvar, PDAF3_assim_offline_en3dvar, &
+       PDAF3_assim_offline_3dvar_all
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
@@ -29,17 +29,14 @@ SUBROUTINE assimilate_pdaf_offline()
 
 
 ! *** External subroutines ***
-! Subroutine names are passed over to PDAF in the calls to 
-! PDAF_get_state and PDAF_put_state_X. This allows the user 
+! Subroutine names are passed over to PDAF in the call to 
+! PDAF_assim_offline_X. This allows the user 
 ! to specify the actual name of a routine.  
 ! The PDAF-internal name of a subroutine might be different
 ! from the external name!
 
   ! Interface between model and PDAF, and prepoststep
-  EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
-       distribute_state_pdaf, &       ! Distribute a state vector to model fields
-       next_observation_pdaf, &       ! Provide time step of next observation
-       prepoststep_ens_offline        ! User supplied pre/poststep routine
+  EXTERNAL :: prepoststep_ens_offline ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
        init_dim_l_pdaf                ! Initialize state dimension for local analysis domain
@@ -61,32 +58,22 @@ SUBROUTINE assimilate_pdaf_offline()
 ! *** Perform analysis step ***
 ! *****************************
 
-! *** Note on PDAF_get_state for offline implementation: ***
-! *** For the offline mode of PDAF the call to           ***
-! *** PDAF_get_state is not required as no forecasting   ***
-! *** is performed in this mode. However, it is save     ***
-! *** to call PDAF_get_state, even it is not necessary.  ***
-! *** The functionality of PDAF_get_state is deactivated ***
-! *** for the offline mode.                              ***
-
   IF (subtype==0) THEN
      ! parameterized 3D-Var
-     CALL PDAF3_put_state_3dvar(collect_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
+     CALL PDAF3_assim_offline_3dvar(init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           prepoststep_3dvar_offline, status_pdaf)
   ELSEIF (subtype==1 .OR. subtype==2) THEN
      ! Ensemble 3D-Var with local or global ESTKF update of ensemble perturbations
-     CALL PDAF3_put_state_en3dvar(collect_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
+     CALL PDAF3_assim_offline_en3dvar(init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           prepoststep_ens_offline, status_pdaf)
   ELSEIF (subtype==3 .OR. subtype==4) THEN
      ! Hybrid 3D-Var with local or global ESTKF update of ensemble perturbations
      !   (This routine can also be use to run all 3D-Var methods)
-     CALL PDAF3_put_state_3dvar_all(collect_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
+     CALL PDAF3_assim_offline_3dvar_all(init_dim_obs_pdafomi, obs_op_pdafomi, &
+          cvt_ens_pdaf, cvt_adj_ens_pdaf, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           prepoststep_ens_offline, status_pdaf)

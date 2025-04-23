@@ -89,7 +89,7 @@ PDAF: Call ensemble initialization
 
 PDAF: Initialization completed
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    EnKF configuration
 PDAF          ensemble size:    8
@@ -103,8 +103,6 @@ PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
-
-  PDAF offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------
@@ -158,23 +156,23 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          EnKF analysis:                       0.028 s
+PDAF          EnKF analysis:                       0.027 s
 PDAF            PDAF-internal operations:            0.019 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.008 s
+PDAF              init_dim_obs_pdafomi:              0.007 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.010 s
+PDAF          prepoststep_pdaf:                    0.009 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                     Initialize PDAF (1):      0.002 s
-PDAF                       EnKF analysis (3):      0.028 s
+PDAF                       EnKF analysis (3):      0.027 s
 PDAF                        get mean state (9):      0.000 s
-PDAF                  prepare observations (6):      0.008 s
-PDAF                 compute HPH+R and HP (10):      0.010 s
-PDAF                                 HXpert (30):      0.008 s
+PDAF                  prepare observations (6):      0.007 s
+PDAF                 compute HPH+R and HP (10):      0.009 s
+PDAF                                 HXpert (30):      0.007 s
 PDAF                          complete HP_p (31):      0.000 s
 PDAF                                    HPH (32):      0.000 s
 PDAF                           add matrix R (46):      0.000 s
@@ -184,6 +182,6 @@ PDAF             compute transform matrix (13):      0.000 s
 PDAF                 solve for representers (33):      0.000 s
 PDAF                         HX*representer (34):      0.000 s
 PDAF              ensemble transformation (14):      0.000 s
-PDAF                         Prepoststep (5):      0.010 s
+PDAF                         Prepoststep (5):      0.009 s
 
  PDAF offline mode: END

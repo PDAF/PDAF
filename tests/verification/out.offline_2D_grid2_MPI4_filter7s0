@@ -92,7 +92,7 @@ PDAF: Call ensemble initialization
 
 PDAF: Initialization completed
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    LESTKF configuration
 PDAF          ensemble size:    8
@@ -109,8 +109,6 @@ PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
-
-  PDAF offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------
@@ -158,10 +156,10 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MiB)
  model PE exited: mype            1
  model PE exited: mype            2
  model PE exited: mype            3
-PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      2.000 MiB (persistent)
 PDAF           ensemble array:     16.000 MiB (persistent)
 PDAF            analysis step:      0.757 MiB (temporary)
@@ -178,47 +176,47 @@ PDAF                 PDAF-OMI:        2.256 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     2.837 s
-PDAF            init_ens_pdaf:                       2.836 s
-PDAF          LESTKF analysis:                    59.474 s
-PDAF            PDAF-internal operations:           31.835 s
-PDAF            OMI-internal routines:              12.625 s
+PDAF          Initialize PDAF:                     2.805 s
+PDAF            init_ens_pdaf:                       2.805 s
+PDAF          LESTKF analysis:                    75.051 s
+PDAF            PDAF-internal operations:           36.624 s
+PDAF            OMI-internal routines:              12.631 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.033 s
+PDAF            init_dim_l_pdaf:                     0.031 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.522 s
+PDAF              init_dim_obs_pdafomi:              0.419 s
 PDAF              obs_op_pdafomi:                    0.006 s
-PDAF              init_dim_obs_l_pdafomi:           14.077 s
-PDAF          prepoststep_pdaf:                    4.505 s
+PDAF              init_dim_obs_l_pdafomi:           24.956 s
+PDAF          prepoststep_pdaf:                    4.797 s
 
 
 PDAF                       PDAF Timing information
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF (1):                 2.837 s
-PDAF          LESTKF analysis (3):                59.474 s
-PDAF            prepare observations (6):            0.528 s
-PDAF              init_dim_obs_pdaf (43):              0.522 s
+PDAF          Initialize PDAF (1):                 2.805 s
+PDAF          LESTKF analysis (3):                75.051 s
+PDAF            prepare observations (6):            0.425 s
+PDAF              init_dim_obs_pdaf (43):              0.419 s
 PDAF              obs_op_pdaf (44):                    0.006 s
 PDAF              init_obs_pdaf (50):                  0.000 s
 PDAF            compute ensemble mean (9):           0.001 s
 PDAF            global preparations (7):             0.000 s
 PDAF              init Omega (33):                     0.000 s
-PDAF            local analysis loop (8):            58.945 s
-PDAF              global to local (10):                0.041 s
-PDAF              localize observations (11):         18.018 s
-PDAF                init_dim_obs_l_pdaf (38):           14.077 s
-PDAF                g2l_obs_pdaf (46):                   3.159 s
-PDAF                init_obs_l (47):                     0.697 s
-PDAF              local analysis (12):                26.396 s
-PDAF                compute Ainv (16):                  23.748 s
-PDAF                  init innovation (20):                0.379 s
-PDAF                  prodRinvA_pdaf (48):                 8.769 s
-PDAF                  complete Ainv (21):                 23.350 s
-PDAF                compute ensemble weights (17):       2.489 s
-PDAF                  get state weight vector (22):        2.308 s
-PDAF                  complete transform matrix (23):      0.138 s
-PDAF                transform ensemble (18):             0.059 s
+PDAF            local analysis loop (8):            74.625 s
+PDAF              global to local (10):                0.028 s
+PDAF              localize observations (11):         28.971 s
+PDAF                init_dim_obs_l_pdaf (38):           24.956 s
+PDAF                g2l_obs_pdaf (46):                   3.218 s
+PDAF                init_obs_l (47):                     0.721 s
+PDAF              local analysis (12):                26.167 s
+PDAF                compute Ainv (16):                  23.389 s
+PDAF                  init innovation (20):                0.374 s
+PDAF                  prodRinvA_pdaf (48):                 8.692 s
+PDAF                  complete Ainv (21):                 22.997 s
+PDAF                compute ensemble weights (17):       2.630 s
+PDAF                  get state weight vector (22):        2.451 s
+PDAF                  complete transform matrix (23):      0.137 s
+PDAF                transform ensemble (18):             0.055 s
 PDAF              local to global (14):                0.028 s
-PDAF          Prepoststep (5):                     4.505 s
+PDAF          Prepoststep (5):                     4.797 s
 
  PDAF offline mode: END

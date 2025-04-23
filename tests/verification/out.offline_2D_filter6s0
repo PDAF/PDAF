@@ -83,7 +83,7 @@ PDAF: Call ensemble initialization
 
 PDAF: Initialization completed
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    ESTKF configuration
 PDAF          ensemble size:    8
@@ -100,8 +100,6 @@ PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
-
-  PDAF offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------
@@ -152,8 +150,8 @@ PDAF                 PDAF-OMI:        0.001 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          ESTKF analysis:                      0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
@@ -165,7 +163,7 @@ PDAF          prepoststep_pdaf:                    0.004 s
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.002 s
+PDAF                     Initialize PDAF (1):      0.003 s
 PDAF                      ESTKF analysis (3):      0.000 s
 PDAF                        get mean state (9):      0.000 s
 PDAF                  prepare observations (6):      0.000 s

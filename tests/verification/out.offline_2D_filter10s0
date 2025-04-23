@@ -83,7 +83,7 @@ PDAF: Call ensemble initialization
 
 PDAF: Initialization completed
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    LNETF configuration
 PDAF          ensemble size:    8
@@ -104,8 +104,6 @@ PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
 PDAF          param_real(2) limit_winf=     0.000
 PDAF          param_real(3) noise_amp=     0.000
-
-  PDAF offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------
@@ -178,14 +176,14 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LNETF analysis:                      0.003 s
-PDAF            PDAF-internal operations:            0.002 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.000 s
+PDAF              init_dim_obs_l_pdafomi:            0.001 s
 PDAF          prepoststep_pdaf:                    0.004 s
 
 
@@ -202,17 +200,17 @@ PDAF            global preparations (7):             0.000 s
 PDAF              generate random matrix (33):       0.000 s
 PDAF            local analysis loop (8):             0.002 s
 PDAF              global to local (10):                0.000 s
-PDAF              localize observations (11):          0.000 s
-PDAF                init_dim_obs_l_pdaf (38):            0.000 s
+PDAF              localize observations (11):          0.001 s
+PDAF                init_dim_obs_l_pdaf (38):            0.001 s
 PDAF                g2l_obs_pdaf (46):                   0.000 s
 PDAF                init_obs_l (47):                     0.000 s
-PDAF              local analysis (12):                 0.002 s
+PDAF              local analysis (12):                 0.001 s
 PDAF                compute matrix A (16):               0.000 s
 PDAF                  compute particle weights (20):       0.000 s
 PDAF                    likelihood_l_pdaf (48):              0.000 s
 PDAF                  complete A (21):                     0.000 s
-PDAF                compute transform (17):              0.002 s
-PDAF                  SVD of A (22):                       0.002 s
+PDAF                compute transform (17):              0.001 s
+PDAF                  SVD of A (22):                       0.001 s
 PDAF                  complete transform matrix (23):      0.000 s
 PDAF                transform ensemble (18):             0.000 s
 PDAF              local to global (14):                0.000 s

@@ -84,7 +84,7 @@ PDAF: Call ensemble initialization
 
 PDAF: Initialization completed
 
-PDAF    Activate PDAF offline mode
+  PDAF offline mode: START ASSIMILATION
 
 PDAF    NETF configuration
 PDAF          ensemble size:    8
@@ -105,8 +105,6 @@ PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
 PDAF          param_real(2) limit_winf=     0.000
 PDAF          param_real(3) noise_amp=     0.000
-
-  PDAF offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------
@@ -165,8 +163,8 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          NETF analysis:                       0.002 s
-PDAF            PDAF-internal operations:            0.001 s
-PDAF            OMI-internal routines:               0.000 s
+PDAF            PDAF-internal operations:            0.000 s
+PDAF            OMI-internal routines:               0.001 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
@@ -178,9 +176,9 @@ PDAF          ---------------------------------------------
 PDAF                     Initialize PDAF (1):      0.002 s
 PDAF                       NETF analysis (3):      0.002 s
 PDAF                  prepare observations (6):      0.001 s
-PDAF             compute particle weights (10):      0.000 s
-PDAF                     compute matrix A (11):      0.000 s
-PDAF             compute transform matrix (20):      0.001 s
+PDAF             compute particle weights (10):      0.001 s
+PDAF                     compute matrix A (11):      0.001 s
+PDAF             compute transform matrix (20):      0.000 s
 PDAF                   transform ensemble (21):      0.000 s
 PDAF                         Prepoststep (5):      0.003 s
 

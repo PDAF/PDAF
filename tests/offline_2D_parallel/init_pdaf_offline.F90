@@ -181,13 +181,6 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-! *************************************
-! *** Activate offline mode of PDAF ***
-! *************************************
-
-  CALL PDAF_set_offline_mode(screen)
-
-
 ! ***************************************************
 ! *** Set coordinates of elements in state vector ***
 ! *** (used for localization in EnKF/ENSRF)       ***

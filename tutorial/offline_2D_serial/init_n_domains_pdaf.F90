@@ -3,7 +3,7 @@
 !! User-supplied call-back routine for PDAF.
 !!
 !! Used in the filters: LSEIK/LETKF/LESTKF/LNETF/LKNETF
-!! and the 3DEnVar and hybbrid 3DVAR
+!! and the 3DEnVar and hybrid 3DVAR
 !!
 !! The routine is called in PDAF_X_update 
 !! at the beginning of the analysis step before 
@@ -12,7 +12,7 @@
 !! domains for the PE-local domain.
 !!
 !! __Revision history:__
-!! * 2013-02 - Lars Nerger - Initial code
+!! * 2005-09 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
 SUBROUTINE init_n_domains_pdaf(step, n_domains_p)

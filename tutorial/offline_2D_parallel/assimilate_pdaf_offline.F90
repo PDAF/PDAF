@@ -15,7 +15,7 @@
 SUBROUTINE assimilate_pdaf_offline()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_put_state
+       ONLY: PDAF3_assim_offline
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
 
@@ -33,8 +33,7 @@ SUBROUTINE assimilate_pdaf_offline()
 ! from the external name!
 
   ! Interface between model and PDAF, and prepoststep
-  EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
-       prepoststep_ens_offline        ! User supplied pre/poststep routine
+  EXTERNAL :: prepoststep_ens_offline ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
        init_dim_l_pdaf                ! Initialize state dimension for local analysis domain
@@ -48,17 +47,8 @@ SUBROUTINE assimilate_pdaf_offline()
 ! *** Perform analysis step ***
 ! *****************************
 
-! +++ Note on PDAF3_get_state for offline implementation:
-! +++ For the offline mode of PDAF the call to
-! +++ PDAF_get_state is not required as no forecasting
-! +++ is performed in this mode. However, it is save
-! +++ to call PDAF_get_state, even it is not necessary.
-! +++ The functionality of PDAF_get_state is deactivated
-! +++ for the offline mode.
-
-  ! Call universal PDAF3 put_state routine
-  CALL PDAF3_put_state(collect_state_pdaf, &
-       init_dim_obs_pdafomi, obs_op_pdafomi, &
+  ! Call universal PDAF3 assim_offline routine
+  CALL PDAF3_assim_offline(init_dim_obs_pdafomi, obs_op_pdafomi, &
        init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
        prepoststep_ens_offline, status_pdaf)
 

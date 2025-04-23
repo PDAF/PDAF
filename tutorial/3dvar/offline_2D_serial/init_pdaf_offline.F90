@@ -184,11 +184,4 @@ SUBROUTINE init_pdaf()
      CALL abort_parallel()
   END IF
 
-
-! *************************************
-! *** Activate offline mode of PDAF ***
-! *************************************
-
-  CALL PDAF_set_offline_mode(screen)
-
 END SUBROUTINE init_pdaf
