@@ -243,14 +243,13 @@ module enkf_clm_mod
               if (g .eq. j) then
                 if (newgridcell) then
                   newgridcell = .false.
+                  cc = cc + 1
                   ! Possibliy: Add state_pdaf2clm_g_p
                   state_pdaf2clm_c_p(cc) = jj
                   state_pdaf2clm_j_p(cc) = i
                 end if
               end if
             end do
-
-            cc = cc + 1
           end do
         end do
 
