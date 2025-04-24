@@ -152,7 +152,7 @@ module enkf_clm_mod
 
           ! Set `clm_varsize`, even though it is currently not used
           ! for `clmupdate_swc.eq.1`
-          clm_varsize = clm_statevecsize
+          clm_varsize = cc
           clm_statevecsize = cc
 
           IF (allocated(state_pdaf2clm_c_p)) deallocate(state_pdaf2clm_c_p)
