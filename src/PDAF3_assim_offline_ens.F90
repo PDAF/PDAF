@@ -39,6 +39,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !!> Universal interface routine to PDAF for all filters
 !!
+!! This variant of the universal routines uses PDAF-local
+!!
 !! __Revision history:__
 !! * 2025-04 - Lars Nerger - Initial code based on PDAF3_put_state_ens
 !! Other revisions - see repository log
@@ -173,7 +175,11 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> Interface to PDAF for local filters 
+!!> Universal interface routine to PDAF for all filters
+!!
+!! This variant of the universal routines does not use PDAF-local.
+!! Compared to PDAF3_assim_offline, there are two additional arguments
+!! g2l_state_pdaf and l2g_state_pdaf.
 !!
 !! __Revision history:__
 !! * 2025-04 - Lars Nerger - Initial code based on PDAF3_put_state_ens
@@ -191,6 +197,13 @@ CONTAINS
     USE PDAFassimilate_lnetf, ONLY: PDAF_assim_offline_lnetf
     USE PDAFassimilate_lknetf, ONLY: PDAF_assim_offline_lknetf
     USE PDAFassimilate_ensrf, ONLY: PDAF_assim_offline_ensrf
+    USE PDAFassimilate_seik, ONLY: PDAF_assim_offline_seik
+    USE PDAFassimilate_enkf, ONLY: PDAF_assim_offline_enkf
+    USE PDAFassimilate_lenkf, ONLY: PDAF_assim_offline_lenkf
+    USE PDAFassimilate_etkf, ONLY: PDAF_assim_offline_etkf
+    USE PDAFassimilate_estkf, ONLY: PDAF_assim_offline_estkf
+    USE PDAFassimilate_netf, ONLY: PDAF_assim_offline_netf
+    USE PDAFassimilate_pf, ONLY: PDAF_assim_offline_pf
 
     IMPLICIT NONE
 
@@ -215,6 +228,11 @@ CONTAINS
          PDAFomi_g2l_obs_cb, &                 !< Restrict full obs. vector to local analysis domain
          PDAFomi_prodRinvA_l_cb, &             !< Provide product R^-1 A on local analysis domain
          PDAFomi_likelihood_l_cb               !< Compute likelihood and apply localization
+    EXTERNAL :: PDAFomi_init_obscovar_cb, &    !< Initialize mean observation error variance
+         PDAFomi_localize_covar_cb, &          !< Apply localization to HP and HPH^T
+         PDAFomi_add_obs_error_cb, &           !< Add observation error covariance matrix
+         PDAFomi_prodRinvA_cb, &               !< Provide product R^-1 A
+         PDAFomi_likelihood_cb                 !< Compute likelihood
     EXTERNAL :: PDAFomi_prodRinvA_hyb_l_cb, &  !< Product R^-1 A on local analysis domain with hybrid weight
          PDAFomi_likelihood_hyb_l_cb           !< Compute likelihood and apply localization with tempering
 
@@ -257,6 +275,32 @@ CONTAINS
        CALL PDAF_assim_offline_ensrf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, PDAFomi_localize_covar_serial_cb, &
             prepoststep_pdaf, outflag)
+    ELSE IF (TRIM(filterstr) == 'SEIK') THEN
+       CALL PDAF_assim_offline_seik(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+            PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+            PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
+    ELSEIF (TRIM(filterstr) == 'ENKF') THEN
+       CALL PDAF_assim_offline_enkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+            PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_add_obs_error_cb, &
+            PDAFomi_init_obscovar_cb, outflag)
+    ELSEIF (TRIM(filterstr) == 'LENKF') THEN
+       CALL PDAF_assim_offline_lenkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+            PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_localize_covar_cb, &
+            PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, outflag)
+    ELSEIF (TRIM(filterstr) == 'ETKF') THEN
+       CALL PDAF_assim_offline_etkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+            PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+            PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
+    ELSEIF (TRIM(filterstr) == 'ESTKF') THEN
+       CALL PDAF_assim_offline_estkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+            PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+            PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
+    ELSEIF (TRIM(filterstr) == 'NETF') THEN
+       CALL PDAF_assim_offline_netf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+            PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
+    ELSEIF (TRIM(filterstr) == 'PF') THEN
+       CALL PDAF_assim_offline_pf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+            PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
     END IF
 
 
