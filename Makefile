@@ -81,11 +81,10 @@ SRC_PDAF_GEN =  PDAF_da.F90 \
 		PDAF_assimilate_prepost.F90 \
 		PDAF3_assimilate_ens.F90 \
 		PDAF3_put_state_ens.F90 \
+		PDAF3_assim_offline_ens.F90 \
 		PDAF3_assimilate_ens_nondiagR.F90 \
 		PDAF3_put_state_ens_nondiagR.F90 \
-		PDAF_cb_procedures.F90 \
-		PDAF_init_mod.F90 \
-		PDAF_get_state_mod.F90
+		PDAF3_assim_offline_ens_nondiagR.F90
 
 # Routines for PDAFlocal
 SRC_PDAFLOCAL =	PDAFlocal.F90 \
@@ -226,6 +225,8 @@ SRC_3DVAR =	PDAF_3dvar.F90 \
 		PDAF3_assimilate_3dvars_nondiagR.F90 \
 		PDAF3_put_state_3dvars.F90 \
 		PDAF3_put_state_3dvars_nondiagR.F90 \
+		PDAF3_assim_offline_3dvars.F90 \
+		PDAF3_assim_offline_3dvars_nondiagR.F90 \
 		PDAF_put_state_3dvar.F90 \
 		PDAF_assimilate_3dvar.F90 \
 		PDAF_put_state_en3dvar_lestkf.F90 \
