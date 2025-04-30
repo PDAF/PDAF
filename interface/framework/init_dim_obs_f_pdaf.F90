@@ -459,7 +459,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! Switch for how to check index of CLM observations
   ! True: Use snapping distance between long/lat on CLM grid
   ! False: Use index arrays from `domain_def_clm`
-  is_use_dr = .false.
+  is_use_dr = .true.
   
   if(model .eq. tag_model_clm) then
 
