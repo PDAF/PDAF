@@ -45,7 +45,7 @@ SUBROUTINE initialize()
 ! *** Read initial fields from file ***
 ! *************************************
 
-  OPEN(11, file = '../inputs_online_2fields/true_initial.txt', status='old')
+  OPEN(11, file = '../../inputs_online_2fields/true_initial.txt', status='old')
  
   DO i = 1, ny
      READ (11, *) field(i, :)
@@ -54,7 +54,7 @@ SUBROUTINE initialize()
   CLOSE(11)
 
   ! Field0
-  OPEN(11, file = '../inputs_online_2fields/trueB_initial.txt', status='old')
+  OPEN(11, file = '../../inputs_online_2fields/trueB_initial.txt', status='old')
  
   DO i = 1, ny
      READ (11, *) fieldB(i, :)

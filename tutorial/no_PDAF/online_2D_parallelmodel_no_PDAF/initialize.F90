@@ -69,7 +69,7 @@ SUBROUTINE initialize()
   ALLOCATE(field(ny, nx))
 
   ! Read global model field
-  OPEN(11, file = '../inputs_online/true_initial.txt', status='old')
+  OPEN(11, file = '../../inputs_online/true_initial.txt', status='old')
  
   DO i = 1, ny
      READ (11, *) field(i, :)
