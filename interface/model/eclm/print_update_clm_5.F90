@@ -58,8 +58,8 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
     real(r8), pointer :: psand(:,:)
     real(r8), pointer :: pclay(:,:)
     real(r8), pointer :: porgm(:,:)
-    real(r8), pointer :: clmstate_tmp_local(:)
-    real(r8), pointer :: clmstate_tmp_global(:)
+    ! real(r8), pointer :: clmstate_tmp_local(:)
+    ! real(r8), pointer :: clmstate_tmp_global(:)
     real(r8), allocatable :: clmstate_out(:,:,:)
     integer ,dimension(4) :: dimids
     integer ,dimension(1) :: il_var_id
@@ -71,13 +71,13 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
 
     call get_proc_global(ng=numg,nl=numl,nc=numc,np=nump)
     call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
-    allocate(clmstate_tmp_local(nlevsoi*(-begc+endc)), stat=nerror)
+    ! allocate(clmstate_tmp_local(nlevsoi*(-begc+endc)), stat=nerror)
 
     ndlon  = ldomain%ni
     ndlat  = ldomain%nj
 
     if (masterproc) then
-      allocate(clmstate_tmp_global(nlevsoi*numg), stat=nerror)
+      ! allocate(clmstate_tmp_global(nlevsoi*numg), stat=nerror)
       allocate(clmstate_out(ndlon,ndlat,nlevsoi), stat=nerror)
     end if
 
@@ -203,10 +203,10 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
     if(masterproc) then
       status = nf90_close(il_file_id)
       deallocate(clmstate_out)
-      deallocate(clmstate_tmp_global)
+      ! deallocate(clmstate_tmp_global)
     end if
 
-    deallocate(clmstate_tmp_local)
+    ! deallocate(clmstate_tmp_local)
 
 end subroutine print_update_clm
 #endif
