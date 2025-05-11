@@ -604,9 +604,11 @@ CONTAINS
     WRITE(*, '(a, 12x, a)') 'PDAF', '12: CG+ with decomposed control vector'
     WRITE(*, '(a, 12x, a)') 'PDAF', '13: direct implementation of CG with decomposed control vector'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(4): size of parameterized control vector (for 3D-Var and hybrid 3D-Var), required'
+         'PDAF', 'param_int(4): dim_cvt'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'size of parameterized control vector (for 3D-Var and hybrid 3D-Var), required'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(5): size of ensemble control vector (required for ensemble and hybrid 3D-Var), '
+         'PDAF', 'param_int(5): dim_cvt_ens'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'size of ensemble control vector (required for ensemble and hybrid 3D-Var), '
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(6): Solver-specific parameter, optional'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'LBFGS: parameter m (default=5)'
