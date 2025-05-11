@@ -166,11 +166,14 @@ to perform new implementations using the latest interface standard.
 
 ---- Implementations using full (PDAF-1) interface (without PDAF-OMI) -----
 
-PDAF1/
+PDAF1_full_interface
 When PDAF V1.16 introduced PDAF-OMI (Observation Module Infrastructure), 
 the tutorial implementations above have been updated for PDAF-OMI.
 The classical implementations, i.e. not using OMI, have been moved into
-the directory PDAF1/ for reference.
+the directory PDAF1_full_interface for reference. This implementation
+uses the full interface where a user provides all possible call-back
+routines. One can consider this as an 'expert mode' since this approach
+can yield the highest compute performance.
 
 ---- Implementations using PDAFomi and PDAFlocalomi (final status of PDAF 2.3.1) -----
 
