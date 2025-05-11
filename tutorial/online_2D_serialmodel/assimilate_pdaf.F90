@@ -5,6 +5,9 @@
 !! (PDAFomi_assimilate_X), which checks whether the forecast phase
 !! is completed. If so, the analysis step is computed inside PDAF.
 !!
+!! In this routine, the real names of most of the 
+!! user-supplied routines for PDAF are specified (see below).
+!!
 !! __Revision history:__
 !! * 2013-08 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
@@ -47,6 +50,14 @@ SUBROUTINE assimilate_pdaf()
 ! *** Call assimilation routine ***
 ! *********************************
 
+! +++ Note: The universal routine PDAF3_assimilate can be used to
+! +++ execute all filter methods. The specified routines for localization
+! +++ are only executed if a local filter is used. If one uses
+! +++ exclusively global filters or the LEnKF, one can use the specific
+! +++ routine PDAF3_assimilate_global which does not include the
+! +++ arguments for localization. This would avoid to include routines
+! +++ that are never called for global filters. 
+
   ! Call universal PDAF3 assimilation routine
   CALL PDAF3_assimilate(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_pdafomi, obs_op_pdafomi, &
@@ -61,7 +72,7 @@ SUBROUTINE assimilate_pdaf()
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' in PDAFomi_assimilate - stopping! (PE ', mype_world,')'
+          ' in PDAF3_assimilate - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
 

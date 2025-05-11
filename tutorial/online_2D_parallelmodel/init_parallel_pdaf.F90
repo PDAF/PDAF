@@ -54,11 +54,11 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
   USE mpi                         ! MPI
   USE mod_parallel_model, &       ! Model parallelization variables
-       ONLY: mype_world, npes_world, mype_model, npes_model, &
-       COMM_model, MPIerr
+       ONLY: mype_2Dmodel, npes_2Dmodel, COMM_2Dmodel
   USE mod_parallel_pdaf, &        ! PDAF parallelization variables
-       ONLY: mype_filter, npes_filter, COMM_filter, filterpe, n_modeltasks, &
-       local_npes_model, task_id, COMM_couple
+       ONLY: mype_world, npes_world, mype_model, npes_model, &
+       COMM_model, mype_filter, npes_filter, COMM_filter, filterpe, &
+       n_modeltasks, local_npes_model, task_id, COMM_couple, MPIerr
   USE parser, &                   ! Command line parser
        ONLY: parse
 
@@ -248,5 +248,8 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! mype_model are different in the numerical model, the 
   ! model-internal variables should be initialized at this point.
 
+  COMM_2Dmodel = COMM_model
+  mype_2Dmodel = mype_model
+  npes_2Dmodel = npes_model
 
 END SUBROUTINE init_parallel_pdaf

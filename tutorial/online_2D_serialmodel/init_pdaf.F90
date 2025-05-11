@@ -21,12 +21,13 @@ SUBROUTINE init_pdaf()
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: dim_state_p, &
-       screen, filtertype, subtype, dim_ens, &
+       ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
+       delt_obs, type_iau, steps_iau, &
        type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
-       type_trans, type_sqrt, delt_obs, ensgroup, &
-       observe_ens, type_obs_init, do_omi_obsstats
+       type_trans, type_sqrt, &
+       observe_ens, type_obs_init, do_omi_obsstats, &
+       ensgroup
   USE mod_model, &                ! Model variables
        ONLY: nx, ny
   USE obs_A_pdafomi, &            ! Variables for observation type A
@@ -100,7 +101,7 @@ SUBROUTINE init_pdaf()
   ensgroup = 1       ! (1) for ensemble from true state; (2) rotated ensemble by 90 degrees
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs = 2       ! Number of time steps between analysis/assimilation steps
+  delt_obs = 2       ! This should be set according to the data availability
 
 ! *** Which observation type to assimilate
   assim_A = .true.
@@ -167,6 +168,8 @@ SUBROUTINE init_pdaf()
 
   ! *** Additional parameter specifications ***
   ! *** -- These are all optional --        ***
+
+  ! Generic settings
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)      ! Type of forgetting factor
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)       ! Type of ensemble transformation
   CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)        ! Type of transform square-root (SEIK-sub4/ESTKF)

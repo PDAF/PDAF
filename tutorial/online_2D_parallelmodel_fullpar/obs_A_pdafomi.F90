@@ -250,7 +250,7 @@ CONTAINS
        ! Allocate process-local observation arrays
        ALLOCATE(obs_p(dim_obs_p))
        ALLOCATE(ivar_obs_p(dim_obs_p))
-       ALLOCATE(ocoord_p(2, dim_obs_p))
+       ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
 
        ! Allocate process-local index array
        ! This array has a many rows as required for the observation operator

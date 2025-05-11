@@ -94,7 +94,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
      CLOSE(11)
 
-     ! Initialize PE-local part of ensemble state
+     ! Initialize process-local part of ensemble state
      DO i = 1, dim_p
         ens_p(i, member) = state(i + off_p)
      END DO

@@ -179,7 +179,7 @@ CONTAINS
     IF (assim_A) thisobs%doassim = 1
 
     ! Specify type of distance computation
-    thisobs%disttype = 0   ! 0=Cartesian, or 1=Cartesian with periodicity
+    thisobs%disttype = 0   ! 0=Cartesian
 
     ! Number of coordinates used for distance computation
     ! The distance compution starts from the first row

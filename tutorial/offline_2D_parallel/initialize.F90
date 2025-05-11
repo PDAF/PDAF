@@ -1,11 +1,13 @@
 !>  Initialize model
 !!
-!! Routine to perform initialization of the 2D offline example for
-!! PDAF. Here, only the global size of the model domain, the
-!! global size of the model state vector and the sizes for
-!! decomposition of the state vector need to be initialized. Further
-!! we initialize the process-local dimension of the state vector.
-!! Generally, this routine could also be joined with the routine init_pdaf().
+!! Routine to perform initialization of model dimensions used to
+!! set the dimension of the state vector for PDAF and for use
+!! in call-back routines.
+!! Here, the global size of the model domain and the 
+!! dimension of the global state vector are initialized.
+!! With MPI-parallelization one will usually initialize both the
+!! global and process-local sized of the state vector.
+!! Generally, this routine could also be joined with init_pdaf().
 !!
 !! __Revision history:__
 !! * 2013-02 - Lars Nerger - Initial code
@@ -13,8 +15,8 @@
 !!
 SUBROUTINE initialize()
 
-  USE mod_assimilation, &   ! Assimilation variables
-       ONLY: nx, ny, dim_state, dim_state_p, local_dims
+  USE mod_assimilation, &   ! Variables for state vector dimension and model grid
+       ONLY: dim_state_p, nx, ny, dim_state, local_dims
   USE mod_parallel_pdaf, &  ! Parallelization variables
        ONLY: mype_world, mype_model, npes_model, task_id
 

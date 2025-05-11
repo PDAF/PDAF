@@ -209,6 +209,7 @@ CONTAINS
 ! ***********************************************************
 
     ! *** Count valid observations that lie within the process sub-domain ***
+    ! Observation files are generated so that invalid observations have value -999
 
     cnt = 0
     DO j = 1, nx

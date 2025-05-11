@@ -23,9 +23,9 @@ MODULE mod_parallel_pdaf
   SAVE 
 
   ! Basic variables for model state integrations
-  INTEGER :: COMM_model  !< MPI communicator for model tasks
-  INTEGER :: mype_model  !< Number of PEs in COMM_model
-  INTEGER :: npes_model  !< PE rank in COMM_model
+  INTEGER :: COMM_model               !< MPI communicator for model tasks
+  INTEGER :: mype_model               !< Number of PEs in COMM_model
+  INTEGER :: npes_model               !< PE rank in COMM_model
 
   ! Additional variables for use with PDAF
   INTEGER :: n_modeltasks = 1         !< Number of parallel model tasks

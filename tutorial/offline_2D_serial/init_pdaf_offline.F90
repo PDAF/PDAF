@@ -148,6 +148,7 @@ SUBROUTINE init_pdaf()
 
   ! *** Additional parameter specifications ***
   ! *** -- These are all optional --        ***
+
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)      ! Type of forgetting factor
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)       ! Type of ensemble transformation
   CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)        ! Type of transform square-root (SEIK-sub4/ESTKF)

@@ -37,8 +37,7 @@ PROGRAM MAIN_OFFLINE
 
   USE mpi                    ! MPI
   USE mod_parallel_pdaf, &   ! Parallelization
-       ONLY: MPIerr, npes_world, mype_world, &
-       init_parallel, finalize_parallel
+       ONLY: MPIerr, npes_world, mype_world, init_parallel
 
   IMPLICIT NONE
 
@@ -114,12 +113,5 @@ PROGRAM MAIN_OFFLINE
 
   ! *** Finalize PDAF - print memory and timing information
   CALL finalize_pdaf(0)
-
-  IF (mype_world == 0) &
-       WRITE (*, '(/1x, a)') 'PDAF offline mode: END'
-
-
-! *** Terminate MPI
-  CALL finalize_parallel()
 
 END PROGRAM MAIN_OFFLINE

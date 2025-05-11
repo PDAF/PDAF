@@ -13,7 +13,7 @@ SUBROUTINE finalize_pdaf()
   USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAF_print_info, PDAF_deallocate
   USE mod_parallel_pdaf, &        ! Parallelization
-       ONLY: mype_world
+       ONLY: mype_world, finalize_parallel
 
   IMPLICIT NONE
 
@@ -26,5 +26,8 @@ SUBROUTINE finalize_pdaf()
 
 ! *** Deallocate PDAF arrays ***
   CALL PDAF_deallocate()
+
+! *** Finalize parallel MPI region - if not done by model ***
+  CALL finalize_parallel()
 
 END SUBROUTINE finalize_pdaf

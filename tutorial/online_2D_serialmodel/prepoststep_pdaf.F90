@@ -32,10 +32,11 @@
 SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
+  USE mpi                      ! MPI
   USE mod_model, &             ! Model variables
        ONLY: nx, ny
   USE mod_parallel_pdaf, &     ! Parallelization variables
-       ONLY: COMM_filter
+       ONLY: COMM_filter, mype_filter
   USE PDAF, &                  ! PDAF diagnostic routine
        ONLY: PDAF_diag_stddev
 
@@ -60,8 +61,6 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER :: pdaf_status              ! status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
   REAL :: ens_stddev                  ! estimated RMS error
-  INTEGER :: nobs                     ! Number of observations in diagnostics
-  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   CHARACTER(len=2) :: stepstr         ! String for time step
@@ -72,16 +71,18 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (firsttime) THEN
-     WRITE (*, '(8x, a)') 'Analyze initial state ensemble'
-     anastr = 'ini'
-  ELSE
-     IF (step<0) THEN
-        WRITE (*, '(8x, a)') 'Analyze and write forecasted state ensemble'
-        anastr = 'for'
+  IF (mype_filter == 0) THEN
+     IF (firsttime) THEN
+        WRITE (*, '(8x, a)') 'Analyze initial state ensemble'
+        anastr = 'ini'
      ELSE
-        WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
-        anastr = 'ana'
+        IF (step<0) THEN
+           WRITE (*, '(8x, a)') 'Analyze and write forecasted state ensemble'
+           anastr = 'for'
+        ELSE
+           WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
+           anastr = 'ana'
+        END IF
      END IF
   END IF
 
@@ -100,15 +101,17 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *****************
 
   ! Output RMS errors given by sampled covar matrix
-  WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', ens_stddev
+  IF (mype_filter == 0) THEN
+     WRITE (*, '(12x, a, es12.4)') &
+          'RMS error according to sampled variance: ', ens_stddev
+  END IF
 
 
 ! *******************
 ! *** File output ***
 ! *******************
 
-  IF (.not. firsttime) THEN
+  notfirst: IF (.not. firsttime) THEN
 
      WRITE (*, '(8x, a)') '--- write ensemble and state estimate'
 
@@ -151,9 +154,9 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
      CLOSE(11)
 
-
      DEALLOCATE(field)
-  END IF
+
+  END IF notfirst
 
 
 ! ********************

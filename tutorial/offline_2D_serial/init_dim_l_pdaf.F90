@@ -29,7 +29,7 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   INTEGER, INTENT(out) :: dim_l    !< Local state dimension
 
 ! *** local variables ***
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
 
 
 ! ****************************************

@@ -25,7 +25,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
   USE mod_assimilation, &     ! Assimilation variables
        ONLY: delt_obs
-  USE mod_parallel_model, &   ! Parallelization variables
+  USE mod_parallel_pdaf, &    ! Parallelization variables
        ONLY: mype_world
   USE mod_model, &            ! Model variables
        ONLY: total_steps

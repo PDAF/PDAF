@@ -16,7 +16,7 @@
 !! operations can be performed here. For example 
 !! the forecast and the analysis states and ensemble
 !! covariance matrix can be analyzed, e.g. by 
-!! computing the estimated variances. 
+!! computing the estimated variances.
 !!
 !! If a user considers to perform adjustments to the 
 !! estimates (e.g. for balances), this routine is 
@@ -35,10 +35,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mpi                      ! MPI
   USE mod_model, &             ! Model variables
        ONLY: nx, ny, nx_p
+  USE mod_parallel_pdaf, &     ! Parallelization variables
+       ONLY: COMM_filter, mype_filter, npes_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_state
-  USE mod_parallel_pdaf, &     ! Assimilation parallelization
-       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE PDAF, &                  ! PDAF diagnostic routine
        ONLY: PDAF_diag_stddev
 
@@ -59,7 +59,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 
 ! *** local variables ***
-  INTEGER :: i, j, member, domain     ! Counters
+  INTEGER :: i, j, member             ! Counters
   INTEGER :: pdaf_status              ! status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
   REAL :: ens_stddev                  ! estimated RMS error
@@ -68,7 +68,8 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   CHARACTER(len=2) :: stepstr         ! String for time step
   CHARACTER(len=3) :: anastr          ! String for call type (initial, forecast, analysis)
   ! Variables for parallelization - global fields
-  INTEGER :: off_p   ! Row-offset according to domain decomposition
+  INTEGER :: domain                   ! Counter
+  INTEGER :: off_p                    ! Row-offset according to domain decomposition
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
@@ -110,7 +111,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ! Output RMS errors given by sampled covar matrix
   IF (mype_filter == 0) THEN
      WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', ens_stddev
+          'RMS error according to sampled variance: ', ens_stddev
   END IF
 
 

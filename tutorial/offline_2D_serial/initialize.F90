@@ -1,9 +1,13 @@
 !>  Initialize model
 !!
-!! Routine to perform initialization of the 2D offline example for
-!! PDAF. Here, only the global size of the model domain and the 
+!! Routine to perform initialization of model dimensions used to
+!! set the dimension of the state vector for PDAF and for use
+!! in call-back routines.
+!! Here, the global size of the model domain and the 
 !! dimension of the global state vector are initialized.
-!! Generally, this could also be joined with the routine init_pdaf().
+!! With MPI-parallelization one will usually initialize both the
+!! global and process-local sized of the state vector.
+!! Generally, this routine could also be joined with init_pdaf().
 !!
 !! __Revision history:__
 !! * 2013-02 - Lars Nerger - Initial code

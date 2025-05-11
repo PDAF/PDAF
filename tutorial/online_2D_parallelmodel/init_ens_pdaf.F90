@@ -24,10 +24,10 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   USE mod_model, &           ! Model variables
        ONLY: nx, ny, nx_p
-  USE mod_parallel_model, &  ! Model parallelization variables
-       ONLY: mype_model
+  USE mod_assimilation, &  ! Assimilation variables
+       ONLY: ensgroup
   USE mod_parallel_pdaf, &   ! Assimilation parallelization variables
-       ONLY: mype_filter
+       ONLY: mype_filter, mype_model
 
   IMPLICIT NONE
 
@@ -69,7 +69,11 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DO member = 1, dim_ens
      WRITE (ensstr, '(i1)') member
-     OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+     IF (ensgroup==1) THEN
+        OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+     ELSE
+        OPEN(11, file = '../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
+     END IF
 
      ! Read global field
      DO i = 1, ny
