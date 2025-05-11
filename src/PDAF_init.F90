@@ -56,7 +56,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
   USE PDAF_info, &
        ONLY: PDAF_print_version
   USE PDAF_DA, ONLY: &
-       PDAF_print_filter_types
+       PDAF_print_DA_types
   USE PDAF_utils_filters, &
        ONLY: PDAF_init_filters, PDAF_alloc_filters, PDAF_options_filters
 
@@ -138,7 +138,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      ! *** For negative subtype only display information on filter options ***
      ! ***********************************************************************
 
-     CALL PDAF_print_filter_types(1)
+     CALL PDAF_print_DA_types(1)
      CALL PDAF_options_filters(filtertype)
 
      subtype_filter = -1
