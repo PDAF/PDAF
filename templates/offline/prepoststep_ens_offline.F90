@@ -34,12 +34,12 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
   USE mpi                      ! MPI
-  USE mod_parallel_pdaf, &     ! Parallelization
+  USE mod_parallel_pdaf, &     ! Parallelization variables
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_state, do_omi_obsstats
-  USE PDAF, &                  ! PDAF and PDAF-OMI diagnostic routines
-       ONLY: PDAF_diag_stddev, PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
+  USE PDAF, &                  ! PDAF diagnostic routine
+       ONLY: PDAF_diag_stddev
 
   IMPLICIT NONE
 
@@ -62,16 +62,8 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER :: pdaf_status              ! status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
   REAL :: ens_stddev                  ! ensemble STDDEV = estimated RMS error
-  INTEGER :: nobs                     ! Number of observations in diagnostics
-  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
-  REAL, POINTER :: obsstats(:,:)      ! Array of observation statistics
-  ! Variables for parallelization - global fields
-  REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
-  REAL, ALLOCATABLE :: state(:)       ! global state vector
-  REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
-  REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
 
 
 ! **********************
@@ -95,20 +87,6 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   CALL PDAF_diag_stddev(dim_p, dim_ens, state_p, ens_p, &
         ens_stddev, 1, COMM_filter, pdaf_status)
 
- 
-! **************************************
-! *** Compute observation statistics ***
-! **************************************
-
-!TEMPLATE: We include two statistics here, which are optional and partly redundant
-  IF (do_omi_obsstats) THEN
-     ! Compute RMS deviation between observation and observed ensemble mean
-     CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1/(mype_filter+1))
-
-     ! Compute statistics on deviation between observation and observed ensemble
-     CALL PDAFomi_diag_stats(nobs, obsstats, 1/(mype_filter+1))
-  END IF
-
 
 ! *****************
 ! *** Screen IO ***
@@ -125,12 +103,12 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** File output ***
 ! *******************
 
-  notfirst: IF (.not. firsttime) THEN
+  IF (.not. firsttime) THEN
 
      ! Template reminder - delete when implementing functionality
      WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Implement writing of output files here!'
 
-  END IF notfirst
+  END IF
 
 
 ! ********************

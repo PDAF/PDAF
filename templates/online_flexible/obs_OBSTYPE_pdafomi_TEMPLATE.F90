@@ -58,7 +58,7 @@ MODULE obs_OBSTYPE_pdafomi
 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
-  USE PDAFomi, &
+  USE PDAF, &
        ONLY: obs_f, obs_l   ! Declaration of observation data types
  
   IMPLICIT NONE
@@ -154,11 +154,9 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_OBSTYPE(step, dim_obs)
 
-    USE PDAF, &
-         ONLY: PDAF_local_type
-    USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs, PDAFomi_set_localize_covar
-    USE mod_assimilation, &
+    USE PDAF, &                ! Include PDAF and PDAF-OMI routines
+         ONLY: PDAF_local_type, PDAFomi_gather_obs, PDAFomi_set_localize_covar
+    USE mod_assimilation, &    
          ONLY: filtertype, cradius, sradius, locweight !, coords_p
 
     IMPLICIT NONE
@@ -202,14 +200,22 @@ CONTAINS
     IF (mype_filter==0) &
          WRITE (*,'(8x,a)') 'Dummy implementation of a single observation'
 
-    dim_obs_p = 1
+    dim_obs_p = 1   ! This needs to be determined by counting observations
+
+    ! Allocate process-local observation arrays
     ALLOCATE(obs_p(dim_obs_p))
-    obs_p = 1.0
-    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
-    ocoord_p = 1.0
-    ALLOCATE(thisobs%id_obs_p(1 , dim_obs_p))
-    thisobs%id_obs_p = 1
     ALLOCATE(ivar_obs_p(dim_obs_p))
+    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
+
+    ! Allocate process-local index array
+    ! This array has a many rows as required for the observation operator
+    ! 1 if observations are at grid points; >1 if interpolation is required
+    ALLOCATE(thisobs%id_obs_p(1 , dim_obs_p))
+
+    ! Dummy values
+    obs_p = 1.0
+    ocoord_p = 1.0
+    thisobs%id_obs_p = 1
     ivar_obs_p = 1.0
 ! +++++ END OF DUMMY OBSERVATION
 
@@ -399,7 +405,7 @@ CONTAINS
 !!
   SUBROUTINE obs_op_OBSTYPE(dim_p, dim_obs, state_p, ostate)
 
-    USE PDAFomi, &
+    USE PDAF, &                ! Include PDAF-OMI routine
          ONLY: PDAFomi_obs_op_gridpoint
 
     IMPLICIT NONE
@@ -446,8 +452,8 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_l_OBSTYPE(domain_p, step, dim_obs, dim_obs_l)
 
-    ! Include PDAFomi function
-    USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
+    USE PDAF, &                ! Include PDAF-OMI routine
+         ONLY: PDAFomi_init_dim_obs_l
 
     ! Include localization radius and local coordinates
     ! one can also set observation-specific values for the localization.

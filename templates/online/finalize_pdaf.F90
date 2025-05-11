@@ -1,8 +1,8 @@
 !>  Finalize PDAF
 !!
-!! This routine calls routines for output on
-!! timing and memory use, to deallocate
-!! PDAF-internal arrays, and to finalize MPI.
+!! This routine calls routines for output on timing
+!! and memory use, to deallocate PDAF-internal arrays,
+!! and to finalize MPI of model is not parallelized.
 !!
 !! __Revision history:__
 !! * 2004-11 - Lars Nerger - Initial code

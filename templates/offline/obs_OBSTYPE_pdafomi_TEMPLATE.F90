@@ -39,16 +39,13 @@
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
 !!
-!! In addition, there are two optional routines, which are required if filters 
+!! In addition, there is one optional routines, which is required if filters 
 !! with localization are used:
 !! * init_dim_obs_l_OBSTYPE \n
 !!           Only required if domain-localized filters (e.g. LESTKF, LETKF) are used:
 !!           Count number of local observations of module-type according to
 !!           their coordinates (distance from local analysis domain). Initialize
 !!           module-internal distances and index arrays.
-!! * localize_covar_OBSTYPE \n
-!!           Only required if the localized EnKF is used:
-!!           Apply covariance localization in the LEnKF.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code

@@ -113,14 +113,14 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs = 2      ! This should be set according to the data availability
+  delt_obs = 2       ! This should be set according to the data availability
 
   ! Incremental updating (IAU)
   type_iau = 0       ! Type of incremental updating
   steps_iau = 1      ! Number of time steps over which IAU is applied
 
 ! *** Which observation type to assimilate
-  assim_OBSTYPE = .true.
+  assim_OBSTYPE = .false.
 
 ! *** specifications for observations ***
   rms_obs_OBSTYPE = 0.5    ! Observation error standard deviation
@@ -179,7 +179,7 @@ SUBROUTINE init_pdaf()
        filter_param_i, 2,&
        filter_param_r, 1, &
        COMM_model, COMM_filter, COMM_couple, &
-       task_id, n_modeltasks, filterpe, init_ens_PDAF, &
+       task_id, n_modeltasks, filterpe, init_ens_pdaf, &
        screen, status_pdaf)
 
   ! *** Additional parameter specifications ***

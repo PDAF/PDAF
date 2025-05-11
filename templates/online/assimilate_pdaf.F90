@@ -15,7 +15,7 @@
 SUBROUTINE assimilate_pdaf()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF_DA_GENOBS, PDAF3_assimilate, PDAF3_generate_obs
+       ONLY: PDAF3_assimilate, PDAF_DA_GENOBS, PDAF3_generate_obs
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation

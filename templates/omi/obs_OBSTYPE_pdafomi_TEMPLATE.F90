@@ -200,14 +200,22 @@ CONTAINS
     IF (mype_filter==0) &
          WRITE (*,'(8x,a)') 'Dummy implementation of a single observation'
 
-    dim_obs_p = 1
+    dim_obs_p = 1   ! This needs to be determined by counting observations
+
+    ! Allocate process-local observation arrays
     ALLOCATE(obs_p(dim_obs_p))
-    obs_p = 1.0
-    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
-    ocoord_p = 1.0
-    ALLOCATE(thisobs%id_obs_p(1 , dim_obs_p))
-    thisobs%id_obs_p = 1
     ALLOCATE(ivar_obs_p(dim_obs_p))
+    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
+
+    ! Allocate process-local index array
+    ! This array has a many rows as required for the observation operator
+    ! 1 if observations are at grid points; >1 if interpolation is required
+    ALLOCATE(thisobs%id_obs_p(1 , dim_obs_p))
+
+    ! Dummy values
+    obs_p = 1.0
+    ocoord_p = 1.0
+    thisobs%id_obs_p = 1
     ivar_obs_p = 1.0
 ! +++++ END OF DUMMY OBSERVATION
 
