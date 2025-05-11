@@ -48,11 +48,12 @@ CONTAINS
 !! Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state(collect_state_pdaf, &
-     init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
      prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr
+  USE PDAF_cb_procedures
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -76,30 +77,32 @@ SUBROUTINE PDAF3_put_state(collect_state_pdaf, &
 ! *** Arguments ***
   INTEGER, INTENT(inout) :: outflag    !< Status flag
 
-! *** Names of external subroutines ***
-  EXTERNAL :: collect_state_pdaf, &          !< Routine to collect a state vector
-       prepoststep_pdaf                      !< User supplied pre/poststep routine
-  EXTERNAL :: init_n_domains_pdaf, &         !< Provide number of local analysis domains
-       init_dim_l_pdaf, &                    !< Init state dimension for local ana. domain
-       init_dim_obs_f_pdaf, &                !< Initialize dimension of full observation vector
-       obs_op_f_pdaf, &                      !< Full observation operator
-       init_dim_obs_l_pdaf                   !< Initialize local dimimension of obs. vector
-  EXTERNAL :: PDAFomi_init_obs_f_cb, &       !< Initialize full observation vector
-       PDAFomi_init_obs_l_cb, &              !< Initialize local observation vector
-       PDAFomi_init_obsvar_cb, &             !< Initialize mean observation error variance
-       PDAFomi_init_obsvar_l_cb, &           !< Initialize local mean observation error variance
-       PDAFomi_init_obsvars_f_cb, &          !< Initialize vector of observation error variances
-       PDAFomi_localize_covar_serial_cb, &   !< Apply localization to HP and BXY
-       PDAFomi_g2l_obs_cb, &                 !< Restrict full obs. vector to local analysis domain
-       PDAFomi_prodRinvA_l_cb, &             !< Provide product R^-1 A on local analysis domain
-       PDAFomi_likelihood_l_cb               !< Compute likelihood and apply localization
-  EXTERNAL :: PDAFomi_init_obscovar_cb, &    !< Initialize mean observation error variance
-       PDAFomi_localize_covar_cb, &          !< Apply localization to HP and HPH^T
-       PDAFomi_add_obs_error_cb, &           !< Add observation error covariance matrix
-       PDAFomi_prodRinvA_cb, &               !< Provide product R^-1 A
-       PDAFomi_likelihood_cb                 !< Compute likelihood
-  EXTERNAL :: PDAFomi_prodRinvA_hyb_l_cb, &  !< Product R^-1 A on local analysis domain with hybrid weight
-       PDAFomi_likelihood_hyb_l_cb           !< Compute likelihood and apply localization with tempering
+! *** Argument procedures ***
+  PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
+  PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+  PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+  PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
+  PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
+  PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+
+! *** OMI-provided procedures ***
+  PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+  PROCEDURE(init_obs_l_cb) :: PDAFomi_init_obs_l_cb      ! < Initialize local observation vector
+  PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+  PROCEDURE(init_obsvar_l_cb) :: PDAFomi_init_obsvar_l_cb !< Initialize local mean observation error variance
+  PROCEDURE(init_obsvars_cb) :: PDAFomi_init_obsvars_f_cb !< Initialize vector of observation error variances
+  PROCEDURE(localize_serial_cb) :: PDAFomi_localize_covar_serial_cb !< Apply localization to HP and BXY
+  PROCEDURE(g2l_obs_cb) :: PDAFomi_g2l_obs_cb             !< Restrict full obs. vector to local analysis domain
+  PROCEDURE(prodRinvA_l_cb) :: PDAFomi_prodRinvA_l_cb     !< Provide product R^-1 A on local analysis domain
+  PROCEDURE(likelihood_l_cb) :: PDAFomi_likelihood_l_cb   !< Compute likelihood and apply localization
+  PROCEDURE(init_obscovar_cb) :: PDAFomi_init_obscovar_cb !< Initialize mean observation error variance
+  PROCEDURE(localize_cb) :: PDAFomi_localize_covar_cb     !< Apply localization to HP and HPH^T
+  PROCEDURE(add_obs_error_cb) :: PDAFomi_add_obs_error_cb !< Add observation error covariance matrix
+  PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+  PROCEDURE(likelihood_cb) :: PDAFomi_likelihood_cb       !< Compute likelihood
+  PROCEDURE(prodRinvA_hyb_l_cb) :: PDAFomi_prodRinvA_hyb_l_cb     !< Product R^-1 A on local analysis domain with hybrid weight
+  PROCEDURE(likelihood_hyb_l_cb) :: PDAFomi_likelihood_hyb_l_cb   !< Compute likelihood and apply localization with tempering
 
 
 ! **************************************************
@@ -107,64 +110,64 @@ SUBROUTINE PDAF3_put_state(collect_state_pdaf, &
 ! **************************************************
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAF_put_state_lseik(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lseik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAF_put_state_letkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_letkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
-     CALL PDAF_put_state_lestkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lestkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-     CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, PDAFomi_likelihood_l_cb, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
-     CALL PDAF_put_state_lknetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lknetf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, PDAFomi_prodRinvA_hyb_l_cb, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
-     CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, PDAFomi_localize_covar_serial_cb, &
           prepoststep_pdaf, outflag)
   ELSE IF (TRIM(filterstr) == 'SEIK') THEN
-     CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'ENKF') THEN
-     CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_add_obs_error_cb, &
           PDAFomi_init_obscovar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'LENKF') THEN
-     CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_localize_covar_cb, &
           PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'ETKF') THEN
-     CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'ESTKF') THEN
-     CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'NETF') THEN
-     CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'PF') THEN
-     CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
   END IF
 
@@ -190,11 +193,12 @@ END SUBROUTINE PDAF3_put_state
 !! Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, &
-     init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
      g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr
+  USE PDAF_cb_procedures
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
   USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
@@ -215,32 +219,34 @@ SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, &
 ! *** Arguments ***
   INTEGER, INTENT(inout) :: outflag    !< Status flag
 
-! *** Names of external subroutines ***
-  EXTERNAL :: collect_state_pdaf, &          !< Routine to collect a state vector
-       prepoststep_pdaf                      !< User supplied pre/poststep routine
-  EXTERNAL :: init_n_domains_pdaf, &         !< Provide number of local analysis domains
-       init_dim_l_pdaf, &                    !< Init state dimension for local ana. domain
-       g2l_state_pdaf, &                     !< Get state on local ana. domain from full state
-       l2g_state_pdaf, &                     !< Init full state from local state
-       init_dim_obs_f_pdaf, &                !< Initialize dimension of full observation vector
-       obs_op_f_pdaf, &                      !< Full observation operator
-       init_dim_obs_l_pdaf                   !< Initialize local dimimension of obs. vector
-  EXTERNAL :: PDAFomi_init_obs_f_cb, &       !< Initialize full observation vector
-       PDAFomi_init_obs_l_cb, &              !< Initialize local observation vector
-       PDAFomi_init_obsvar_cb, &             !< Initialize mean observation error variance
-       PDAFomi_init_obsvar_l_cb, &           !< Initialize local mean observation error variance
-       PDAFomi_init_obsvars_f_cb, &          !< Initialize vector of observation error variances
-       PDAFomi_localize_covar_serial_cb, &   !< Apply localization to HP and BXY
-       PDAFomi_g2l_obs_cb, &                 !< Restrict full obs. vector to local analysis domain
-       PDAFomi_prodRinvA_l_cb, &             !< Provide product R^-1 A on local analysis domain
-       PDAFomi_likelihood_l_cb               !< Compute likelihood and apply localization
-  EXTERNAL :: PDAFomi_init_obscovar_cb, &    !< Initialize mean observation error variance
-       PDAFomi_localize_covar_cb, &          !< Apply localization to HP and HPH^T
-       PDAFomi_add_obs_error_cb, &           !< Add observation error covariance matrix
-       PDAFomi_prodRinvA_cb, &               !< Provide product R^-1 A
-       PDAFomi_likelihood_cb                 !< Compute likelihood
-  EXTERNAL :: PDAFomi_prodRinvA_hyb_l_cb, &  !< Product R^-1 A on local analysis domain with hybrid weight
-       PDAFomi_likelihood_hyb_l_cb           !< Compute likelihood and apply localization with tempering
+! *** Argument procedures ***
+  PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
+  PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+  PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+  PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
+  PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
+  PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
+  PROCEDURE(g2l_state_cb) :: g2l_state_pdaf           !< Get local state from full state
+  PROCEDURE(l2g_state_cb) :: l2g_state_pdaf           !< Init full state from local state
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+
+! *** OMI-provided procedures ***
+  PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+  PROCEDURE(init_obs_l_cb) :: PDAFomi_init_obs_l_cb      ! < Initialize local observation vector
+  PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+  PROCEDURE(init_obsvar_l_cb) :: PDAFomi_init_obsvar_l_cb !< Initialize local mean observation error variance
+  PROCEDURE(init_obsvars_cb) :: PDAFomi_init_obsvars_f_cb !< Initialize vector of observation error variances
+  PROCEDURE(localize_serial_cb) :: PDAFomi_localize_covar_serial_cb !< Apply localization to HP and BXY
+  PROCEDURE(g2l_obs_cb) :: PDAFomi_g2l_obs_cb             !< Restrict full obs. vector to local analysis domain
+  PROCEDURE(prodRinvA_l_cb) :: PDAFomi_prodRinvA_l_cb     !< Provide product R^-1 A on local analysis domain
+  PROCEDURE(likelihood_l_cb) :: PDAFomi_likelihood_l_cb   !< Compute likelihood and apply localization
+  PROCEDURE(init_obscovar_cb) :: PDAFomi_init_obscovar_cb !< Initialize mean observation error variance
+  PROCEDURE(localize_cb) :: PDAFomi_localize_covar_cb     !< Apply localization to HP and HPH^T
+  PROCEDURE(add_obs_error_cb) :: PDAFomi_add_obs_error_cb !< Add observation error covariance matrix
+  PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+  PROCEDURE(likelihood_cb) :: PDAFomi_likelihood_cb       !< Compute likelihood
+  PROCEDURE(prodRinvA_hyb_l_cb) :: PDAFomi_prodRinvA_hyb_l_cb     !< Product R^-1 A on local analysis domain with hybrid weight
+  PROCEDURE(likelihood_hyb_l_cb) :: PDAFomi_likelihood_hyb_l_cb   !< Compute likelihood and apply localization with tempering
 
 
 ! **************************************************
@@ -248,64 +254,64 @@ SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, &
 ! **************************************************
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAF_put_state_lseik(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lseik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAF_put_state_letkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_letkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
-     CALL PDAF_put_state_lestkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lestkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-     CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, PDAFomi_likelihood_l_cb, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
           g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
-     CALL PDAF_put_state_lknetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lknetf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, PDAFomi_prodRinvA_hyb_l_cb, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
-     CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, PDAFomi_localize_covar_serial_cb, &
           prepoststep_pdaf, outflag)
   ELSE IF (TRIM(filterstr) == 'SEIK') THEN
-     CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'ENKF') THEN
-     CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_add_obs_error_cb, &
           PDAFomi_init_obscovar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'LENKF') THEN
-     CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_localize_covar_cb, &
           PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'ETKF') THEN
-     CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'ESTKF') THEN
-     CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'NETF') THEN
-     CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
   ELSEIF (TRIM(filterstr) == 'PF') THEN
-     CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
   END IF
 
@@ -330,6 +336,7 @@ SUBROUTINE PDAF3_put_state_global(collect_state_pdaf, &
      prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr
+  USE PDAF_cb_procedures
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_seik, ONLY: PDAF_put_state_seik
   USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf
@@ -344,18 +351,20 @@ SUBROUTINE PDAF3_put_state_global(collect_state_pdaf, &
 ! *** Arguments ***
   INTEGER, INTENT(inout) :: outflag    !< Status flag
 
-! *** Names of external subroutines ***
-  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
-       prepoststep_pdaf                !< User supplied pre/poststep routine
-  EXTERNAL :: init_dim_obs_pdaf, &     !< Initialize dimension of observation vector
-       obs_op_pdaf                     !< Observation operator
-  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-       PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-       PDAFomi_init_obscovar_cb, &     !< Initialize mean observation error variance
-       PDAFomi_localize_covar_cb, &    !< Apply localization to HP and HPH^T
-       PDAFomi_add_obs_error_cb, &     !< Add observation error covariance matrix
-       PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
-       PDAFomi_likelihood_cb           !< Compute likelihood
+! *** Argument procedures ***
+  PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
+  PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+  PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+
+! *** OMI-provided procedures ***
+  PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+  PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+  PROCEDURE(init_obscovar_cb) :: PDAFomi_init_obscovar_cb !< Initialize mean observation error variance
+  PROCEDURE(localize_cb) :: PDAFomi_localize_covar_cb     !< Apply localization to HP and HPH^T
+  PROCEDURE(add_obs_error_cb) :: PDAFomi_add_obs_error_cb !< Add observation error covariance matrix
+  PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+  PROCEDURE(likelihood_cb) :: PDAFomi_likelihood_cb       !< Compute likelihood
 
 
 ! **************************************************
@@ -407,10 +416,10 @@ END SUBROUTINE PDAF3_put_state_global
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_lenkf(collect_state_pdaf, &
-     init_dim_obs_pdaf, obs_op_pdaf, &
-     localize_covar_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, localize_pdaf, &
      prepoststep_pdaf, outflag)
 
+  USE PDAF_cb_procedures
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_lenkf, ONLY: PDAF_put_state_lenkf
 
@@ -419,15 +428,17 @@ SUBROUTINE PDAF3_put_state_lenkf(collect_state_pdaf, &
 ! *** Arguments ***
   INTEGER, INTENT(inout) :: outflag    !< Status flag
 
-! *** Names of external subroutines ***
-  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
-       prepoststep_pdaf                !< User supplied pre/poststep routine
-  EXTERNAL :: init_dim_obs_pdaf, &     !< Initialize dimension of observation vector
-       obs_op_pdaf, &                  !< Observation operator
-       localize_covar_pdaf             !< Apply localization to HP and HPH^T
-  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-       PDAFomi_init_obscovar_cb, &     !< Initialize mean observation error variance
-       PDAFomi_add_obs_error_cb        !< Provide product R^-1 A
+! *** Argument procedures ***
+  PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
+  PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+  PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+  PROCEDURE(localize_cb) :: localize_pdaf             !< Apply localization to HP and HPH^T
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+
+! *** OMI-provided procedures ***
+  PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+  PROCEDURE(init_obscovar_cb) :: PDAFomi_init_obscovar_cb !< Initialize mean observation error variance
+  PROCEDURE(add_obs_error_cb) :: PDAFomi_add_obs_error_cb !< Add observation error covariance matrix
 
 
 ! **************************************************
@@ -435,7 +446,7 @@ SUBROUTINE PDAF3_put_state_lenkf(collect_state_pdaf, &
 ! **************************************************
 
   CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-       PDAFomi_init_obs_f_cb, prepoststep_pdaf, localize_covar_pdaf, &
+       PDAFomi_init_obs_f_cb, prepoststep_pdaf, localize_pdaf, &
        PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, outflag)
 
 
@@ -454,10 +465,10 @@ END SUBROUTINE PDAF3_put_state_lenkf
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_ensrf(collect_state_pdaf, &
-     init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-     localize_covar_serial_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, localize_serial_pdaf, &
      prepoststep_pdaf, outflag)
 
+  USE PDAF_cb_procedures
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_ensrf, ONLY: PDAF_put_state_ensrf
 
@@ -466,23 +477,25 @@ SUBROUTINE PDAF3_put_state_ensrf(collect_state_pdaf, &
 ! *** Arguments ***
   INTEGER, INTENT(inout) :: outflag    !< Status flag
 
-! *** Names of external subroutines ***
-  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
-       prepoststep_pdaf                !< User supplied pre/poststep routine
-  EXTERNAL :: init_dim_obs_f_pdaf, &   !< Initialize dimension of observation vector
-       obs_op_f_pdaf, &                !< Observation operator
-       localize_covar_serial_pdaf      !< Apply localization to HP and BXY
-  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-       PDAFomi_init_obsvars_f_cb, &    !< Initialize vector of observation error variances
-       PDAFomi_add_obs_error_cb        !< Provide product R^-1 A
+! *** Argument procedures ***
+  PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
+  PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+  PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+  PROCEDURE(localize_serial_cb) :: localize_serial_pdaf  !< Apply localization to HP and BXY for single observation
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+
+! *** OMI-provided procedures ***
+  PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+  PROCEDURE(init_obsvars_cb) :: PDAFomi_init_obsvars_f_cb !< Initialize vector of observation error variances
+  PROCEDURE(add_obs_error_cb) :: PDAFomi_add_obs_error_cb !< Add observation error covariance matrix
 
 
 ! **************************************************
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-       PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, localize_covar_serial_pdaf, &
+  CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+       PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, localize_serial_pdaf, &
        prepoststep_pdaf, outflag)
 
 
@@ -502,9 +515,10 @@ END SUBROUTINE PDAF3_put_state_ensrf
 !! * 2020-06 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-SUBROUTINE PDAF3_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf, &
-     obs_op_f_pdaf, get_obs_f_pdaf, prepoststep_pdaf, outflag)
+SUBROUTINE PDAF3_put_state_generate_obs(collect_state_pdaf, init_dim_obs_pdaf, &
+     obs_op_pdaf, get_obs_pdaf, prepoststep_pdaf, outflag)
 
+  USE PDAF_cb_procedures
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFput_state_generate_obs, ONLY: PDAF_put_state_generate_obs
 
@@ -513,21 +527,23 @@ SUBROUTINE PDAF3_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf,
 ! *** Arguments ***
   INTEGER, INTENT(out) :: outflag  !< Status flag
 
-! *** External subroutines ***
-  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
-       prepoststep_pdaf                !< User supplied pre/poststep routine
-  EXTERNAL :: init_dim_obs_f_pdaf, &   !< Initialize dimension of observation vector
-       obs_op_f_pdaf, &                !< Observation operator
-       get_obs_f_pdaf                  !< Initialize observation vector
-  EXTERNAL :: PDAFomi_init_obserr_f_cb !< Initialize mean observation error variance
+! *** Argument procedures ***
+  PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
+  PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+  PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+  PROCEDURE(get_obs_cb) :: get_obs_pdaf               !< Initialize observation vector
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+
+! *** OMI-provided procedures ***
+  PROCEDURE(init_obserr_cb) :: PDAFomi_init_obserr_f_cb !< Initialize mean observation error variance
 
 
 ! **************************************************
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAF_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-       PDAFomi_init_obserr_f_cb, get_obs_f_pdaf, prepoststep_pdaf, outflag)
+  CALL PDAF_put_state_generate_obs(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+       PDAFomi_init_obserr_f_cb, get_obs_pdaf, prepoststep_pdaf, outflag)
 
 
 ! *******************************************

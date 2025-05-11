@@ -61,6 +61,7 @@ SRC_MOD_PDAF =  PDAF_timer.F90 \
 # Generic routines in PDAF
 SRC_PDAF_GEN =  PDAF_da.F90 \
 		PDAF.F90 \
+		PDAF_cb_procedures.F90 \
 		PDAF_forecast.F90 \
 		PDAF_iau.F90 \
 		PDAF_init.F90 \

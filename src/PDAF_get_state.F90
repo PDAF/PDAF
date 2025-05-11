@@ -45,6 +45,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 #include "typedefs.h"
 
   USE mpi
+  USE PDAF_cb_procedures
   USE PDAF_communicate_ens, &
        ONLY: PDAF_scatter_ens
   USE PDAF_timer, &
@@ -76,12 +77,11 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   INTEGER, INTENT(inout) :: doexit  !< Whether to exit from forecasts
   INTEGER, INTENT(inout) :: outflag !< Status flag
 
-! *** External subroutines ***
+! *** Argument procedures ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_next_observation, &  !< Routine to provide time step, time and dimension
-                                     !<   of next observation
-       U_distribute_state, &         !< Routine to distribute a state vector
-       U_prepoststep                 !< User supplied pre/poststep routine
+  PROCEDURE(distribute_cb) :: U_distribute_state   !< Routine to distribute a state vector
+  PROCEDURE(prepost_cb) :: U_prepoststep           !< User supplied pre/poststep routine
+  PROCEDURE(next_obs_cb) :: U_next_observation     !< Provide information on next forecast
 
 ! *** local variables ***
   INTEGER :: i, j             ! Counters

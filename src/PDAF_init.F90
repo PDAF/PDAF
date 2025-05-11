@@ -41,6 +41,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      outflag)
 
   USE mpi
+  USE PDAF_cb_procedures
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
@@ -56,7 +57,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
   USE PDAF_info, &
        ONLY: PDAF_print_version
   USE PDAF_DA, ONLY: &
-       PDAF_print_DA_types
+       PDAF_print_filter_types
   USE PDAF_utils_filters, &
        ONLY: PDAF_init_filters, PDAF_alloc_filters, PDAF_options_filters
 
@@ -95,7 +96,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 
 ! *** External subroutines ***
 ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_ens  !< User-supplied routine for ensemble initialization
+  PROCEDURE(init_ens_cb) :: U_init_ens  !< User-supplied routine for ensemble initialization
 
 ! *** local variables ***
   INTEGER :: i                     ! Counter
@@ -138,7 +139,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      ! *** For negative subtype only display information on filter options ***
      ! ***********************************************************************
 
-     CALL PDAF_print_DA_types(1)
+     CALL PDAF_print_filter_types(1)
      CALL PDAF_options_filters(filtertype)
 
      subtype_filter = -1

@@ -47,6 +47,7 @@ MODULE PDAF
   USE PDAF_info, &
        ONLY: PDAF_print_info
   USE PDAFlocal
+  USE PDAF_cb_procedures
 
   USE PDAF_lknetf, &
        ONLY: PDAF_lknetf_reset_gamma

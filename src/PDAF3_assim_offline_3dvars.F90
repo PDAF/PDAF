@@ -42,12 +42,13 @@ CONTAINS
 !! * 2025-04 - Lars Nerger - Initial code based on PDAF3_put_state code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAF3_assim_offline_3dvar_all(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+  SUBROUTINE PDAF3_assim_offline_3dvar_all(init_dim_obs_pdaf, obs_op_pdaf, &
        cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
        init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
        prepoststep_pdaf, outflag)
 
     USE PDAF_mod_core, ONLY: filterstr, debug, subtype_filter
+    USE PDAF_cb_procedures
     USE PDAFomi, ONLY: PDAFomi_dealloc
     USE PDAFlocal, &
          ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -63,27 +64,28 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(out) :: outflag      !< Status flag
 
-! *** External subroutines ***
-    EXTERNAL :: prepoststep_pdaf         !< User supplied pre/poststep routine
-    EXTERNAL :: cvt_ens_pdaf, &          !< Apply control vector transform matrix to control vector
-         cvt_adj_ens_pdaf, &             !< Apply adjoint control vector transform matrix
-         cvt_pdaf, &                     !< Apply control vector transform matrix to control vector
-         cvt_adj_pdaf, &                 !< Apply adjoint control vector transform matrix
-         obs_op_lin_pdaf, &              !< Linearized observation operator
-         obs_op_adj_pdaf                 !< Adjoint observation operator
-    EXTERNAL :: init_n_domains_pdaf, &   !< Provide number of local analysis domains
-         init_dim_l_pdaf, &              !< Init state dimension for local ana. domain
-         init_dim_obs_f_pdaf, &          !< Initialize dimension of full observation vector
-         obs_op_f_pdaf, &                !< Full observation operator
-         init_dim_obs_l_pdaf             !< Initialize local dimimension of obs. vector
-    EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-         PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
-         PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-         PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
-         PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
-         PDAFomi_g2l_obs_cb, &           !< Restrict full obs. vector to local analysis domain
-         PDAFomi_prodRinvA_l_cb, &       !< Provide product R^-1 A on local analysis domain
-         PDAFomi_likelihood_l_cb         !< Compute likelihood and apply localization
+! *** Argument procedures ***
+    PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+    PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+    PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+    PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
+    PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
+    PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
+    PROCEDURE(cvt_ens_cb) :: cvt_ens_pdaf               !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_ens_cb) :: cvt_adj_ens_pdaf       !< Apply adjoint control vector transform matrix
+    PROCEDURE(cvt_cb) :: cvt_pdaf                       !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_cb) :: cvt_adj_pdaf               !< Apply adjoint control vector transform matrix
+    PROCEDURE(obs_op_lin_cb) :: obs_op_lin_pdaf         !< Linearized observation operator
+    PROCEDURE(obs_op_adj_cb) :: obs_op_adj_pdaf         !< Adjoint observation operator
+
+! *** OMI-provided procedures ***
+    PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+    PROCEDURE(init_obs_l_cb) :: PDAFomi_init_obs_l_cb       !< Initialize local observation vector
+    PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+    PROCEDURE(init_obsvar_l_cb) :: PDAFomi_init_obsvar_l_cb !< Initialize local mean observation error variance
+    PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+    PROCEDURE(g2l_obs_cb) :: PDAFomi_g2l_obs_cb             !< Restrict full obs. vector to local analysis domain
+    PROCEDURE(prodRinvA_l_cb) :: PDAFomi_prodRinvA_l_cb     !< Provide product R^-1 A on local analysis domain
 
 
 ! **************************************************
@@ -94,33 +96,33 @@ CONTAINS
          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF3_assim_offline_3dvar_all -- START'
 
     IF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==0) THEN
-       CALL PDAF_assim_offline_3dvar(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_3dvar(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
             prepoststep_pdaf, outflag)
     ELSE IF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==1) THEN
-       CALL PDAF_assim_offline_en3dvar_lestkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_en3dvar_lestkf(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-            init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+            init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
             PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, &
             init_dim_obs_l_pdaf,  PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, &
             PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, prepoststep_pdaf, outflag)
     ELSEIF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==2) THEN
-       CALL PDAF_assim_offline_en3dvar_estkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_en3dvar_estkf(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
             PDAFomi_init_obsvar_cb, prepoststep_pdaf, outflag)
     ELSE IF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==3) THEN
-       CALL PDAF_assim_offline_hyb3dvar_lestkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_hyb3dvar_lestkf(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-            init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+            init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
             PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, &
             init_dim_obs_l_pdaf,  PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, &
             PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, prepoststep_pdaf, outflag)
     ELSE IF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==4) THEN
-       CALL PDAF_assim_offline_hyb3dvar_estkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_hyb3dvar_estkf(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
             obs_op_lin_pdaf, obs_op_adj_pdaf, PDAFomi_init_obsvar_cb, &
@@ -154,6 +156,7 @@ CONTAINS
        cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, prepoststep_pdaf, outflag)
 
     USE PDAF_mod_core, ONLY: filterstr, subtype_filter
+    USE PDAF_cb_procedures
     USE PDAFomi, ONLY: PDAFomi_dealloc
     USE PDAFassimilate_3dvar, ONLY: PDAF_assim_offline_3dvar
 
@@ -162,16 +165,18 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(out) :: outflag      !< Status flag
 
-! *** External subroutines ***
-    EXTERNAL :: prepoststep_pdaf         !< User supplied pre/poststep routine
-    EXTERNAL :: init_dim_obs_pdaf, &     !< Initialize dimension of observation vector
-         obs_op_pdaf, &                  !< Observation operator
-         cvt_pdaf, &                     !< Apply control vector transform matrix to control vector
-         cvt_adj_pdaf, &                 !< Apply adjoint control vector transform matrix
-         obs_op_lin_pdaf, &              !< Linearized observation operator
-         obs_op_adj_pdaf                 !< Adjoint observation operator
-    EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-         PDAFomi_prodRinvA_cb            !< Provide product R^-1 A
+! *** Argument procedures ***
+    PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+    PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+    PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+    PROCEDURE(cvt_cb) :: cvt_pdaf                       !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_cb) :: cvt_adj_pdaf               !< Apply adjoint control vector transform matrix
+    PROCEDURE(obs_op_lin_cb) :: obs_op_lin_pdaf         !< Linearized observation operator
+    PROCEDURE(obs_op_adj_cb) :: obs_op_adj_pdaf         !< Adjoint observation operator
+
+! *** OMI-provided procedures ***
+    PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+    PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
 
 
 ! **************************************************
@@ -204,16 +209,15 @@ CONTAINS
 !! * 2025-04 - Lars Nerger - Initial code based on PDAF3_put_state code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAF3_assim_offline_en3dvar(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+  SUBROUTINE PDAF3_assim_offline_en3dvar(init_dim_obs_pdaf, obs_op_pdaf, &
        cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
        init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
        prepoststep_pdaf, outflag)
 
     USE PDAF_mod_core, ONLY: filterstr, subtype_filter
+    USE PDAF_cb_procedures
     USE PDAFomi, ONLY: PDAFomi_dealloc
-    USE PDAFlocal, &
-         ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
-         PDAFlocal_l2g_cb                !< Project local to global state vecto
+    USE PDAFlocal, ONLY: PDAFlocal_g2l_cb, PDAFlocal_l2g_cb
     USE PDAFassimilate_en3dvar_lestkf, ONLY: PDAF_assim_offline_en3dvar_lestkf
     USE PDAFassimilate_en3dvar_estkf, ONLY: PDAF_assim_offline_en3dvar_estkf
 
@@ -222,25 +226,26 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(out) :: outflag      !< Status flag
 
-! *** External subroutines ***
-    EXTERNAL :: prepoststep_pdaf         !< User supplied pre/poststep routine
-    EXTERNAL :: cvt_ens_pdaf, &          !< Apply control vector transform matrix to control vector
-         cvt_adj_ens_pdaf, &             !< Apply adjoint control vector transform matrix
-         obs_op_lin_pdaf, &              !< Linearized observation operator
-         obs_op_adj_pdaf                 !< Adjoint observation operator
-    EXTERNAL :: init_n_domains_pdaf, &   !< Provide number of local analysis domains
-         init_dim_l_pdaf, &              !< Init state dimension for local ana. domain
-         init_dim_obs_f_pdaf, &          !< Initialize dimension of full observation vector
-         obs_op_f_pdaf, &                !< Full observation operator
-         init_dim_obs_l_pdaf             !< Initialize local dimimension of obs. vector
-    EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-         PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
-         PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-         PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
-         PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
-         PDAFomi_g2l_obs_cb, &           !< Restrict full obs. vector to local analysis domain
-         PDAFomi_prodRinvA_l_cb, &       !< Provide product R^-1 A on local analysis domain
-         PDAFomi_likelihood_l_cb         !< Compute likelihood and apply localization
+! *** Argument procedures ***
+    PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+    PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+    PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+    PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
+    PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
+    PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
+    PROCEDURE(cvt_ens_cb) :: cvt_ens_pdaf               !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_ens_cb) :: cvt_adj_ens_pdaf       !< Apply adjoint control vector transform matrix
+    PROCEDURE(obs_op_lin_cb) :: obs_op_lin_pdaf         !< Linearized observation operator
+    PROCEDURE(obs_op_adj_cb) :: obs_op_adj_pdaf         !< Adjoint observation operator
+
+! *** OMI-provided procedures ***
+    PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+    PROCEDURE(init_obs_l_cb) :: PDAFomi_init_obs_l_cb       !< Initialize local observation vector
+    PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+    PROCEDURE(init_obsvar_l_cb) :: PDAFomi_init_obsvar_l_cb !< Initialize local mean observation error variance
+    PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+    PROCEDURE(g2l_obs_cb) :: PDAFomi_g2l_obs_cb             !< Restrict full obs. vector to local analysis domain
+    PROCEDURE(prodRinvA_l_cb) :: PDAFomi_prodRinvA_l_cb     !< Provide product R^-1 A on local analysis domain
 
 
 ! **************************************************
@@ -248,16 +253,16 @@ CONTAINS
 ! **************************************************
 
     IF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==1) THEN
-       CALL PDAF_assim_offline_en3dvar_lestkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_en3dvar_lestkf(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-            init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+            init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
             PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, &
             init_dim_obs_l_pdaf,  PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, &
             PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, prepoststep_pdaf, outflag)
 
     ELSEIF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==2) THEN
-       CALL PDAF_assim_offline_en3dvar_estkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_en3dvar_estkf(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
             PDAFomi_init_obsvar_cb, prepoststep_pdaf, outflag)
@@ -288,6 +293,7 @@ CONTAINS
        prepoststep_pdaf, outflag)
 
     USE PDAF_mod_core, ONLY: filterstr, subtype_filter
+    USE PDAF_cb_procedures
     USE PDAFomi, ONLY: PDAFomi_dealloc
     USE PDAFassimilate_en3dvar_estkf, ONLY: PDAF_assim_offline_en3dvar_estkf
 
@@ -296,20 +302,19 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(out) :: outflag      !< Status flag
 
-! *** External subroutines ***
-    EXTERNAL :: prepoststep_pdaf         !< User supplied pre/poststep routine
-    EXTERNAL :: init_dim_obs_pdaf, &     !< Initialize dimension of observation vector
-         obs_op_pdaf, &                  !< Observation operator
-         cvt_ens_pdaf, &                 !< Apply control vector transform matrix to control vector
-         cvt_adj_ens_pdaf, &             !< Apply adjoint control vector transform matrix
-         obs_op_lin_pdaf, &              !< Linearized observation operator
-         obs_op_adj_pdaf                 !< Adjoint observation operator
-    EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-         PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-         PDAFomi_init_obscovar_cb, &     !< Initialize mean observation error variance
-         PDAFomi_add_obs_error_cb, &     !< Add observation error covariance matrix
-         PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
-         PDAFomi_likelihood_cb           !< Compute likelihood
+! *** Argument procedures ***
+    PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+    PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+    PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+    PROCEDURE(cvt_ens_cb) :: cvt_ens_pdaf               !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_ens_cb) :: cvt_adj_ens_pdaf       !< Apply adjoint control vector transform matrix
+    PROCEDURE(obs_op_lin_cb) :: obs_op_lin_pdaf         !< Linearized observation operator
+    PROCEDURE(obs_op_adj_cb) :: obs_op_adj_pdaf         !< Adjoint observation operator
+
+! *** OMI-provided procedures ***
+    PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb     !< Initialize full observation vector
+    PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb !< Initialize mean observation error variance
+    PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb     !< Provide product R^-1 A
 
 
 ! **************************************************
@@ -341,12 +346,13 @@ CONTAINS
 !! * 2025-04 - Lars Nerger - Initial code based on PDAF3_put_state code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAF3_assim_offline_en3dvar_lestkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+  SUBROUTINE PDAF3_assim_offline_en3dvar_lestkf(init_dim_obs_pdaf, obs_op_pdaf, &
        cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
        init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
        prepoststep_pdaf, outflag)
 
     USE PDAF_mod_core, ONLY: filterstr, subtype_filter
+    USE PDAF_cb_procedures
     USE PDAFomi, ONLY: PDAFomi_dealloc
     USE PDAFlocal, &
          ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -358,25 +364,26 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(out) :: outflag      !< Status flag
 
-! *** External subroutines ***
-    EXTERNAL :: prepoststep_pdaf         !< User supplied pre/poststep routine
-    EXTERNAL :: cvt_ens_pdaf, &          !< Apply control vector transform matrix to control vector
-         cvt_adj_ens_pdaf, &             !< Apply adjoint control vector transform matrix
-         obs_op_lin_pdaf, &              !< Linearized observation operator
-         obs_op_adj_pdaf                 !< Adjoint observation operator
-    EXTERNAL :: init_n_domains_pdaf, &   !< Provide number of local analysis domains
-         init_dim_l_pdaf, &              !< Init state dimension for local ana. domain
-         init_dim_obs_f_pdaf, &          !< Initialize dimension of full observation vector
-         obs_op_f_pdaf, &                !< Full observation operator
-         init_dim_obs_l_pdaf             !< Initialize local dimimension of obs. vector
-    EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-         PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
-         PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-         PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
-         PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
-         PDAFomi_g2l_obs_cb, &           !< Restrict full obs. vector to local analysis domain
-         PDAFomi_prodRinvA_l_cb, &       !< Provide product R^-1 A on local analysis domain
-         PDAFomi_likelihood_l_cb         !< Compute likelihood and apply localization
+! *** Argument procedures ***
+    PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+    PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+    PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+    PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
+    PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
+    PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
+    PROCEDURE(cvt_ens_cb) :: cvt_ens_pdaf               !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_ens_cb) :: cvt_adj_ens_pdaf       !< Apply adjoint control vector transform matrix
+    PROCEDURE(obs_op_lin_cb) :: obs_op_lin_pdaf         !< Linearized observation operator
+    PROCEDURE(obs_op_adj_cb) :: obs_op_adj_pdaf         !< Adjoint observation operator
+
+! *** OMI-provided procedures ***
+    PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+    PROCEDURE(init_obs_l_cb) :: PDAFomi_init_obs_l_cb       !< Initialize local observation vector
+    PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+    PROCEDURE(init_obsvar_l_cb) :: PDAFomi_init_obsvar_l_cb !< Initialize local mean observation error variance
+    PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+    PROCEDURE(g2l_obs_cb) :: PDAFomi_g2l_obs_cb             !< Restrict full obs. vector to local analysis domain
+    PROCEDURE(prodRinvA_l_cb) :: PDAFomi_prodRinvA_l_cb     !< Provide product R^-1 A on local analysis domain
 
 
 ! **************************************************
@@ -384,10 +391,10 @@ CONTAINS
 ! **************************************************
 
     IF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==1) THEN
-       CALL PDAF_assim_offline_en3dvar_lestkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_en3dvar_lestkf(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-            init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+            init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
             PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, &
             init_dim_obs_l_pdaf,  PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, &
             PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, prepoststep_pdaf, outflag)
@@ -415,39 +422,41 @@ CONTAINS
 !! * 2025-04 - Lars Nerger - Initial code based on PDAF3_put_state code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAF3_assim_offline_hyb3dvar(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+  SUBROUTINE PDAF3_assim_offline_hyb3dvar(init_dim_obs_pdaf, obs_op_pdaf, &
        cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
        init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
        prepoststep_pdaf, outflag)
 
     USE PDAF_mod_core, ONLY: filterstr
+    USE PDAF_cb_procedures
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     INTEGER, INTENT(out) :: outflag      !< Status flag
 
-! *** External subroutines ***
-    EXTERNAL :: prepoststep_pdaf         !< User supplied pre/poststep routine
-    EXTERNAL :: cvt_ens_pdaf, &          !< Apply control vector transform matrix to control vector
-         cvt_adj_ens_pdaf, &             !< Apply adjoint control vector transform matrix
-         cvt_pdaf, &                     !< Apply control vector transform matrix to control vector
-         cvt_adj_pdaf, &                 !< Apply adjoint control vector transform matrix
-         obs_op_lin_pdaf, &              !< Linearized observation operator
-         obs_op_adj_pdaf                 !< Adjoint observation operator
-    EXTERNAL :: init_n_domains_pdaf, &   !< Provide number of local analysis domains
-         init_dim_l_pdaf, &              !< Init state dimension for local ana. domain
-         init_dim_obs_f_pdaf, &          !< Initialize dimension of full observation vector
-         obs_op_f_pdaf, &                !< Full observation operator
-         init_dim_obs_l_pdaf             !< Initialize local dimimension of obs. vector
-    EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-         PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
-         PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-         PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
-         PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
-         PDAFomi_g2l_obs_cb, &           !< Restrict full obs. vector to local analysis domain
-         PDAFomi_prodRinvA_l_cb, &       !< Provide product R^-1 A on local analysis domain
-         PDAFomi_likelihood_l_cb         !< Compute likelihood and apply localization
+! *** Argument procedures ***
+    PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+    PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+    PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+    PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
+    PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
+    PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
+    PROCEDURE(cvt_ens_cb) :: cvt_ens_pdaf               !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_ens_cb) :: cvt_adj_ens_pdaf       !< Apply adjoint control vector transform matrix
+    PROCEDURE(cvt_cb) :: cvt_pdaf                       !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_cb) :: cvt_adj_pdaf               !< Apply adjoint control vector transform matrix
+    PROCEDURE(obs_op_lin_cb) :: obs_op_lin_pdaf         !< Linearized observation operator
+    PROCEDURE(obs_op_adj_cb) :: obs_op_adj_pdaf         !< Adjoint observation operator
+
+! *** OMI-provided procedures ***
+    PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+    PROCEDURE(init_obs_l_cb) :: PDAFomi_init_obs_l_cb       !< Initialize local observation vector
+    PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+    PROCEDURE(init_obsvar_l_cb) :: PDAFomi_init_obsvar_l_cb !< Initialize local mean observation error variance
+    PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+    PROCEDURE(g2l_obs_cb) :: PDAFomi_g2l_obs_cb             !< Restrict full obs. vector to local analysis domain
+    PROCEDURE(prodRinvA_l_cb) :: PDAFomi_prodRinvA_l_cb     !< Provide product R^-1 A on local analysis domain
 
 
 ! **************************************************
@@ -455,7 +464,7 @@ CONTAINS
 ! **************************************************
 
     IF (TRIM(filterstr) == '3DVAR') THEN
-       CALL PDAF3_assim_offline_3dvar_all(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF3_assim_offline_3dvar_all(init_dim_obs_pdaf, obs_op_pdaf, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
             init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
             prepoststep_pdaf, outflag)
@@ -478,6 +487,7 @@ CONTAINS
        obs_op_lin_pdaf, obs_op_adj_pdaf, prepoststep_pdaf, outflag)
 
     USE PDAF_mod_core, ONLY: filterstr, subtype_filter
+    USE PDAF_cb_procedures
     USE PDAFomi, ONLY: PDAFomi_dealloc
     USE PDAFassimilate_hyb3dvar_estkf, ONLY: PDAF_assim_offline_hyb3dvar_estkf
 
@@ -486,22 +496,22 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(out) :: outflag      !< Status flag
 
-! *** External subroutines ***
-    EXTERNAL :: prepoststep_pdaf         !< User supplied pre/poststep routine
-    EXTERNAL :: init_dim_obs_pdaf, &     !< Initialize dimension of observation vector
-         obs_op_pdaf, &                  !< Observation operator
-         cvt_pdaf, &                     !< Apply control vector transform matrix to control vector
-         cvt_adj_pdaf, &                 !< Apply adjoint control vector transform matrix
-         cvt_ens_pdaf, &                 !< Apply ensemble control vector transform matrix to control vector
-         cvt_adj_ens_pdaf, &             !< Apply adjoint ensemble control vector transform matrix
-         obs_op_lin_pdaf, &              !< Linearized observation operator
-         obs_op_adj_pdaf                 !< Adjoint observation operator
-    EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-         PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-         PDAFomi_init_obscovar_cb, &     !< Initialize mean observation error variance
-         PDAFomi_add_obs_error_cb, &     !< Add observation error covariance matrix
-         PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
-         PDAFomi_likelihood_cb           !< Compute likelihood
+! *** Argument procedures ***
+    PROCEDURE(prepost_cb) :: prepoststep_pdaf       !< User supplied pre/poststep routine
+    PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf !< Initialize dimension of full observation vector
+    PROCEDURE(obs_op_cb) :: obs_op_pdaf             !< Full observation operator
+    PROCEDURE(cvt_ens_cb) :: cvt_ens_pdaf           !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_ens_cb) :: cvt_adj_ens_pdaf   !< Apply adjoint control vector transform matrix
+    PROCEDURE(cvt_cb) :: cvt_pdaf                   !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_cb) :: cvt_adj_pdaf           !< Apply adjoint control vector transform matrix
+    PROCEDURE(obs_op_lin_cb) :: obs_op_lin_pdaf     !< Linearized observation operator
+    PROCEDURE(obs_op_adj_cb) :: obs_op_adj_pdaf     !< Adjoint observation operator
+
+! *** OMI-provided procedures ***
+    PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+    PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+    PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+    PROCEDURE(prodRinvA_l_cb) :: PDAFomi_prodRinvA_l_cb     !< Provide product R^-1 A on local analysis domain
 
 
 ! **************************************************
@@ -534,12 +544,13 @@ CONTAINS
 !! * 2025-04 - Lars Nerger - Initial code based on PDAF3_put_state code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAF3_assim_offline_hyb3dvar_lestkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+  SUBROUTINE PDAF3_assim_offline_hyb3dvar_lestkf(init_dim_obs_pdaf, obs_op_pdaf, &
        cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
        init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
        prepoststep_pdaf, outflag)
 
     USE PDAF_mod_core, ONLY: filterstr, subtype_filter
+    USE PDAF_cb_procedures
     USE PDAFomi, ONLY: PDAFomi_dealloc
     USE PDAFlocal, &
          ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
@@ -551,27 +562,28 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(out) :: outflag      !< Status flag
 
-! *** External subroutines ***
-    EXTERNAL :: prepoststep_pdaf         !< User supplied pre/poststep routine
-    EXTERNAL :: cvt_ens_pdaf, &          !< Apply control vector transform matrix to control vector
-         cvt_adj_ens_pdaf, &             !< Apply adjoint control vector transform matrix
-         cvt_pdaf, &                     !< Apply control vector transform matrix to control vector
-         cvt_adj_pdaf, &                 !< Apply adjoint control vector transform matrix
-         obs_op_lin_pdaf, &              !< Linearized observation operator
-         obs_op_adj_pdaf                 !< Adjoint observation operator
-    EXTERNAL :: init_n_domains_pdaf, &   !< Provide number of local analysis domains
-         init_dim_l_pdaf, &              !< Init state dimension for local ana. domain
-         init_dim_obs_f_pdaf, &          !< Initialize dimension of full observation vector
-         obs_op_f_pdaf, &                !< Full observation operator
-         init_dim_obs_l_pdaf             !< Initialize local dimimension of obs. vector
-    EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
-         PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
-         PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-         PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
-         PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
-         PDAFomi_g2l_obs_cb, &           !< Restrict full obs. vector to local analysis domain
-         PDAFomi_prodRinvA_l_cb, &       !< Provide product R^-1 A on local analysis domain
-         PDAFomi_likelihood_l_cb         !< Compute likelihood and apply localization
+! *** Argument procedures ***
+    PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
+    PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
+    PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+    PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
+    PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
+    PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
+    PROCEDURE(cvt_ens_cb) :: cvt_ens_pdaf               !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_ens_cb) :: cvt_adj_ens_pdaf       !< Apply adjoint control vector transform matrix
+    PROCEDURE(cvt_cb) :: cvt_pdaf                       !< Apply control vector transform matrix to control vector
+    PROCEDURE(cvt_adj_cb) :: cvt_adj_pdaf               !< Apply adjoint control vector transform matrix
+    PROCEDURE(obs_op_lin_cb) :: obs_op_lin_pdaf         !< Linearized observation operator
+    PROCEDURE(obs_op_adj_cb) :: obs_op_adj_pdaf         !< Adjoint observation operator
+
+! *** OMI-provided procedures ***
+    PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
+    PROCEDURE(init_obs_l_cb) :: PDAFomi_init_obs_l_cb       !< Initialize local observation vector
+    PROCEDURE(init_obsvar_cb) :: PDAFomi_init_obsvar_cb     !< Initialize mean observation error variance
+    PROCEDURE(init_obsvar_l_cb) :: PDAFomi_init_obsvar_l_cb !< Initialize local mean observation error variance
+    PROCEDURE(prodRinvA_cb) :: PDAFomi_prodRinvA_cb         !< Provide product R^-1 A
+    PROCEDURE(g2l_obs_cb) :: PDAFomi_g2l_obs_cb             !< Restrict full obs. vector to local analysis domain
+    PROCEDURE(prodRinvA_l_cb) :: PDAFomi_prodRinvA_l_cb     !< Provide product R^-1 A on local analysis domain
 
 
 ! **************************************************
@@ -579,10 +591,10 @@ CONTAINS
 ! **************************************************
 
     IF (TRIM(filterstr) == '3DVAR' .AND. subtype_filter==3) THEN
-       CALL PDAF_assim_offline_hyb3dvar_lestkf(init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+       CALL PDAF_assim_offline_hyb3dvar_lestkf(init_dim_obs_pdaf, obs_op_pdaf, &
             PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
             cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-            init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+            init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
             PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, &
             init_dim_obs_l_pdaf,  PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, &
             PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, prepoststep_pdaf, outflag)
