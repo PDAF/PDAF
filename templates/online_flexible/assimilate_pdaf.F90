@@ -29,11 +29,9 @@ SUBROUTINE assimilate_pdaf()
 
 
 ! *** External subroutines ***
-! Subroutine names are passed over to PDAF in the calls to 
-! PDAF_get_state and PDAF_assimilate_X. This allows the user 
-! to specify the actual name of a routine.  
-! The PDAF-internal name of a subroutine might be different
-! from the external name!
+! Subroutine names are passed over to PDAF in the calls to PDAF3_assimilate.
+! This allows the user to specify the actual name of a routine.  
+! The PDAF-internal name of a subroutine can be different from the external name!
 
   ! Interface between model and PDAF, and prepoststep
   EXTERNAL :: distribute_state_pdaf, &  ! Distribute a state vector to model fields

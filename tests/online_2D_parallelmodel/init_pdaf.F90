@@ -17,7 +17,7 @@
 SUBROUTINE init_pdaf()
 
   USE PDAF, &                     ! PDAF interfaces and parameters
-       ONLY: PDAF_init, PDAF_get_state, PDAF_iau_init, PDAF_set_iparam, &
+       ONLY: PDAF_init, PDAF_init_forecast, PDAF_iau_init, PDAF_set_iparam, &
        PDAF_set_rparam, PDAF_DA_ENKF, PDAF_DA_PF, &
        PDAFomi_set_domain_limits, PDAFomi_set_obs_diag, PDAFomi_set_domain_limits
   USE mod_parallel_model, &       ! Parallelization variables for model
@@ -212,7 +212,7 @@ SUBROUTINE init_pdaf()
 ! *** Prepare ensemble forecasts ***
 ! **********************************
 
-  CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+  CALL PDAF_init_forecast(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
 

@@ -82,14 +82,11 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   IF (mype_filter == 0) THEN
      IF (firsttime) THEN
         WRITE (*, '(8x, a)') 'Analyze initial state ensemble'
-        anastr = 'ini'
      ELSE
         IF (step<0) THEN
            WRITE (*, '(8x, a)') 'Analyze and write forecasted state ensemble'
-           anastr = 'for'
         ELSE
            WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
-           anastr = 'ana'
         END IF
      END IF
   END IF

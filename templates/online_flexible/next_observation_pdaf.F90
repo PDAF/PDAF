@@ -2,18 +2,18 @@
 !!
 !! User-supplied call-back routine for PDAF.
 !!
-!! Used in all filters
+!! The subroutine is called before at the initialization
+!! of the forecastss by PDAF_init_forecast and then for
+!! each subsequent forecasts phase by PDAF3_assimilate.
+!! It has to initialize the number of time steps until
+!! the next available observation (nsteps) and the
+!! current model time (time). In addition the exit
+!! flag (exit) has to be initialized. This indicates for
+!! the case of the flexible parallelization variant, if
+!! the data assimilation process is completed such that
+!! the ensemble loop in the model routine can be exited.
 !!
-!! The subroutine is called before each forecast phase
-!! by PDAF_get_state. It has to initialize the number 
-!! of time steps until the next available observation 
-!! (nsteps) and the current model time (time). In 
-!! addition the exit flag (exit) has to be initialized.
-!! It indicates if the data assimilation process is 
-!! completed such that the ensemble loop in the model 
-!! routine can be exited.
-!!
-!! The routine is called from PDAF_get_state by all processes
+!! The routine is called by all processes
 !!
 !! __Revision history:__
 !! * 2004-10 - Lars Nerger - Initial code

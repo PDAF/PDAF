@@ -2,11 +2,9 @@
 !!
 !! User-supplied call-back routine for PDAF.
 !!
-!! Used in all filters.
-!!
-!! During the forecast phase of the filter this
-!! subroutine is called from PDAF_get_state
-!! supplying a model state which has to be evolved. 
+!! During the forecast phase of the filter this subroutine
+!! is called from PDAF_init_forecast or PDAF3_assimilate.
+!! supplying a model state, which has to be evolved. 
 !! The routine has to initialize the fields of the 
 !! model (typically available through a module) from 
 !! the state vector of PDAF. With parallelization, 

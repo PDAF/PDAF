@@ -184,7 +184,7 @@ SUBROUTINE init_pdaf()
 ! *** Prepare ensemble forecasts ***
 ! **********************************
 
-  CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+  CALL PDAF_init_forecast(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
 

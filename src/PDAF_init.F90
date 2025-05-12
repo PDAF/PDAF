@@ -291,4 +291,51 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 
 END SUBROUTINE PDAF_init
 
+
+!-------------------------------------------------------------------------------
+!> Interface to control ensemble integration
+!!
+!! Interface routine called from the model before the 
+!! forecast of each ensemble state to transfer data
+!! from PDAF to the model.  For the parallelization 
+!! this involves transfer from filter PEs to model PEs.
+!!
+!! At the beginning of a forecast phase sub-ensembles
+!! are distributed to the model tasks. During the 
+!! forecast phase each state vector of a sub-ensemble
+!! is transferred to the model fields by U\_dist\_state.
+!!
+!! !  This is a core routine of PDAF and
+!! should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-05 - Lars Nerger - Initial code as alias of PDAF_get_state
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_init_forecast(steps, time, doexit, U_next_observation, U_distribute_state, &
+     U_prepoststep, outflag)
+
+  USE PDAF_cb_procedures
+  USE PDAFget_state, ONLY: PDAF_get_state
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: steps   !< Flag and number of time steps
+  REAL, INTENT(out)      :: time    !< current model time
+  INTEGER, INTENT(inout) :: doexit  !< Whether to exit from forecasts
+  INTEGER, INTENT(inout) :: outflag !< Status flag
+
+! *** Argument procedures ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  PROCEDURE(distribute_cb) :: U_distribute_state   !< Routine to distribute a state vector
+  PROCEDURE(prepost_cb) :: U_prepoststep           !< User supplied pre/poststep routine
+  PROCEDURE(next_obs_cb) :: U_next_observation     !< Provide information on next forecast
+
+
+  CALL PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_state, &
+     U_prepoststep, outflag)
+
+END SUBROUTINE PDAF_init_forecast
+
 END MODULE PDAFinit
