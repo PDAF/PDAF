@@ -134,6 +134,7 @@ PDAF     --- Initialize unit weights
 PDAF     --- Support radius   5.0000E+00
 PDAF     --- use blocking with size   200
 PDAF     --- use blocking with size   200
+PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              534
 PDAF        Local domains without observations:           114
@@ -162,14 +163,6 @@ PDAF           ensemble array:      0.040 MiB (persistent)
 PDAF            analysis step:      0.104 MiB (temporary)
 PDAF                 PDAF-OMI:      0.002 MiB (temporary)
 
-PDAF                       PDAF Memory overview
-PDAF          ---------------------------------------------
-PDAF                 Globally allocated memory  (MiB)
-PDAF              state and A:        0.005 MiB (persistent)
-PDAF           ensemble array:        0.040 MiB (persistent)
-PDAF            analysis step:        0.104 MiB (temporary)
-PDAF                 PDAF-OMI:        0.002 MiB (temporary)
-
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
@@ -183,7 +176,7 @@ PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.001 s
+PDAF              init_dim_obs_l_pdafomi:            0.000 s
 PDAF          prepoststep_pdaf:                    0.004 s
 
 
@@ -200,8 +193,8 @@ PDAF            global preparations (7):             0.000 s
 PDAF              generate random matrix (33):       0.000 s
 PDAF            local analysis loop (8):             0.002 s
 PDAF              global to local (10):                0.000 s
-PDAF              localize observations (11):          0.001 s
-PDAF                init_dim_obs_l_pdaf (38):            0.001 s
+PDAF              localize observations (11):          0.000 s
+PDAF                init_dim_obs_l_pdaf (38):            0.000 s
 PDAF                g2l_obs_pdaf (46):                   0.000 s
 PDAF                init_obs_l (47):                     0.000 s
 PDAF              local analysis (12):                 0.001 s
@@ -213,7 +206,7 @@ PDAF                compute transform (17):              0.001 s
 PDAF                  SVD of A (22):                       0.001 s
 PDAF                  complete transform matrix (23):      0.000 s
 PDAF                transform ensemble (18):             0.000 s
-PDAF              local to global (14):                0.000 s
+PDAF              local to global (14):                0.001 s
 PDAF            add noise to ensemble (19):          0.000 s
 PDAF          Prepoststep (5):                     0.004 s
 

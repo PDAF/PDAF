@@ -136,7 +136,7 @@ PDAF     Compute adaptive hybrid weight
 PDAF     --- gamma_lin: (1 - N_eff/N)*scale, scale=   0.950
 PDAF     Compute LETKF update
 PDAF     --- Use OpenMP parallelization with     4 threads
-PDAFomi     --- hybrid gamma=     0.19291
+PDAFomi     --- hybrid gamma=     0.03959
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
@@ -184,19 +184,11 @@ PDAF           ensemble array:      0.040 MiB (persistent)
 PDAF            analysis step:      0.116 MiB (temporary)
 PDAF                 PDAF-OMI:      0.002 MiB (temporary)
 
-PDAF                       PDAF Memory overview
-PDAF          ---------------------------------------------
-PDAF                 Globally allocated memory  (MiB)
-PDAF              state and A:        0.005 MiB (persistent)
-PDAF           ensemble array:        0.040 MiB (persistent)
-PDAF            analysis step:        0.116 MiB (temporary)
-PDAF                 PDAF-OMI:        0.002 MiB (temporary)
-
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ------------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LKNETF analysis:                     0.004 s
 PDAF            PDAF-internal operations:            0.002 s
 PDAF            OMI-internal routines:               0.000 s
@@ -211,7 +203,7 @@ PDAF          prepoststep_pdaf:                    0.004 s
 
 PDAF                       PDAF Timing information
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF (1):                 0.003 s
+PDAF          Initialize PDAF (1):                 0.002 s
 PDAF          LKNETF analysis (3):                 0.004 s
 PDAF            prepare observations (6):            0.000 s
 PDAF            compute mean state (9):              0.000 s
@@ -219,8 +211,8 @@ PDAF            global preparations (7):             0.001 s
 PDAF            local analysis loop (8):             0.003 s
 PDAF              global to local (10):                0.000 s
 PDAF              localize observations (11):          0.000 s
-PDAF              local analysis (12):                 0.001 s
-PDAF              local to global (14):                0.000 s
+PDAF              local analysis (12):                 0.003 s
+PDAF              local to global (14):                0.001 s
 PDAF            Prepoststep (5):                   0.004 s
 
  PDAF offline mode: END

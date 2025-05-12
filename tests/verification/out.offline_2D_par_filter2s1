@@ -143,20 +143,12 @@ PDAF           ensemble array:      0.013 MiB (persistent)
 PDAF            analysis step:      0.099 MiB (temporary)
 PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
-PDAF                       PDAF Memory overview
-PDAF          ---------------------------------------------
-PDAF                 Globally allocated memory  (MiB)
-PDAF              state and A:        0.005 MiB (persistent)
-PDAF           ensemble array:        0.040 MiB (persistent)
-PDAF            analysis step:        0.294 MiB (temporary)
-PDAF                 PDAF-OMI:        0.002 MiB (temporary)
-
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
+PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          EnKF analysis:                       0.027 s
+PDAF          EnKF analysis:                       0.026 s
 PDAF            PDAF-internal operations:            0.019 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
@@ -167,12 +159,12 @@ PDAF          prepoststep_pdaf:                    0.009 s
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.002 s
-PDAF                       EnKF analysis (3):      0.027 s
+PDAF                     Initialize PDAF (1):      0.003 s
+PDAF                       EnKF analysis (3):      0.026 s
 PDAF                        get mean state (9):      0.000 s
 PDAF                  prepare observations (6):      0.007 s
 PDAF                 compute HPH+R and HP (10):      0.009 s
-PDAF                                 HXpert (30):      0.007 s
+PDAF                                 HXpert (30):      0.008 s
 PDAF                          complete HP_p (31):      0.000 s
 PDAF                                    HPH (32):      0.000 s
 PDAF                           add matrix R (46):      0.000 s

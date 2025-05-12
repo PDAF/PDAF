@@ -158,22 +158,13 @@ PDAF            analysis step:      0.010 MiB (temporary)
 PDAF                resampling:     0.055 MiB (temporary)
 PDAF                 PDAF-OMI:      0.002 MiB (temporary)
 
-PDAF                       PDAF Memory overview
-PDAF          ---------------------------------------------
-PDAF                 Globally allocated memory  (MiB)
-PDAF              state and U:        0.005 MiB (persistent)
-PDAF           ensemble array:        0.040 MiB (persistent)
-PDAF            analysis step:        0.010 MiB (temporary)
-PDAF                resampling:       0.055 MiB (temporary)
-PDAF                 PDAF-OMI:        0.002 MiB (temporary)
-
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LSEIK analysis:                      0.002 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF            PDAF-internal operations:            0.002 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
@@ -208,9 +199,9 @@ PDAF                  prodRinvA_pdaf (48):                 0.000 s
 PDAF                  complete Ainv (21):                  0.000 s
 PDAF                get state weight vector (22):        0.001 s
 PDAF                update state (23):                   0.000 s
-PDAF              ensemble transformation (13):        0.000 s
-PDAF                prepare ens. weights (24):           0.000 s
-PDAF                  SQRT(Ainv) (32):                     0.000 s
+PDAF              ensemble transformation (13):        0.001 s
+PDAF                prepare ens. weights (24):           0.001 s
+PDAF                  SQRT(Ainv) (32):                     0.001 s
 PDAF                  compute C^T OmegaT (34):             0.000 s
 PDAF                update ensemble (18):                  0.000 s
 PDAF              local to global (14):                0.000 s

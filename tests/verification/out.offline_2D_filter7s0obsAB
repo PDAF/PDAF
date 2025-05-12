@@ -169,14 +169,6 @@ PDAF           ensemble array:      0.040 MiB (persistent)
 PDAF            analysis step:      0.063 MiB (temporary)
 PDAF                 PDAF-OMI:      0.003 MiB (temporary)
 
-PDAF                       PDAF Memory overview
-PDAF          ---------------------------------------------
-PDAF                 Globally allocated memory  (MiB)
-PDAF              state and A:        0.005 MiB (persistent)
-PDAF           ensemble array:        0.040 MiB (persistent)
-PDAF            analysis step:        0.063 MiB (temporary)
-PDAF                 PDAF-OMI:        0.003 MiB (temporary)
-
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
@@ -217,8 +209,8 @@ PDAF                  init innovation (20):                0.000 s
 PDAF                  prodRinvA_pdaf (48):                 0.000 s
 PDAF                  complete Ainv (21):                  0.000 s
 PDAF                compute ensemble weights (17):       0.002 s
-PDAF                  get state weight vector (22):        0.001 s
-PDAF                  complete transform matrix (23):      0.001 s
+PDAF                  get state weight vector (22):        0.002 s
+PDAF                  complete transform matrix (23):      0.000 s
 PDAF                transform ensemble (18):             0.000 s
 PDAF              local to global (14):                0.000 s
 PDAF          Prepoststep (5):                     0.003 s
