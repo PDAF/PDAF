@@ -73,7 +73,7 @@ PDAF: Call ensemble initialization
          Initialize B^1/2
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 
 PDAF    3DVAR configuration
 PDAF          filter sub-type= 0
@@ -116,7 +116,7 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
-PDAF     --- duration of observation preparation:     0.001 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -146,10 +146,10 @@ F     = final function value
 
 CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
 
- Total User time 2.490E-04 seconds.
+ Total User time 2.570E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
-PDAF     --- update duration:     0.000 s
+PDAF     --- update duration:     0.001 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
@@ -168,14 +168,14 @@ PDAF     Call pre-post routine after forecast; step       4
         Analyze and write forecasted state for 3D-Var
             RMS error according to modes Vmat_p:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.000 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
         --- number of full observations    28
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- duration of observation preparation:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -205,7 +205,7 @@ F     = final function value
 
 CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
 
- Total User time 5.499E-05 seconds.
+ Total User time 6.200E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
 PDAF     --- update duration:     0.000 s
@@ -227,14 +227,14 @@ PDAF     Call pre-post routine after forecast; step       6
         Analyze and write forecasted state for 3D-Var
             RMS error according to modes Vmat_p:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.000 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
         --- number of full observations    28
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- duration of observation preparation:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -264,7 +264,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 3.800E-05 seconds.
+ Total User time 3.900E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -286,14 +286,14 @@ PDAF     Call pre-post routine after forecast; step       8
         Analyze and write forecasted state for 3D-Var
             RMS error according to modes Vmat_p:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.000 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type A
         --- number of full observations    28
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- duration of observation preparation:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -323,7 +323,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 3.900E-05 seconds.
+ Total User time 3.801E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -382,7 +382,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 3.700E-05 seconds.
+ Total User time 3.600E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -441,7 +441,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 3.800E-05 seconds.
+ Total User time 3.700E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -500,7 +500,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 3.200E-05 seconds.
+ Total User time 3.100E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -618,7 +618,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 3.800E-05 seconds.
+ Total User time 3.700E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -642,21 +642,21 @@ PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          State forecast:                      0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          3DVAR analysis:                      0.000 s
+PDAF          3DVAR analysis:                      0.001 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
-PDAF            Solver:                              0.000 s
+PDAF            Solver:                              0.001 s
 PDAF            cvt_pdaf:                            0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.003 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF          Prepoststep (5):                     0.018 s
+PDAF          Prepoststep (5):                     0.015 s

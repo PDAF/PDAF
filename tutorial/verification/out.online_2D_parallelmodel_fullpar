@@ -8,24 +8,24 @@
   ----------------------------------------------------------
      7              3      1      2      3        M
     11              5      1      2      5        M
-     6              3      0      1      3        M
-    10              5      0      1      5        M
-     5              2      1      2      2        M
      9              4      1      2      4        M
+     5              2      1      2      2        M
+    10              5      0      1      5        M
     15              7      1      2      7        M
-     8              4      0      1      4        M
+     6              3      0      1      3        M
      4              2      0      1      2        M
-    14              7      0      1      7        M
+     8              4      0      1      4        M
     13              6      1      2      6        M
+    14              7      0      1      7        M
     12              6      0      1      6        M
     19              9      1      2      9        M
-    18              9      0      1      9        M
-     3              1      1      2      1        M
     17              8      1      2      8        M
+     3              1      1      2      1        M
+    18              9      0      1      9        M
+     1       1                    2      0        F
     16              8      0      1      8        M
      2              1      0      1      1        M
      0       0                    1      0        F
-     1       1                    2      0        F
 
 
 
@@ -48,6 +48,12 @@
                      Filter: LESTKF
       -- Standard mode
               ensemble size:    9
+ MODEL-side: INITIALIZE PARALLELIZED 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+
+  -- Domain decomposition over  2 PEs
+  -- local domain sizes (nx_p x ny):  18 x 18
           forgetting factor: 1.00
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -77,12 +83,6 @@ PDAF    +++ Domain-localized implementation of the ESTKF by +++
 PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335  +++
 PDAF    +++           doi:10.1175/MWR-D-11-00102.1          +++
 PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- MODEL-side: INITIALIZE PARALLELIZED 2D TUTORIAL MODEL
-          Grid size:  36 x   18
-          Time steps  18
-
-  -- Domain decomposition over  2 PEs
-  -- local domain sizes (nx_p x ny):  18 x 18
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
@@ -548,17 +548,17 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.007 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          Ensemble forecast:                   0.035 s
-PDAF            MPI communication in PDAF:           0.035 s
+PDAF          Ensemble forecast:                   0.036 s
+PDAF            MPI communication in PDAF:           0.036 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.109 s
-PDAF            PDAF-internal operations:            0.097 s
+PDAF          LESTKF analysis:                     0.110 s
+PDAF            PDAF-internal operations:            0.098 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.028 s
-PDAF              obs_op_pdafomi:                    0.074 s
+PDAF              init_dim_obs_pdafomi:              0.033 s
+PDAF              obs_op_pdafomi:                    0.068 s
 PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.094 s
+PDAF          prepoststep_pdaf:                    0.099 s

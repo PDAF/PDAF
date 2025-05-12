@@ -75,7 +75,7 @@ PDAF: Call ensemble initialization
          Initialize B^1/2 for 3D-Var
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.003 s
+PDAF     --- duration of PDAF initialization:     0.002 s
 
   PDAF offline mode: START ASSIMILATION
 
@@ -192,8 +192,8 @@ PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
 PDAF          Hyb3DVAR analysis:                   0.002 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
@@ -208,7 +208,7 @@ PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.000 s
+PDAF              init_dim_obs_l_pdafomi:            0.001 s
 PDAF          Prepoststep (5):                     0.005 s
 
  PDAF offline mode: END

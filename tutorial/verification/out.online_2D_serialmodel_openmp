@@ -7,12 +7,12 @@
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      6              7      0      1      6       F
-     3              4      0      1      3       F
-     5              6      0      1      5       F
      4              5      0      1      4       F
-     2              3      0      1      2       F
      1              2      0      1      1       F
      7              8      0      1      7       F
+     2              3      0      1      2       F
+     5              6      0      1      5       F
+     3              4      0      1      3       F
      8              9      0      1      8       F
      0       0      1      0      1      0       T
  INITIALIZE 2D TUTORIAL MODEL
@@ -32,18 +32,21 @@
           Time steps  18
  INITIALIZE 2D TUTORIAL MODEL
           Grid size:  36 x   18
- INITIALIZE 2D TUTORIAL MODEL
-          Grid size:  36 x   18
-          Time steps  18
           Time steps  18
 
 
 
                  +++++ PDAF tutorial - online mode +++++
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
 
                 Tutorial: 2D model without parallelization
 
 
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
  INITIALIZE 2D TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
@@ -84,9 +87,6 @@ PDAF    +++ Domain-localized implementation of the ESTKF by +++
 PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335  +++
 PDAF    +++           doi:10.1175/MWR-D-11-00102.1          +++
 PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- INITIALIZE 2D TUTORIAL MODEL
-          Grid size:  36 x   18
-          Time steps  18
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
@@ -566,19 +566,19 @@ PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.036 s
+PDAF          Initialize PDAF:                     0.010 s
 PDAF            init_ens_pdaf:                       0.005 s
-PDAF          Ensemble forecast:                   0.086 s
-PDAF            MPI communication in PDAF:           0.086 s
+PDAF          Ensemble forecast:                   0.049 s
+PDAF            MPI communication in PDAF:           0.049 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.022 s
-PDAF            PDAF-internal operations:            0.139 s
-PDAF            OMI-internal routines:               0.001 s
+PDAF          LESTKF analysis:                     0.014 s
+PDAF            PDAF-internal operations:            0.129 s
+PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_l_pdaf:                     0.001 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.006 s
+PDAF              init_dim_obs_pdafomi:              0.002 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.001 s
-PDAF          prepoststep_pdaf:                    0.143 s
+PDAF              init_dim_obs_l_pdafomi:            0.004 s
+PDAF          prepoststep_pdaf:                    0.128 s

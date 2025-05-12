@@ -129,7 +129,7 @@ INITIAL VALUES:
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
-PDAF     --- update duration:     0.001 s
+PDAF     --- update duration:     0.000 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
@@ -154,7 +154,7 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          3DVAR analysis:                      0.001 s
+PDAF          3DVAR analysis:                      0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Solver:                              0.000 s

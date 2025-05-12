@@ -76,7 +76,7 @@ PDAF: Call ensemble initialization
          Initialize B^1/2 for 3D-Var
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 
   PDAF offline mode: START ASSIMILATION
 
@@ -160,7 +160,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
             RMS error according to sampled variance:   1.0503E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.004 s
+PDAF     --- duration of poststep:     0.005 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -177,10 +177,10 @@ PDAF                 PDAF-OMI:      0.001 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          Hyb3DVAR analysis:                   0.001 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Solver:                              0.000 s
 PDAF            cvt_ens_pdaf:                        0.000 s
@@ -190,6 +190,6 @@ PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF          Prepoststep (5):                     0.004 s
+PDAF          Prepoststep (5):                     0.005 s
 
  PDAF offline mode: END

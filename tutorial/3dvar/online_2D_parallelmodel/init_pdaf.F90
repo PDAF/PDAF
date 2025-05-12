@@ -283,11 +283,11 @@ SUBROUTINE init_pdaf()
 
   IF (.NOT. (filtertype==200 .AND. subtype==0)) THEN
      ! For 3D ensemble Var and hybrid Var
-     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+     CALL PDAF_init_forecast(steps, timenow, doexit, next_observation_pdaf, &
           distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
   ELSE
      ! For parameterized 3D-Var
-     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+     CALL PDAF_init_forecast(steps, timenow, doexit, next_observation_pdaf, &
           distribute_state_pdaf, prepoststep_3dvar_pdaf, status_pdaf)
   END IF
 
