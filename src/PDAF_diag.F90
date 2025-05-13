@@ -1580,7 +1580,7 @@ SUBROUTINE PDAF_diag_reliability_budget(n_times, dim_ens, dim_p, &
   DO it = 1, n_times
      DO i = 1, dim_p
         budget(i, it, 1) = budget(i, it, 1) * depar_factor
-        budget(i, it, 3) = budget(i, it, 3) * ensvar_factor
+        budget(i, it, 3) = budget(i, it, 3) * envar_factor
         budget(i, it, 4) = budget(i, it, 4) * inv_ens
         ! residual = depar^2 - ensvar - obsvar - bias^2
         ! bias^2 will be removed later
