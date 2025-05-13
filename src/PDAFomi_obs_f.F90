@@ -106,7 +106,7 @@ MODULE PDAFomi_obs_f
 ! *** Module internal variables
   INTEGER :: debug=0                      !< Debugging flag
   INTEGER :: error=0                      !< Error flag
-  INTEGER :: obs_diag=0                   !< Whether to store observation diagnostics
+  INTEGER :: obs_diag=1                   !< Whether to store observation diagnostics
   LOGICAL :: count_mem=.TRUE.             !< Flag for memory counting
 
   REAL, ALLOCATABLE :: domain_limits(:)   !< Limiting coordinates (NSWE) for process domain
