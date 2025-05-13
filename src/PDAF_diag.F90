@@ -1,4 +1,4 @@
-! Copyright (c) 2012-2023 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2012-2025 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -1457,5 +1457,140 @@ SUBROUTINE PDAF_diag_histogram(ncall, dim, dim_ens, element, &
   END IF
 
 END SUBROUTINE PDAF_diag_histogram
+
+
+
+!--------------------------------------------------------------------------
+!> Reliability budget diagnostics
+!!
+!! The diagnostics derives a balance relationship that decomposes the 
+!! departure between the ensemble mean and observations:
+!! Depar^2 = Bias^2 + EnsVar + ObsUnc^2 + Residual
+!! under the assumption of a perfectly reliable ensemble. When the 
+!! residual term is not small, one can identify the sources of 
+!! problematic ensemble representation of the uncertainty by looking at
+!! each terms. One of the benefits of 
+!! the reliability budget diagnostics is that it can identify spatially 
+!! local issues in ensemble perturbations.
+!!
+!! In this subroutine, the budget array returns each term of the 
+!! reliability budget is given at each given time step. The returned
+!! array can be used for significant t-test where each time step is used
+!! as a sample from the population. The actual budget is the mean over
+!! time steps except for Bias^2 term, which is given separately. This
+!! is because the unsquared bias is used in the t-test in the original
+!! paper.
+!!
+!! The subroutine does not comes with a t-test to ensure that
+!! the reliability budget is statistically significant as done
+!! in the original paper. However, this can be achieved with external
+!! libraries or software if the t-test is deemed important. The t-test 
+!! should account for the temporal autocorrelation between time steps
+!! in the given trajectory.
+!! 
+!! The diagnostics requires a trajectory of ensemble and observations, 
+!! a trajectory of an ensemle of observation error variances. The 
+!! ensemble of observation error variances can be the square of
+!! observation errors sampled from observation error distribution as
+!! done in stochastic ensemble Kalman filter. In deterministic ensemble
+!! systems, the ensemble of observation error variances can be the 
+!! observation error variances where each ensemble member has the same
+!! value.
+!! 
+!! The reliability budget is proposed by 
+!! Rodwell, M. J., Lang, S. T. K., Ingleby, N. B., Bormann, N., Holm,
+!! E., Rabier, F., ... & Yamaguchi, M. (2016).
+!! Reliability in ensemble data assimilation.
+!! Quarterly Journal of the Royal Meteorological Society, 142(694),
+!!  443-454.
+!!
+!! __Revision history:__
+!! * 2025-05 - Yumeng Chen - Initial code
+!!
+SUBROUTINE PDAF_diag_reliability_budget(n_times, dim_ens, dim_p, &
+                                    ens_p, obsvar, obs_p, budget, bias_2)
+  IMPLICIT NONE
+! *** Arguments ***
+  INTEGER, INTENT(in) :: n_times                        !< Number of time steps
+  INTEGER, INTENT(in) :: dim_ens                        !< Number of ensemble members
+  INTEGER, INTENT(in) :: dim_p                          !< Dimension of the state vector
+  REAL, INTENT(in) :: ens_p(dim_p, dim_ens, n_times)    !< Ensemble matrix over times
+  REAL, INTENT(in) :: obsvar(dim_p, dim_ens, n_times)   !< Squared observation error/variance at n_times
+                                                        !< In ensemble of var/stochastic EnKF system,
+                                                        !< the observation error is different for each ensemble member.
+                                                        !< If an observation variance is given directly,
+                                                        !< same value can be used across dimensions.
+  REAL, INTENT(in)  :: obs_p(dim_p, n_times)            !< Observation vector       
+  REAL, INTENT(out) :: budget(dim_p, n_times, 5)        !< Budget term for a single time step
+                                                        !< 1. depar^2, 2. bias, 3. ensvar, 4. obsunc, 
+                                                        !< 5. residual
+                                                        !< Each time step is used as a sample for 
+                                                        !< significant tests
+  REAL, INTENT(out) :: bias_2(dim_p)                    !< bias^2 uses 
+
+! *** Locals ***
+  REAL, ALLOCATABLE :: state_p(:)                       !< Ensemble mean
+  REAL              :: d                                !< Innovation vector for ensemble mean
+  REAL  :: envar_factor, inv_ens, depar_factor          !< Auxilary variable for summation
+  INTEGER           :: i, it, ie                        !< Counter
+
+
+  ! Allocate local arrays
+  ALLOCATE(state_p(dim_p))
+
+  budget = 0.
+  bias_2 = 0.
+  inv_ens = 1. / REAL(dim_ens)
+  envar_factor = inv_ens / REAL(dim_ens+1) / REAL(dim_ens - 1)
+  depar_factor = REAL(n_times) / REAL(n_times - 1)
+  DO it = 1, n_times
+      ! Compute state_p = mean(ens_p, axis=2 in Python),
+     state_p = 0.
+     DO ie = 1, dim_ens
+        DO i = 1, dim_p
+           state_p(i) = state_p(i) + ens_p(i, ie, it)
+        END DO
+     END DO
+     state_p = state_p * inv_ens
+
+     DO ie = 1, dim_ens
+        DO i = 1, dim_p
+           ! ensvar = sum(ens_p - state_p, axis over ie) * (dim_ens+1)/dim_ens/(dim_ens-1)
+           budget(i, it, 3) = budget(i, it, 3) + ens_p(i, ie, it) - state_p(i)
+           ! ObsUnc is an average over ensemble members
+           budget(i, it, 4) = budget(i, it, 4) + obsvar(i, ie, it)
+        END DO
+     END DO
+
+     ! compute each time step of budget component
+     DO i = 1, dim_p
+        d = obs_p(i, it) - state_p(i)
+        ! depar^2 = (d*d)*n_times/(n_times - 1)
+        budget(i, it, 1) = d * d
+        ! unsquared bias = -d
+        budget(i, it, 2) = -d
+        ! Bias^2
+        bias_2(i) = bias_2(i) + d
+     END DO
+  END DO
+  ! Bias^2
+  bias_2 = bias_2 * bias_2 /(n_times - 1) / n_times
+
+  ! compute residual
+  DO it = 1, n_times
+     DO i = 1, dim_p
+        budget(i, it, 1) = budget(i, it, 1) * depar_factor
+        budget(i, it, 3) = budget(i, it, 3) * ensvar_factor
+        budget(i, it, 4) = budget(i, it, 4) * inv_ens
+        ! residual = depar^2 - ensvar - obsvar - bias^2
+        ! bias^2 will be removed later
+        budget(i, it, 5) = budget(i, it, 1) - bias_2(i) - budget(i, it, 3) - budget(i, it, 4)
+     END DO
+  ENDDO
+
+  ! clean up
+  DEALLOCATE(state_p)
+
+END SUBROUTINE PDAF_diag_reliability_budget
 
 END MODULE PDAF_diag
