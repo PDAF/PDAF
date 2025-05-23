@@ -27,7 +27,7 @@ PROGRAM MAIN
   USE mod_model, &             ! Module provided by model code
        ONLY: dt
   USE PDAF , &                 ! Interface definitions to PDAF core routines
-       ONLY: PDAF_get_state, PDAF_get_fcst_info
+       ONLY: PDAF_init_forecast, PDAF_get_fcst_info
 
   IMPLICIT NONE
 
@@ -77,13 +77,13 @@ PROGRAM MAIN
   ! This step is always inserted after the model initialization
   ! is complete and just before the time stepping starts
 
-  CALL init_pdaf()
+  CALL init_pdaf(nsteps, timenow, doexit)
 
 
 ! *** PDAF: Get state and forecast information (nsteps,time) at initial time ***
 
-  CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+!  CALL PDAF_init_forecast(nsteps, timenow, doexit, next_observation_pdaf, &
+!       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
 ! *** Ensemble forecasting and analysis steps ***
 
