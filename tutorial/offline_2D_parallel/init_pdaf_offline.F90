@@ -91,11 +91,6 @@ SUBROUTINE init_pdaf()
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
-                    !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
-                    !   (2) use 5th-order polynomial
-                    !   (3) regulated localization of R with mean error variance
-                    !   (4) regulated localization of R with single-point error variance
   cradius = 0.0     ! Cut-off radius in grid points for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
@@ -147,7 +142,6 @@ SUBROUTINE init_pdaf()
 
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)      ! Type of forgetting factor
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)       ! Type of ensemble transformation
-  CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)        ! Type of transform square-root (SEIK-sub4/ESTKF)
   CALL PDAF_set_iparam(8, observe_ens, status_pdaf)      ! Whether to apply observation operator to ensemble mean
   CALL PDAF_set_iparam(9, type_obs_init, status_pdaf)    ! Initialize observation before or after call to prepoststep
 

@@ -53,7 +53,7 @@ PROGRAM MAIN
 ! ***      Integration      ***
 ! *****************************
 
-  ! *** Perform ensmeble assimilation ***
+  ! *** Perform ensemble assimilation ***
   CALL integrate_pdaf()
 
 #ifdef USE_PDAF
