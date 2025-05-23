@@ -254,36 +254,45 @@ SUBROUTINE PDAFenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           'Configuration: param_real(1) forget     ', forget
   END IF
 
-  IF (subtype == 0) THEN
+  haveobs: IF (dim_obs_p > 0) THEN
 
-     ! *** analysis with representer method - with 2m>n ***
-     CALL PDAF_enkf_ana_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
-          state_p, ens_p, HXB, HX_p, HXbar_p, obs_p, &
-          U_add_obs_err, U_init_obs_covar, screen, debug, flag)
+     IF (subtype == 0) THEN
 
-     ! *** Perform smoothing of past ensembles ***
-     CALL PDAF_timeit(15, 'new')
-     CALL PDAF_timeit(51, 'new')
-     CALL PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, HXB, sens_p, &
-          cnt_maxlag, forget, screen)
-     CALL PDAF_timeit(51, 'old')
-     CALL PDAF_timeit(15, 'old')
+        ! *** analysis with representer method - with 2m>n ***
+        CALL PDAF_enkf_ana_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
+             state_p, ens_p, HXB, HX_p, HXbar_p, obs_p, &
+             U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
-  ELSE IF (subtype == 1) THEN
+        ! *** Perform smoothing of past ensembles ***
+        CALL PDAF_timeit(15, 'new')
+        CALL PDAF_timeit(51, 'new')
+        CALL PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, HXB, sens_p, &
+             cnt_maxlag, forget, screen)
+        CALL PDAF_timeit(51, 'old')
+        CALL PDAF_timeit(15, 'old')
 
-     ! *** analysis with representer method with 2m<n ***
-     CALL PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
-          state_p, ens_p, HX_p, HXbar_p, obs_p, &
-          U_add_obs_err, U_init_obs_covar, screen, debug, flag)
+     ELSE IF (subtype == 1) THEN
 
-  END IF
+        ! *** analysis with representer method with 2m<n ***
+        CALL PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
+             state_p, ens_p, HX_p, HXbar_p, obs_p, &
+             U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_enkf_update:', debug, 'ensemble member', i, &
-             ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
-  END IF
+     END IF
+
+     IF (debug>0) THEN
+        DO i = 1, dim_ens
+           WRITE (*,*) '++ PDAF-debug PDAF_enkf_update:', debug, 'ensemble member', i, &
+                ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
+        END DO
+     END IF
+
+  ELSE haveobs
+
+     IF (mype == 0) WRITE (*,'(/5x,a/)') &
+          '!!! PDAF WARNING: No observations present - no analysis update performed !!!'
+
+  END IF haveobs
 
   CALL PDAF_timeit(3, 'old')
 

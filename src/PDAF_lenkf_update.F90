@@ -236,13 +236,23 @@ SUBROUTINE  PDAFlenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           'Configuration: param_real(1) forget     ', forget
   END IF
 
-  IF (subtype == 0) THEN
-     ! *** analysis with representer method with 2m<n ***
-     CALL PDAF_lenkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
-          state_p, ens_p, HX_p, HXbar_p, obs_p, &
-          U_add_obs_err, U_init_obs_covar, U_localize, &
-          screen, debug, flag)
-  END IF
+  haveobs: IF (dim_obs_p > 0) THEN
+
+     IF (subtype == 0) THEN
+        ! *** analysis with representer method with 2m<n ***
+        CALL PDAF_lenkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
+             state_p, ens_p, HX_p, HXbar_p, obs_p, &
+             U_add_obs_err, U_init_obs_covar, U_localize, &
+             screen, debug, flag)
+     END IF
+
+  ELSE haveobs
+
+     IF (mype == 0) WRITE (*,'(/5x,a/)') &
+          '!!! PDAF WARNING: No observations present - no analysis update performed !!!'
+
+  END IF haveobs
+
 
   IF (debug>0) THEN
      DO i = 1, dim_ens
