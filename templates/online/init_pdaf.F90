@@ -127,11 +127,6 @@ SUBROUTINE init_pdaf()
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
-                    !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
-                    !   (2) use 5th-order polynomial
-                    !   (3) regulated localization of R with mean error variance
-                    !   (4) regulated localization of R with single-point error variance
   cradius = 2.0     ! Cut-off radius for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
