@@ -14,7 +14,7 @@
 !! * 2008-10 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE init_pdaf(nsteps, timenow, doexit)
+SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
   USE PDAFomi, &                  ! PDAF-OMI routine
@@ -35,11 +35,6 @@ SUBROUTINE init_pdaf(nsteps, timenow, doexit)
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
 
   IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(inout) :: nsteps   ! Number of time steps to be performed in current forecast
-  INTEGER, INTENT(inout) :: doexit   ! Whether to exit forecasting (1=true)
-  REAL, INTENT(inout)    :: timenow  ! Current model time
 
 ! *** Local variables ***
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
@@ -250,7 +245,7 @@ SUBROUTINE init_pdaf(nsteps, timenow, doexit)
 ! *** Prepare ensemble forecasts ***
 ! **********************************
 
-  CALL PDAF_init_forecast(nsteps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+  CALL PDAF_init_forecast(next_observation_pdaf, distribute_state_pdaf, &
+       prepoststep_pdaf, status_pdaf)
 
 END SUBROUTINE init_pdaf

@@ -17,8 +17,7 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE pdaf, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAF_init, PDAF_get_state, PDAF_iau_init
+  USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
@@ -36,8 +35,6 @@ SUBROUTINE init_pdaf()
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL    :: filter_param_r(4) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
-  INTEGER :: doexit, steps     ! Not used in this implementation
-  REAL    :: timenow           ! Not used in this implementation
 
 ! *** External subroutines ***
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
@@ -230,12 +227,12 @@ SUBROUTINE init_pdaf()
 
   IF (.NOT. (filtertype==200 .AND. subtype==0)) THEN
      ! For 3D ensemble Var and hybrid Var
-     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-          distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+     CALL PDAF_init_forecast(next_observation_pdaf, distribute_state_pdaf, &
+          prepoststep_ens_pdaf, status_pdaf)
   ELSE
      ! For parameterized 3D-Var
-     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-          distribute_state_pdaf, prepoststep_3dvar_pdaf, status_pdaf)
+     CALL PDAF_init_forecast(next_observation_pdaf, distribute_state_pdaf, &
+          prepoststep_3dvar_pdaf, status_pdaf)
   END IF
 
 END SUBROUTINE init_pdaf

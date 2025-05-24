@@ -6,7 +6,7 @@ export DA_SPECS_3DVar="-dim_ens 1 -dim_cvec 9 -filtertype 200 -subtype 0"
 export DA_SPECS_3DEnVar="-dim_ens 9 -filtertype 200"
 export DA_SPECS_hyb3DVar="-dim_ens 9 -filtertype 200"
 
-COMPILEPDAF=1
+COMPILEPDAF=0
 COMPILE=1
 RUN_OFFLINE=1
 RUN_ONLINE_SERIAL=1

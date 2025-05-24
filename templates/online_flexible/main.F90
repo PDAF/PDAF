@@ -91,6 +91,12 @@ PROGRAM MAIN
   pdaf_modelloop: DO  
 
      ! *** Forecast ensemble state ***
+
+     ! *** PDAF: Get forecast information ***
+     CALL PDAF_get_fcst_info(nsteps, timenow, doexit)
+
+     ! *** Check exit flag ***
+     IF (doexit==1) EXIT pdaf_modelloop
  
      ! Initialize current model time
      time = timenow
@@ -108,12 +114,6 @@ PROGRAM MAIN
         CALL assimilate_pdaf()
 
      ENDDO
-
-     ! *** PDAF: Get forecast information ***
-     CALL PDAF_get_fcst_info(nsteps, timenow, doexit)
-
-     ! *** Check exit flag ***
-     IF (doexit==1) EXIT pdaf_modelloop
 
   END DO pdaf_modelloop
 

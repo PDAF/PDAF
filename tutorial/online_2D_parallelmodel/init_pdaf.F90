@@ -42,8 +42,6 @@ SUBROUTINE init_pdaf()
   INTEGER :: filter_param_i(2) ! Integer parameter array for filter
   REAL    :: filter_param_r(1) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
-  INTEGER :: doexit, steps     ! Not used in this implementation
-  REAL    :: timenow           ! Not used in this implementation
   REAL    :: lim_coords(2,2)   ! limiting coordinates of process sub-domain
   INTEGER :: i, off_nx         ! Counters
 
@@ -185,8 +183,8 @@ SUBROUTINE init_pdaf()
 ! *** Prepare ensemble forecasts ***
 ! **********************************
 
-  CALL PDAF_init_forecast(steps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+  CALL PDAF_init_forecast(next_observation_pdaf, distribute_state_pdaf, &
+       prepoststep_pdaf, status_pdaf)
 
 
 ! ************************************************************************
