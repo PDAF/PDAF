@@ -4861,6 +4861,18 @@ CONTAINS
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
 
+    ! Localization
+    IF (ALLOCATED(thisobs%cradius)) DEALLOCATE(thisobs%cradius)
+    IF (ALLOCATED(thisobs%sradius)) DEALLOCATE(thisobs%sradius)
+    IF (ALLOCATED(thisobs%locweight)) DEALLOCATE(thisobs%locweight)
+
+    ! Observation diagnostics arrays
+    IF (ALLOCATED(thisobs%obs_diag_p)) DEALLOCATE(thisobs%obs_diag_p)
+    IF (ALLOCATED(thisobs%ivar_obs_diag_p)) DEALLOCATE(thisobs%ivar_obs_diag_p)
+    IF (ALLOCATED(thisobs%ocoord_diag_p)) DEALLOCATE(thisobs%ocoord_diag_p)
+    IF (ALLOCATED(thisobs%hxmean_diag_p)) DEALLOCATE(thisobs%hxmean_diag_p)
+    IF (ALLOCATED(thisobs%hx_diag_p)) DEALLOCATE(thisobs%hx_diag_p)
+
     ! Reset assim flag
     thisobs%doassim = 0
 
