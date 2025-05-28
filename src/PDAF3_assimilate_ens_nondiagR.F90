@@ -415,6 +415,7 @@ SUBROUTINE PDAF3_assimilate_enkf_nondiagR(collect_state_pdaf, distribute_state_p
   USE PDAF_cb_procedures
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
+  USE PDAFassimilate_lenkf, ONLY: PDAF_assimilate_lenkf
 
   IMPLICIT NONE
   
