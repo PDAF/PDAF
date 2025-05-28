@@ -73,7 +73,9 @@ SUBROUTINE integration(time, nsteps)
 
 ! *** time stepping loop ***
   integrate: DO step = 1, nsteps
+#ifdef USE_PDAF
      CALL PDAF_iau_add_inc(collect_state_pdaf, distribute_state_pdaf)
+#endif
 
 ! *** model time step - RK4 ***
 
