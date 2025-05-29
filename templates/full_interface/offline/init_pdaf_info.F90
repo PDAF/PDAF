@@ -17,7 +17,7 @@ SUBROUTINE init_pdaf_info()
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, model_error, &
        model_err_amp, forget, rank_ana_enkf, &
-       dim_lag, twin_experiment, pf_res_type, &
+       dim_lag, pf_res_type, &
        pf_noise_type, pf_noise_amp, type_hyb, hyb_gamma, hyb_kappa
 
   IMPLICIT NONE
@@ -222,8 +222,8 @@ SUBROUTINE init_pdaf_info()
         WRITE (*, '(6x, a)') '-- Hybrid 3D-Var using ESTKF for ensemble transformation'
      END IF
   END IF     
-  IF (twin_experiment) &
-       WRITE (*, '(/6x, a)') 'Run twin experiment with synthetic observations'
+!  IF (twin_experiment) &
+!       WRITE (*, '(/6x, a)') 'Run twin experiment with synthetic observations'
 !  IF (filtertype==100 .OR. twin_experiment) &
 !       WRITE (*, '(11x, a, a)') 'File for synthetic observations: ', TRIM(file_syntobs)
 

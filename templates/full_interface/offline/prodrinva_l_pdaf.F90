@@ -33,6 +33,8 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &
+       ONLY: PDAF_local_weight
   USE mod_assimilation, &
        ONLY: cradius, locweight, sradius, rms_obs, distance_l
   USE mod_parallel, &

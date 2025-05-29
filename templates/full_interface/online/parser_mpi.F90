@@ -53,7 +53,7 @@
 MODULE parser
 
   use mpi 
-  USE mod_parallel_model, &
+  USE mod_parallel_pdaf, &
     ONLY: abort_parallel
 
   IMPLICIT NONE

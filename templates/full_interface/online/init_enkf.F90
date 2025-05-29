@@ -32,6 +32,8 @@ SUBROUTINE init_enkf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 !
 ! !USES:
 !  USE mpi
+  USE PDAF, &
+     ONLY: PDAF_enkf_omega
 
   IMPLICIT NONE
 

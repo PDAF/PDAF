@@ -21,6 +21,8 @@ SUBROUTINE init_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &                     ! PDAF
+       ONLY: PDAF_init
   USE mod_parallel, &             ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
@@ -270,12 +272,5 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
-
-
-! *************************************
-! *** Activate offline mode of PDAF ***
-! *************************************
-
-  CALL PDAF_set_offline_mode(screen)
 
 END SUBROUTINE init_pdaf

@@ -16,11 +16,12 @@ SUBROUTINE assimilate_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF                     ! PDAF 
   USE mod_parallel_pdaf, &     ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: filtertype
-  USE PDAF_interfaces_module   ! Check consistency of PDAF calls
+  USE PDAF                     ! Include PDAF calls
 
   IMPLICIT NONE
 
@@ -84,7 +85,7 @@ SUBROUTINE assimilate_pdaf()
   IF (filtertype == 1) THEN
      CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
-          prodRinvA_pdaf, next_observation_pdaf, status_pdaf)
+          prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 2) THEN
      CALL PDAF_assimilate_enkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, &
@@ -131,8 +132,8 @@ SUBROUTINE assimilate_pdaf()
           likelihood_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 10) THEN
      CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdaf, &
-          obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_ens_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+          init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_pdaf, &
           likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           g2l_obs_pdaf, next_observation_pdaf, status_pdaf)

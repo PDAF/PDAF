@@ -25,7 +25,7 @@ SUBROUTINE assimilation_pdaf_offline()
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &      ! variables for assimilation
        ONLY: filtertype
-  USE PDAF_interfaces_module   ! Check consistency of PDAF calls
+  USE PDAF                     ! Include PDAF calls
 
   IMPLICIT NONE
 
@@ -147,7 +147,7 @@ SUBROUTINE assimilation_pdaf_offline()
           likelihood_pdaf, status)
   ELSE IF (filtertype == 10) THEN
      CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, &
-          obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
+          obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
           likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           g2l_obs_pdaf, status)

@@ -14,6 +14,8 @@ SUBROUTINE finalize_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &
+       ONLY: PDAF_deallocate, PDAF_print_info
   USE mod_parallel_pdaf, &
        ONLY: finalize_parallel, mype_world
 

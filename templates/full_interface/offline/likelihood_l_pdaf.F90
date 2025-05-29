@@ -28,6 +28,8 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &
+       ONLY: PDAF_local_weight
   USE mod_assimilation, &
        ONLY: cradius, locweight, sradius, distance_l
   USE mod_parallel, &

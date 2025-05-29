@@ -32,6 +32,8 @@ SUBROUTINE init_seik(filtertype, dim_p, dim_ens, state_p, Uinv, &
 !
 ! !USES:
 !  USE mpi
+  USE PDAF, &
+     ONLY: PDAF_samplens
 
   IMPLICIT NONE
 

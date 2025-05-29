@@ -28,6 +28,8 @@
 !!
 SUBROUTINE prodRinvA_hyb_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, gamma, A_l, C_l)
 
+  USE PDAF, &
+       ONLY: PDAF_local_weight
   USE mod_assimilation, &
        ONLY: cradius, locweight, sradius, rms_obs, distance_l
   USE mod_parallel_pdaf, &

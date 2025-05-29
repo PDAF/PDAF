@@ -33,6 +33,8 @@
 !!
 SUBROUTINE likelihood_hyb_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, gamma, likely_l)
 
+  USE PDAF, &
+       ONLY: PDAF_local_weight
   USE mod_assimilation, &
        ONLY: cradius, locweight, sradius, distance_l
   USE mod_parallel_pdaf, &

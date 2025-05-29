@@ -11,9 +11,7 @@
 !!
 SUBROUTINE assimilate_pdaf()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAF3_assimilate_3dvar, PDAF3_assimilate_en3dvar, &
-       PDAF3_assimilate_3dvar_all
+  USE PDAF                        ! PDAF
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
