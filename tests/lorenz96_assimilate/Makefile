@@ -57,7 +57,6 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
 		collect_state_pdaf.o \
-		distribute_stateinc_pdaf.o \
 		compute_truermse.o \
 		compute_rms_smoother.o \
 		init_obs_mask.o \
