@@ -206,7 +206,7 @@ The filter algorithms in PDAF are:
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347-1367, doi:10.1175/MWR-D-14-00108.1]
 - **LKNETF** (Local Kalman-nonlinear ensemble transform filter)
        [L. Nerger, Q. J. R. Meteorol Soc., 148 (2022) 620-640, doi:10.1002/qj.4221]
-- ** ENSRF/EAKF** (Ensemble square-root filter and Ensemble Adjustment Filter using serial observation processing and covariance localization0
+- **ENSRF/EAKF** (Ensemble square-root filter and Ensemble Adjustment Filter using serial observation processing and covariance localization0
        [ENSRF: J. Whitaker, T. Hamill, Mon. Wea. Rev. 130 (2002) 1913-1924, https://doi.org/10.1175/1520-0493(2002)130<1913:EDAWPO>2.0.CO;2,
         EAKF J. Anderson, Mon. Wea. Rev. (2003) 634-642, https://doi.org/10.1175/1520-0493(2003)131<0634:ALLSFF>2.0.CO;2] 
 
@@ -226,13 +226,13 @@ The 3D-Var methods are implemented as incremental 3D-Var schemes following
 Bannister, Q. J. Royal Meteorol. Soc., 143 (2017) 607-633, doi:10.1002/qj.2982. 
 
 
-PDAF is written in Fortran (using Fortran 2003). 
+PDAF is written in, mainly, Fortran 2003. 
 The compilation and execution has been tested on the different systems ranging from
 notebook computers to supercomputers, e.g.:
 - Linux
 - MacOS
 - Cray CLE
-- NEC Super-UX
+- NEC Aurora
 - Microsoft Windows 10 with Cygwin
 
 
