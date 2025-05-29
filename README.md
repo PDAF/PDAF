@@ -1,11 +1,18 @@
 
 # PDAF (Parallel Data Assimilation Framework)
 
-Copyright 2004-2024, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
+Copyright 2004-2025, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
 For license information, please see the file LICENSE.txt.
 
 For full documentation and tutorial, see: http://pdaf.awi.de 
+
+## Note on PDAF V3.0
+
+In the upgrade to PDAF V3.0 there are changes which make it not
+fully backward-compatible. If one has a code implemented for PDAF2,
+one needs a few adaptions. For more informtion, see:
+https://pdaf.awi.de/trac/wiki/PortingToPDAF3
 
 
 ## Introduction
@@ -23,7 +30,9 @@ PDAF provides
   the Kalman filter or nonlinear filters (see list below)
 - A selection of 3D variational methods, both with parameterized
   and ensemble covariance matrix
-- Functions for ensemble diagnostics
+- A structured approach to handle large sets of different observation
+  types (PDAF-OMI)
+- Functionality for ensemble and observation diagnostics
 - Functionality to generate synthetic observations for data
   assimilation studies (e.g. OSSEs)
 
@@ -32,15 +41,11 @@ The PDAF release provides also
 - Code templates to assist in the implementation
 - Toy models fully implemented with PDAF for the study of data
   assimilation methods.
-- Model bindings for using PDAF with different models 
 
 
 ## First Steps with PDAF
 
 A good starting point for using PDAF is to run a tutorial example.
-The directory /tutorial contains files demonstrating the application 
-of PDAF with a simple 2-dimensional example.
-
 The web site  http://pdaf.awi.de/trac/wiki/FirstSteps 
 provides hints on getting started with PDAF and 
   https://pdaf.awi.de/trac/wiki/PdafTutorial
@@ -111,7 +116,7 @@ solvers from the external libraries in /external/ execute
 
 ## Test suite
 
-The directory testsuite/ contains another set of example implementations.
+The directory tests/ contains aset of implementations for consistency tests.
 This is more for 'internal use'. We use these implementations to validate PDAF. 
 The model is trivial: At each time step simply the time step size is added 
 to the state vector. In this example all available filters are implemented.
@@ -201,6 +206,9 @@ The filter algorithms in PDAF are:
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347-1367, doi:10.1175/MWR-D-14-00108.1]
 - **LKNETF** (Local Kalman-nonlinear ensemble transform filter)
        [L. Nerger, Q. J. R. Meteorol Soc., 148 (2022) 620-640, doi:10.1002/qj.4221]
+- ** ENSRF/EAKF** (Ensemble square-root filter and Ensemble Adjustment Filter using serial observation processing and covariance localization0
+       [ENSRF: J. Whitaker, T. Hamill, Mon. Wea. Rev. 130 (2002) 1913-1924, https://doi.org/10.1175/1520-0493(2002)130<1913:EDAWPO>2.0.CO;2,
+        EAKF J. Anderson, Mon. Wea. Rev. (2003) 634-642, https://doi.org/10.1175/1520-0493(2003)131<0634:ALLSFF>2.0.CO;2] 
 
 All filter algorithms are fully parallelized with MPI and optimized. The local filters 
 (LSEIK, LETKF, LESTKF, LNETF, LKNETF) are in addition parallelized using OpenMP.
@@ -218,7 +226,7 @@ The 3D-Var methods are implemented as incremental 3D-Var schemes following
 Bannister, Q. J. Royal Meteorol. Soc., 143 (2017) 607-633, doi:10.1002/qj.2982. 
 
 
-PDAF is written in Fortran (mainly Fortran 90 with some features from Fortran 2003). 
+PDAF is written in Fortran (using Fortran 2003). 
 The compilation and execution has been tested on the different systems ranging from
 notebook computers to supercomputers, e.g.:
 - Linux
