@@ -28,6 +28,7 @@ SUBROUTINE assimilation_pdaf(time)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF
   USE mod_parallel, &     ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation

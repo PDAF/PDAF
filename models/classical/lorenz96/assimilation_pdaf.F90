@@ -28,6 +28,7 @@ SUBROUTINE assimilation_pdaf(time)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF                ! PDAF routines
   USE mod_parallel, &     ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation
@@ -180,7 +181,7 @@ SUBROUTINE assimilation_pdaf(time)
                 init_obs_pdaf, prepoststep_pdaf, likelihood_pdaf, status)
         ELSE IF (filtertype == 10) THEN
            CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, &
-                obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_pdaf, &
+                obs_op_f_pdaf, init_dim_obs_f_pdaf, init_obs_l_pdaf, prepoststep_pdaf, &
                 likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
                 init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
                 g2l_obs_pdaf, status)

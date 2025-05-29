@@ -39,6 +39,8 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &
+       ONLY: PDAF_seik_ttimesa
   USE mod_memcount, &
        ONLY: memcount
   USE mod_model, &

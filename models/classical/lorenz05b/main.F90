@@ -25,6 +25,8 @@ PROGRAM MAIN
 !
 ! !USES:
   USE mpi
+  USE PDAF, &
+       ONLY: PDAF_deallocate, PDAF_print_info
   USE mod_parallel, &     ! Parallelization variables
        ONLY: MPIerr, npes_world, mype_world, n_modeltasks, &
        init_parallel, finalize_parallel

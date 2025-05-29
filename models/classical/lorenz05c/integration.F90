@@ -28,7 +28,7 @@ SUBROUTINE integration(time, nsteps)
        ONLY: x, dt, dim_state
 #ifdef USE_PDAF
   USE mod_assimilation, & ! Variables for assimilation
-       ONLY: filtertype, incremental, model_error
+       ONLY: model_error
 #endif
   USE output_netcdf, &    ! NetCDF output
        ONLY: write_netcdf, close_netcdf
@@ -43,10 +43,6 @@ SUBROUTINE integration(time, nsteps)
 ! local variables
   INTEGER :: step               ! Time step counter
   REAL, ALLOCATABLE :: x1(:), x2(:), x3(:), x4(:) ! Temporary arrays for RK4
-
-#ifdef USE_PDAF
-  EXTERNAL :: distribute_stateinc_pdaf ! Routine to add state increment for IAU
-#endif
 
 
 ! **********************
@@ -68,14 +64,6 @@ SUBROUTINE integration(time, nsteps)
 
 ! *** time stepping loop ***
   integrate: DO step = 1, nsteps
-
-#ifdef USE_PDAF
-     ! For incremental updating (SEEK, SEIK, and LSEIK)
-     IF (incremental == 1 &
-          .AND. (filtertype==0 .OR. filtertype == 1 .OR. filtertype == 3)) THEN
-        CALL PDAF_incremental(nsteps, distribute_stateinc_pdaf)
-     END IF
-#endif
 
 ! *** model time step - RK4 ***
 

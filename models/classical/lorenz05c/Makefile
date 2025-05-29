@@ -54,7 +54,6 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 		init_dim_obs_pdaf.o \
 		init_obs_pdaf.o \
 		obs_op_pdaf.o \
-		distribute_stateinc_pdaf.o \
 		compute_truermse.o \
 		compute_rms_smoother.o \
 		init_obs_mask.o \
@@ -139,13 +138,13 @@ pdaf_lorenz_05c : libpdaf-d.a \
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR)/src; make;
+	@cd $(BASEDIR); make;
 
 
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/src $(MPI_INC) $(NC_INC) -c $*.F90 
+	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/include $(MPI_INC) $(NC_INC) -c $*.F90 
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:

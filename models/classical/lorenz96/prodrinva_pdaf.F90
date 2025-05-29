@@ -27,6 +27,7 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs, rank, obs, A, C)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF
   USE mod_assimilation, &
        ONLY: rms_obs
 

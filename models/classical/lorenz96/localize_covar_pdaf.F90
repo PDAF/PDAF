@@ -21,6 +21,8 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &
+       ONLY: PDAF_local_weight
   USE mod_assimilation, &
        ONLY: cradius, sradius, locweight
   USE mod_parallel, &

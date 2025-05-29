@@ -22,7 +22,7 @@ SUBROUTINE init_pdaf_parse()
        ONLY: parse
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       rms_obs, model_error, model_err_amp, incremental, &
+       rms_obs, model_error, model_err_amp, &
        type_forget, forget, epsilon, rank_analysis_enkf, &
        locweight, cradius, cradius2, sradius, int_rediag, &
        file_ini, file_obs, type_ensinit, seedset, type_trans, &
@@ -82,8 +82,6 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, filtertype)
   handle = 'subtype'                 ! Set subtype of filter
   CALL parse(handle, subtype)
-  handle = 'incremental'             ! Set whether to use incremental updating
-  CALL parse(handle, incremental)
 
   ! Settings for smoother
   handle = 'dim_lag'                 ! Size of lag in smoother

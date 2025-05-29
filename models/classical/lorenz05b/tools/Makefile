@@ -11,7 +11,7 @@
 
 
 # Root directory of PDAF package
-BASEDIR = ../../..
+BASEDIR = ../../../..
 
 # Include machine-specific definitions
 # For available include files see directory make.arch
@@ -32,7 +32,7 @@ EXE_COVAR  = generate_covar
 ######################################################
 
 info:
-	@echo "Makefile to build tool programs for the Lorenz05b model";
+	@echo "Makefile to build tool programs for the Lorenz96 model";
 	@echo  "-------------------------------------------------------------------------------";
 	@echo  "Use as   make TARGET   where TARGET can be:";
 	@echo  "  info           - This text";
@@ -55,7 +55,7 @@ $(EXE_COVAR) : libpdaf-d.a $(OBJ_COVAR)
 all: $(EXE_GENOBS) $(EXE_COVAR)
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) $(NC_INC) -c $*.F90 
+	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/include $(NC_INC) -c $*.F90 
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
@@ -66,7 +66,7 @@ all: $(EXE_GENOBS) $(EXE_COVAR)
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR)/src; make;
+	@cd $(BASEDIR); make;
 
 
 clean :

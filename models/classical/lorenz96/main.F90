@@ -24,6 +24,7 @@ PROGRAM MAIN
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF
   USE mpi
   USE mod_parallel, &     ! Parallelization variables
        ONLY: MPIerr, npes_world, mype_world, n_modeltasks, &

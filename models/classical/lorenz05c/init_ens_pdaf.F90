@@ -34,6 +34,8 @@ SUBROUTINE init_ens_pdaf(filtertype, dim, dim_ens, state, Uinv, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF, &
+       ONLY: PDAF_sampleens
   USE timer, &
        ONLY: timeit
   USE mod_memcount, &

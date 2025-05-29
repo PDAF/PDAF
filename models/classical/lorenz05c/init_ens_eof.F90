@@ -30,6 +30,8 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
 !
 ! !USES:
   USE netcdf
+  USE PDAF, &
+       ONLY: PDAF_sampleens
   USE mod_memcount, &
        ONLY: memcount
   USE mod_assimilation, &

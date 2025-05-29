@@ -29,6 +29,7 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF
   USE netcdf
   USE mod_memcount, &
        ONLY: memcount

@@ -22,7 +22,7 @@ SUBROUTINE compute_truermse(calltype, step, time, dim, state_est, &
 !
 ! !USES:
   USE netcdf
-  USE PDAF_interfaces_module, &
+  USE PDAF, &
        ONLY: PDAF_diag_histogram, PDAF_diag_ensstats
   USE mod_memcount, &
        ONLY: memcount

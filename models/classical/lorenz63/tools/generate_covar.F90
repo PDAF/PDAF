@@ -16,6 +16,7 @@ PROGRAM generate_covar
 ! about its long time mean.
 
 ! !USES:
+  USE PDAF, ONLY: PDAF_eofcovar
   USE netcdf
 
   IMPLICIT NONE

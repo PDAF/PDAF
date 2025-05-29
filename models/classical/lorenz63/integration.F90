@@ -28,10 +28,6 @@ SUBROUTINE integration(time, nsteps)
        ONLY: mype_model  
   USE mod_model, &        ! Model variables
        ONLY: x, dt
-#ifdef USE_PDAF
-  USE mod_assimilation, & ! Variables for assimilation
-       ONLY: filtertype, incremental
-#endif
   USE output_netcdf, &    ! NetCDF output
        ONLY: write_netcdf, close_netcdf
 
@@ -46,10 +42,6 @@ SUBROUTINE integration(time, nsteps)
   INTEGER :: step               ! Time step counter
   REAL :: x1(3), x2(3), x3(3), x4(3) ! Temporary arrays for RK4
 
-#ifdef USE_PDAF
-  EXTERNAL :: distribute_stateinc_pdaf ! Routine to add state increment for IAU
-#endif
-
 
 ! *********************************
 ! *** Perform model integration ***
@@ -62,12 +54,6 @@ SUBROUTINE integration(time, nsteps)
   integrate: DO step = 1, nsteps
      
 #ifdef USE_PDAF
-     ! For incremental updating (SEEK, SEIK, and LSEIK)
-     IF (incremental == 1 &
-          .AND. (filtertype==0 .OR. filtertype == 1 .OR. filtertype == 3)) THEN
-        CALL PDAF_incremental(nsteps, distribute_stateinc_pdaf)
-     END IF
-
   ! *** PDAF: Add model error ***      
   ! This is the place where model error can be simulated.
   ! This routine is not implemented here!
