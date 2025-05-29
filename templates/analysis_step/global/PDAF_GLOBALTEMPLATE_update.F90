@@ -204,16 +204,8 @@ CONTAINS
     IF (debug>0) THEN
        WRITE (*,*) '++ PDAF-debug PDAF_GLOBALTEMPLATE_update', debug, &
             'Configuration: param_int(3) dim_lag     ', dim_lag
-       WRITE (*,*) '++ PDAF-debug PDAF_GLOBALTEMPLATE_update', debug, &
-            'Configuration: param_int(4) -not used-  '
-       WRITE (*,*) '++ PDAF-debug PDAF_GLOBALTEMPLATE_update', debug, &
-            'Configuration: param_int(5) type_forget ', type_forget
-       WRITE (*,*) '++ PDAF-debug PDAF_GLOBALTEMPLATE_update', debug, &
-            'Configuration: param_int(6) -not used-  '
-       WRITE (*,*) '++ PDAF-debug PDAF_GLOBALTEMPLATE_update', debug, &
-            'Configuration: param_int(7) -not used-  '
-       WRITE (*,*) '++ PDAF-debug PDAF_GLOBALTEMPLATE_update', debug, &
-            'Configuration: param_int(8) observe_ens ', observe_ens
+       WRITE (*,*) '++ PDAF-debug PDAF_LOCALTEMPLATE_update', debug, &
+            'Configuration: param_int(8) observe_ens           ', observe_ens
 
        WRITE (*,*) '++ PDAF-debug PDAF_GLOBALTEMPLATE_update', debug, &
             'Configuration: param_real(1) forget     ', forget
