@@ -207,8 +207,8 @@ The filter algorithms in PDAF are:
 - **LKNETF** (Local Kalman-nonlinear ensemble transform filter)
        [L. Nerger, Q. J. R. Meteorol Soc., 148 (2022) 620-640, doi:10.1002/qj.4221]
 - **ENSRF/EAKF** (Ensemble square-root filter and Ensemble Adjustment Filter using serial observation processing and covariance localization0
-       [ENSRF: J. Whitaker, T. Hamill, Mon. Wea. Rev. 130 (2002) 1913-1924, https://doi.org/10.1175/1520-0493(2002)130<1913:EDAWPO>2.0.CO;2,
-        EAKF J. Anderson, Mon. Wea. Rev. (2003) 634-642, https://doi.org/10.1175/1520-0493(2003)131<0634:ALLSFF>2.0.CO;2] 
+       [ENSRF: J. Whitaker, T. Hamill, Mon. Wea. Rev. 130 (2002) 1913-1924,
+        EAKF J. Anderson, Mon. Wea. Rev. (2003) 634-642] 
 
 All filter algorithms are fully parallelized with MPI and optimized. The local filters 
 (LSEIK, LETKF, LESTKF, LNETF, LKNETF) are in addition parallelized using OpenMP.
