@@ -7,49 +7,59 @@ For license information, please see the file LICENSE.txt.
 
 For full documentation and tutorial, see: http://pdaf.awi.de 
 
+
 ## Note on PDAF V3.0
 
-In the upgrade to PDAF V3.0 there are changes which make it not
+In the upgrade to PDAF V3.0 there are changes which make PDAF3
 fully backward-compatible. If one has a code implemented for PDAF2,
-one needs a few adaptions. For more informtion, see:
+one needs a few adaptions. For more information, see:
 https://pdaf.awi.de/trac/wiki/PortingToPDAF3
-
 
 ## Introduction
 
-PDAF is a framework for data assimilation.
-PDAF can be used to assess data assimilation methods with small models,
-to perform real data assimilation with high-dimensional models, and to
-teach ensemble data assimilation. 
+PDAF is a unified framework for data assimilation with the aim
+to reduce development effort for data assimilation while providing
+high computational efficiency.
 
-PDAF provides 
+PDAF can be used
+- to perform data assimilation with high-dimensional models,
+- to assess data assimilation methods with small models,
+- to teach ensemble data assimilation, and
+- to develop new data assimilation methods and test them in a unified environment
+
+PDAF provides
+- A modular structure with separation-of-concerns for the model,
+  the data assimilation methods, observation handling, and covariances
 - A parallel infrastructure, using MPI and OpenMP, to implement a
   parallel data assimilation system based on existing numerical
-  models (typically of components of the Earth system). 
-- A selection of ensemble data assimilation algorithms based on
-  the Kalman filter or nonlinear filters (see list below)
+  models (typically of, but not limited to, components of the Earth system). 
+- A selection of state-of-the-art ensemble data assimilation algorithms
+  based on the Kalman filter or nonlinear filters (see list below)
 - A selection of 3D variational methods, both with parameterized
   and ensemble covariance matrix
-- A structured approach to handle large sets of different observation
-  types (PDAF-OMI)
+- A structured approach to handle large sets of observation
+  types
 - Functionality for ensemble and observation diagnostics
 - Functionality to generate synthetic observations for data
   assimilation studies (e.g. OSSEs)
 
 The PDAF release provides also
-- Tutorial codes demontrating the implementation
-- Code templates to assist in the implementation
+- Tutorial codes demonstrating the implementation
+- Code templates to assist in the implementation 
 - Toy models fully implemented with PDAF for the study of data
   assimilation methods.
-
+- Links to codes for existing model couplings with PDAF
 
 ## First Steps with PDAF
 
 A good starting point for using PDAF is to run a tutorial example.
 The web site  http://pdaf.awi.de/trac/wiki/FirstSteps 
-provides hints on getting started with PDAF and 
-  https://pdaf.awi.de/trac/wiki/PdafTutorial
-holds the tutorial slide sets that explain the implementation
+provides hints on getting started with PDAF.
+
+## PDAF tutorials
+The page
+https://pdaf.awi.de/trac/wiki/PdafTutorial
+provides tutorial slide sets that explain the implementation
 steps and how to compile and run the tutorial examples. 
 
 
@@ -86,41 +96,25 @@ are provided on the PDAF web site.
 
 The PDAF library will be automatically built when compiling a tutorial case
 or one of the models. However, one can also separately build the library.
-In order to build the PDAF library you need a Fortran 90 compiler, and
-'make'
+In order to build the PDAF library one needs a Fortran 2003 compiler,
+'make'. PDAF is generally intended for parallel computing using MPI and
+needs an MPI-library for compilation. In addition, the libraries BLAS
+and LAPACK are required.
 
-1. Choose a suitable include file for the make process and/or edit
-one. See the directory make.arch/ for several provided include files.
-There are include files for compilation with and without MPI.
-
-Note: PDAF is generally intended for parallel computing using MPI.
-However, it can be compiled for serial computing. To compile PDAF
-for this case, a simplified MPI header file is included und should be
-in the include path. In addition, a dummy implementation of MPI, which
-behaves like MPI in the single-process case, is provided in the
-directory nullmpi/. For the serial case, this file should also be
-compiled and linked when PDAF is linked to a program.
+1. Choose a suitable include file for the make process and/or edit or
+create one. See the directory make.arch/ for several provided include files.
+For standard Linux systems using gfortran and OpenMPI using
+linux_gfortran.h will most likely work.
 
 2. Set the environment variable $PDAF_ARCH to the name of the include
 file (without ending .h). Alternatively you can specify PDAF_ARCH on
 the command line when running 'make' in step 3.
 
-3. In the main directory execute 'make' at the prompt. This will
-compile the sources and generate a library file that includes the 
-ensemble filter methods in the directory lib/. 
-To generate the PDAF library including the 3D-Var methods and the 
-solvers from the external libraries in /external/ execute
-'make pdaf-var' at the prompt.
- 
-
-
-## Test suite
-
-The directory tests/ contains aset of implementations for consistency tests.
-This is more for 'internal use'. We use these implementations to validate PDAF. 
-The model is trivial: At each time step simply the time step size is added 
-to the state vector. In this example all available filters are implemented.
-
+3. In the main directory execute 'make' at the prompt, e.g.
+'make PDAF_ARCH=linux_gfortran'. This will
+compile the sources and generate two library files that include the 
+ensemble filter methods and the 3D-Var methods including solvers
+in the directory lib/.  
 
 ## Verifying your installation 
 
@@ -138,32 +132,16 @@ Linux with the gfotran compiler. For other systems, you might need to
 change the settings for the make definitions files).
 
 
-The testsuite also provides a functionality for verification:
+## Test suite
 
-Using 'make' one can run test cases for the verification which are
-compared to reference outputs provided in the sub-directories
-of the directory  testsuite/tests_dummy1D for different computers
-and compilers. In particular the online case dummymodel_1D and the
-offline test offline_1D can be run. Scripts for serial (non-parallel)
-execution as well as example scripts for running parallel test jobs on
-computers with SLURM or PBS batch systems are provided.
+The directory tests/ contains a set of implementations for consistency tests.
+This is more for 'internal use'. We use these implementations to validate PDAF. 
 
-An installation of PDAF can be verified using the test suite as follows:
-1. prepare the include file in make.arch
-2. cd to testsuite/src
-3. Build and execute the online experiments:
-   'make pdaf_dummy_online' and
-   'make test_pdaf_online > out.test_pdaf_online'
-4. Build and execute the offline experiments:
-   'make pdaf_dummy_online' and
-   'make test_pdaf_offline > out.test_pdaf_offline'
-6. Check the files out.test_pdaf_online and out.test_pdaf_offline
-   At the end of the file, you see a list of Checks done using
-   a Python script. Here the outputs are compared with reference 
-   outputs produced with gfortran and MacOS.
-   You can also diff the files to corresponding files in one of the
-   example-directories in ../tests_dummy1D. Here, also reference
-   output files, like output_lestkf0.dat are stored.
+You can run the scripts analogously to that in the directory tutorial/:
+**runtests_offline.sh** or **runtests_online.sh** perform details tests
+on options for the offline and online coupled implementations.
+The script **test_runtime.sh** runs tests on a larger model grid. This is
+usually used to assess the effect of code changes on the run time.
 
 
 ## Data Assimilation Algorithms 
@@ -206,9 +184,10 @@ The filter algorithms in PDAF are:
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347-1367, doi:10.1175/MWR-D-14-00108.1]
 - **LKNETF** (Local Kalman-nonlinear ensemble transform filter)
        [L. Nerger, Q. J. R. Meteorol Soc., 148 (2022) 620-640, doi:10.1002/qj.4221]
-- **ENSRF/EAKF** (Ensemble square-root filter and Ensemble Adjustment Filter using serial observation processing and covariance localization0
-       [ENSRF: J. Whitaker, T. Hamill, Mon. Wea. Rev. 130 (2002) 1913-1924,
-        EAKF J. Anderson, Mon. Wea. Rev. (2003) 634-642] 
+- **ENSRF** (Ensemble square-root filter  using serial observation processing and covariance localization)
+       [J. Whitaker, T. Hamill, Mon. Wea. Rev. 130 (2002) 1913-1924]
+- **EAKF** (Ensemble Adjustment Filter using serial observation processing and covariance localization)
+       [J. Anderson, Mon. Wea. Rev. (2003) 634-642] 
 
 All filter algorithms are fully parallelized with MPI and optimized. The local filters 
 (LSEIK, LETKF, LESTKF, LNETF, LKNETF) are in addition parallelized using OpenMP.
@@ -238,4 +217,4 @@ notebook computers to supercomputers, e.g.:
 
 ## Contact Information
 
-Please send comments, suggestions, or bug reports to pdaf@awi.de
+Please send comments, suggestions, or bug reports to pdaf@awi.de or use the Issues in Github.
