@@ -55,24 +55,6 @@ then
     make model_pdaf
     cd ..
 
-    echo "------------ online_2D_parallelmodel_fullpar ---------------"
-    export PDAF_ARCH=$ARCH
-    echo PDAF_ARCH: $PDAF_ARCH
-    cd online_2D_parallelmodel_fullpar
-    make clean
-    make cleandata
-    make model_pdaf
-    cd ..
-
-    echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
-    export PDAF_ARCH=$ARCH
-    echo PDAF_ARCH: $PDAF_ARCH
-    cd online_2D_parallelmodel_fullpar_1fpe
-    make clean
-    make cleandata
-    make model_pdaf
-    cd ..
-
 else
     echo "Compilation is deactivated!"
 fi
@@ -145,20 +127,3 @@ make cleandataq
 mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_parallelmodel_ESTKF
 cd ..
 python ../verification/check_online2_cl.py online_2D_parallelmodel online_2D_parallelmodel_ESTKF
-
-
-echo "------------ online_2D_parallelmodel_fullpar --------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_parallelmodel_fullpar
-make cleandataq
-mpirun --oversubscribe -np 20 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar
-cd ..
-python ../verification/check_online_cl.py online_2D_parallelmodel_fullpar
-
-echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
-export OMP_NUM_THREADS=1
-cd online_2D_parallelmodel_fullpar_1fpe
-make cleandataq
-mpirun --oversubscribe -np 19 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar_1fpe
-cd ..
-python ../verification/check_online_cl.py online_2D_parallelmodel_fullpar_1fpe

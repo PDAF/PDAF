@@ -52,6 +52,7 @@ MODULE mod_assimilation
 
 ! ! Settings for observations - available as command line options
   INTEGER :: delt_obs      ! time step interval between assimilation steps
+  LOGICAL :: twin_experiment   !< Whether to run an twin experiment with synthetic observations
   REAL    :: rms_obs       ! RMS error size for observation generation
   INTEGER :: dim_obs       ! Number of observations
 
@@ -118,7 +119,7 @@ MODULE mod_assimilation
   INTEGER :: int_rediag   ! Interval to perform re-diagonalization in SEEK
   REAL    :: epsilon      ! Epsilon for gradient approx. in SEEK forecast
 !    ! ENKF
-  INTEGER :: rank_ana_enkf ! Rank to be considered for inversion of HPH
+  INTEGER :: rank_ana_enkf  ! Rank to be considered for inversion of HPH
 !    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
   INTEGER :: type_trans    ! Type of ensemble transformation
                            ! SEIK/LSEIK:
@@ -146,11 +147,65 @@ MODULE mod_assimilation
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  REAL    :: sradius        ! Support radius for 5th order polynomial
+  REAL    :: sradius       ! Support radius for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
+!    ! NETF/LNETF/PF
+  INTEGER :: type_winf     !< Set weights inflation: 
+                           !<   (0) no weights inflation
+                           !<   (1) use N_eff/N>limit_winf
+  REAL    :: limit_winf    !< Limit for weights inflation: N_eff/N>limit_winf
+!    ! hybrid LKNETF
+  INTEGER :: type_hyb      !< * Type of hybrid weight:
+                           !<   (0) use fixed hybrid weight hyb_gamma
+                           !<   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
+                           !<   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
+                           !<   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
+                           !<   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
+  REAL    :: hyb_gamma     !< Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
+  REAL    :: hyb_kappa     !< Hybrid norm for using skewness and kurtosis
+!    ! Particle filter
+  INTEGER :: pf_res_type   !< * Resampling type for PF
+                           !<   (1) probabilistic resampling
+                           !<   (2) stochastic universal resampling
+                           !<   (3) residual resampling        
+  INTEGER :: pf_noise_type !< * Resampling type for PF
+                           !<   (0) no perturbations, (1) constant stddev, 
+                           !<   (2) amplitude of stddev relative of ensemble variance
+  REAL :: pf_noise_amp     !< Noise amplitude (>=0.0, only used if pf_noise_type>0)
+
+!    ! 3D-Var
+  INTEGER :: type_opt      !< * Type of minimizer for 3DVar
+                           !<   (1) LBFGS (default)
+                           !<   (2) CG+
+                           !<   (3) plain CG
+                           !<   (12) CG+ parallelized
+                           !<   (13) plain CG parallelized
+  INTEGER :: dim_cvec = 0  !< Size of control vector (parameterized part; for subtypes 0,1)
+  INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
+  INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
+  REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
+  INTEGER :: solver_iparam1 = 2 !< Solver specific parameter
+                                !<  LBFGS: parameter m (default=5)
+                                !<       Number of corrections used in limited memory matrix; 3<=m<=20
+                                !<  CG+: parameter method (default=2)
+                                !<       (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
+                                !<  CG: maximum number of iterations (default=200)
+  INTEGER :: solver_iparam2 = 1 !< Solver specific parameter
+                                !<  LBFGS: - not used - 
+                                !<  CG+: parameter irest (default=1)
+                                !<       (0) no restarts; (n>0) restart every n steps
+                                !<  CG: - not used -
+  REAL :: solver_rparam1 = 1.0e-6 !< Solver specific parameter
+                                !<  LBFGS: limit for stopping iterations 'pgtol' (default=1.0e-5)
+                                !<  CG+: convergence parameter 'eps' (default=1.0e-5)
+                                !<  CG: conpergence parameter 'eps' (default=1.0e-6)
+  REAL :: solver_rparam2 = 1.0e+7 !< Solver specific parameter
+                                !<  LBFGS: tolerance in termination test 'factr' (default=1.0e+7) 
+                                !<  CG+: - not used -
+                                !<  CG: - not used -
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
