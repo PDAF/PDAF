@@ -204,6 +204,7 @@ Next to the ensemble filter methods, different 3D-Var methods are provided:
 The 3D-Var methods are implemented as incremental 3D-Var schemes following
 Bannister, Q. J. Royal Meteorol. Soc., 143 (2017) 607-633, doi:10.1002/qj.2982. 
 
+## The code
 
 PDAF is written in, mainly, Fortran 2003. 
 The compilation and execution has been tested on the different systems ranging from
@@ -214,6 +215,11 @@ notebook computers to supercomputers, e.g.:
 - NEC Aurora
 - Microsoft Windows 10 with Cygwin
 
+## Citing PDAF
+
+PDAF is developed by researchers. Thus, with respect to science, please cite PDAF,
+when you publish work obtained using the software. For more information on how to
+cite PDAF, see https://pdaf.awi.de/trac/wiki/CitingPDAF
 
 ## Contact Information
 
