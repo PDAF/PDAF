@@ -20,14 +20,4 @@ make clean
 make cleandata
 cd ..
 
-cd online_2D_parallelmodel_fullpar
-make clean
-make cleandata
-cd ..
-
-cd online_2D_parallelmodel_fullpar_1fpe
-make clean
-make cleandata
-cd ..
-
 rm -f out.*
