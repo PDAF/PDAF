@@ -70,14 +70,15 @@ SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  ! Routines for ensemble framework
+  ! Routines for ensemble framework - generic and always needed
   EXTERNAL :: U_collect_state, &   !< Write model fields into state vector
        U_prepoststep               !< User supplied pre/poststep routine
-  ! Observation-related routines for analysis step
+  ! Observation-related routines for analysis step - generic and always needed
   EXTERNAL :: U_init_dim_obs, &    !< Initialize dimension of observation vector
        U_obs_op, &                 !< Observation operator
-       U_init_obs, &               !< Initialize observation vector
-       U_init_obsvar, &            !< Initialize mean observation error variance
+       U_init_obs                  !< Initialize observation vector
+  ! Observation-related routines for analysis step - specific for the DA method
+  EXTERNAL :: U_init_obsvar, &     ! Initialize mean observation error variance
        U_prodRinvA                 !< Provide product R^-1 A
 
 ! TEMPLATE: The local variables are usually generic and don't need changes

@@ -70,11 +70,14 @@ CONTAINS
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
+    ! Routine for ensemble framework - generic and always needed
+    EXTERNAL :: U_prepoststep         !< User supplied pre/poststep routine
+    ! Observation-related routines for analysis step - generic and always needed
     EXTERNAL :: U_init_dim_obs, &      !< Initialize dimension of observation vector
          U_obs_op, &                   !< Observation operator
-         U_init_obs, &                 !< Initialize observation vector
-         U_init_obsvar, &              !< Initialize mean observation error variance
-         U_prepoststep, &              !< User supplied pre/poststep routine
+         U_init_obs                    !< Initialize observation vector
+    ! Observation-related routines for analysis step - specific for the DA method
+    EXTERNAL :: U_init_obsvar, &       !< Initialize mean observation error variance
          U_prodRinvA                   !< Provide product R^-1 A for GLOBALTEMPLATE analysis
 
 ! *** local variables ***
