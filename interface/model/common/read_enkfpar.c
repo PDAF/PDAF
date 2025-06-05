@@ -81,6 +81,7 @@ void read_enkfpar(char *parname)
   clmprint_swc          = iniparser_getint(pardict,"CLM:print_swc",0);
   clmprint_et           = iniparser_getint(pardict,"CLM:print_et",0);
   clmstatevec_allcol    = iniparser_getint(pardict,"CLM:statevec_allcol",0);
+  clmstatevec_colmean   = iniparser_getint(pardict,"CLM:statevec_colmean",0);
   clmstatevec_only_active = iniparser_getint(pardict,"CLM:statevec_only_active",0);
   clmstatevec_max_layer = iniparser_getint(pardict,"CLM:statevec_max_layer",25);
   clmt_printensemble    = iniparser_getint(pardict,"CLM:t_printensemble",-1);
@@ -139,6 +140,14 @@ void read_enkfpar(char *parname)
     printf("nproccosmo=%d\n", nproccosmo);
     printf("npes_model=%d\n", npes_model);
     printf("Error:  nprocpf + nprocclm + npproccosmo must be equal to npes_model.\n");
+    exit(1);
+  }
+
+  /* Check: Consistency of `statevec_allcol` and `statevec_colmean` */
+  if (clmstatevec_allcol != 0 && clmstatevec_colmean != 0){
+    printf("clmstatevec_allcol=%d\n", clmstatevec_allcol);
+    printf("clmstatevec_colmean=%d\n", clmstatevec_colmean);
+    printf("Error: Either clmstatevec_allcol or clmstatevec_colmean must turned off, i.e. equal to 0.\n");
     exit(1);
   }
 

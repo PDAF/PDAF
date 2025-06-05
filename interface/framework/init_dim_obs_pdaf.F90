@@ -959,7 +959,16 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
                    end if
 #endif
                  else
-                   obs_index_p(cnt) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+#ifdef CLMFIVE
+                   if(clmstatevec_only_active.eq.1) then
+                     obs_index_p(cnt) = state_clm2pdaf_p(c,clmobs_layer(i))
+                   else
+
+#endif
+                     obs_index_p(cnt) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+#ifdef CLMFIVE
+                   end if
+#endif
                  end if
 
                  !write(*,*) 'obs_index_p(',cnt,') is',obs_index_p(cnt)
