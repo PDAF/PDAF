@@ -7,6 +7,9 @@ For license information, please see the file LICENSE.txt.
 
 For full documentation and tutorial, see: http://pdaf.awi.de 
 
+We recommend to subscribe to the PDAF mailing list via the
+online form at https://pdaf.awi.de/register
+
 
 ## Note on PDAF V3.0
 
