@@ -87,6 +87,8 @@
 !!        Set thisobs%icoeff_p
 !! * PDAFomi_set_domainsize \n
 !!        Set thisobs%domainsize
+!! * PDAFomi_set_name \n
+!!        Set thisobs%name
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -129,7 +131,6 @@ MODULE PDAFomi_obs_f
      ! ---- Optional variables - they can be set in INIT_DIM_OBS ----
      REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
      REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
-     CHARACTER(len=20) :: name=""         !< Name of observation type (optional)
 
      ! ---- Variables with predefined values - they can be changed in INIT_DIM_OBS  ----
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
@@ -139,6 +140,7 @@ MODULE PDAFomi_obs_f
                                           !<     observation standard deviation (only active for >0)
      REAL :: inno_omit_ivar=1.0e-12       !< Value of inverse variance to omit observation
                                           !<     (should be much smaller than actual inverse observation error variance)
+     CHARACTER(len=20) :: name=""         !< Name of observation type (optional)
 
      ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
@@ -2691,6 +2693,30 @@ CONTAINS
     thisobs%domainsize(:) = domainsize(:)
 
   END SUBROUTINE PDAFomi_set_domainsize
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%name
+!!
+!! This routine can be used to set thisobs%name
+!!
+!! __Revision history:__
+!! * 2025-06 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_name(thisobs, obsname)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    CHARACTER(len=20), INTENT(in) :: obsname !< Name of observation type
+
+    ! Initialization
+    thisobs%name = obsname
+
+  END SUBROUTINE PDAFomi_set_name
 
 
 

@@ -38,6 +38,9 @@
 !! * PDAFomi_obs_op_gatheronly\n
 !!        Observation operator for the case of strongly coupled assimilation
 !!        to gather an observation which only exists in other compartments.
+!! * PDAFomi_obs_op_extern\n
+!!        Observation operator allowing the user to apply H externally
+!!        (e.g. inside the model) and just provie the domain local H(x).
 !!
 !! Adjoint observation operators:
 !!
@@ -375,11 +378,12 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> observation operator for the case that observations belong to other compartment
+!> observation operator for the case that observations belong to other component
 !!
 !! Application of observation operator for the case that 
-!! model variables are observerved in another compartment
-!! only. Thus DIM_OBS_P of the current compartment is 0.
+!! model variables are observed in a coupled model system
+!! in another model component only. Thus DIM_OBS_P of the
+!! current component is 0.
 !! Accordingly, this observation operator only performs
 !! the gather operation to obtain the full observations.
 !!
@@ -442,6 +446,61 @@ CONTAINS
     END IF doassim
 
   END SUBROUTINE PDAFomi_obs_op_gatheronly
+
+
+
+
+!-------------------------------------------------------------------------------
+!> observation operator for the case that user provides local Hx
+!!
+!! Application of observation operator for the case that
+!! a user performs the actual observation operator externally,
+!! e.g., directly in the model during the forecast. 
+!! For this case, the user can provide the observed model state
+!! to this routine and it will just call PDAFomi_gather_obsstate
+!! to obtain the full observed vector OBS_F_ALL.
+!!
+!! The routine has to be called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2025-06 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_obs_op_extern(thisobs, ostate_p, obs_f_all)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    REAL, INTENT(in)    :: ostate_p(:)     !< PE-local observed model state (dim: thisobs%dim_obs_p)
+    REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
+
+! *** Local variables ***
+
+
+! *********************************************
+! *** Perform application of measurement    ***
+! *** operator H on vector or matrix column ***
+! *********************************************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_extern -- START'
+
+       ! *** PE-local: Nothing to be done!
+
+       ! *** Global: Gather full observed state vector
+       CALL PDAFomi_gather_obsstate(thisobs, ostate_p, obs_f_all)
+
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_extern -- END'
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_obs_op_extern
 
 
 
