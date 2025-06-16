@@ -1,0 +1,51 @@
+# https://hpscterrsys.github.io/pdaf
+
+format: jb-book
+root: INDEX
+
+parts:
+  - caption: User's Guide
+    chapters:
+
+    - file: users_guide/introduction_to_tsmp_pdaf/README
+      title: Introduction to TSMP-PDAF
+      sections:
+      - file: users_guide/introduction_to_tsmp_pdaf/introduction
+      - file: users_guide/introduction_to_tsmp_pdaf/input_file
+      - file: users_guide/introduction_to_tsmp_pdaf/how_to_use_this_document
+
+    - file: users_guide/building_tsmp_pdaf/README
+      title: Building TSMP-PDAF
+      sections:
+      - file: users_guide/building_tsmp_pdaf/build_preprocessor_variables
+
+    - file: users_guide/running_tsmp_pdaf/README
+      title: Running TSMP-PDAF
+      sections:
+      - file: users_guide/running_tsmp_pdaf/input_clm
+      - file: users_guide/running_tsmp_pdaf/input_pfl
+      - file: users_guide/running_tsmp_pdaf/input_cos
+      - file: users_guide/running_tsmp_pdaf/input_oas
+      - file: users_guide/running_tsmp_pdaf/input_cmd
+      - file: users_guide/running_tsmp_pdaf/input_obs
+      - file: users_guide/running_tsmp_pdaf/input_enkfpf
+
+    - file: users_guide/debugging_tsmp_pdaf/README
+      title: Debugging TSMP-PDAF
+      sections:
+      - file: users_guide/debugging_tsmp_pdaf/debug
+
+    - file: users_guide/misc/README
+      title: Misc
+      sections:
+      - file: users_guide/misc/clm5_pdaf_starter
+
+  - caption: Reference
+    chapters:
+    # - file: reference/history_fields
+    - url: https://pdaf.awi.de/trac/wiki
+      title: PDAF documentation
+    - url: https://hpscterrsys.github.io/pdaf/src
+      title: TSMP-PDAF Source Code Browser (library)
+    - url: https://hpscterrsys.github.io/pdaf/interface
+      title: TSMP-PDAF Source Code Browser (interface)
