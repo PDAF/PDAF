@@ -1520,13 +1520,13 @@ SUBROUTINE PDAF_diag_reliability_budget(n_times, dim_ens, dim_p, &
                                                         !< the observation error is different for each ensemble member.
                                                         !< If an observation variance is given directly,
                                                         !< same value can be used across dimensions.
-  REAL, INTENT(in)  :: obs_p(dim_p, n_times)            !< Observation vector       
+  REAL, INTENT(in)  :: obs_p(dim_p, n_times)            !< Observation vector
   REAL, INTENT(out) :: budget(dim_p, n_times, 5)        !< Budget term for a single time step
-                                                        !< 1. depar^2, 2. bias, 3. ensvar, 4. obsunc, 
+                                                        !< 1. depar^2, 2. bias, 3. ensvar, 4. obsunc,
                                                         !< 5. residual
-                                                        !< Each time step is used as a sample for 
+                                                        !< Each time step is used as a sample for
                                                         !< significant tests
-  REAL, INTENT(out) :: bias_2(dim_p)                    !< bias^2 uses 
+  REAL, INTENT(out) :: bias_2(dim_p)                    !< bias^2 uses
 
 ! *** Locals ***
   REAL, ALLOCATABLE :: state_p(:)                       !< Ensemble mean
@@ -1541,7 +1541,7 @@ SUBROUTINE PDAF_diag_reliability_budget(n_times, dim_ens, dim_p, &
   budget = 0.
   bias_2 = 0.
   inv_ens = 1. / REAL(dim_ens)
-  envar_factor = inv_ens / REAL(dim_ens+1) / REAL(dim_ens - 1)
+  envar_factor = REAL(dim_ens+1)*inv_ens / REAL(dim_ens - 1)
   depar_factor = REAL(n_times) / REAL(n_times - 1)
   DO it = 1, n_times
       ! Compute state_p = mean(ens_p, axis=2 in Python),
@@ -1556,7 +1556,8 @@ SUBROUTINE PDAF_diag_reliability_budget(n_times, dim_ens, dim_p, &
      DO ie = 1, dim_ens
         DO i = 1, dim_p
            ! ensvar = sum(ens_p - state_p, axis over ie) * (dim_ens+1)/dim_ens/(dim_ens-1)
-           budget(i, it, 3) = budget(i, it, 3) + ens_p(i, ie, it) - state_p(i)
+           budget(i, it, 3) = budget(i, it, 3) + \
+              (ens_p(i, ie, it) - state_p(i))*(ens_p(i, ie, it) - state_p(i))
            ! ObsUnc is an average over ensemble members
            budget(i, it, 4) = budget(i, it, 4) + obsvar(i, ie, it)
         END DO
@@ -1564,11 +1565,11 @@ SUBROUTINE PDAF_diag_reliability_budget(n_times, dim_ens, dim_p, &
 
      ! compute each time step of budget component
      DO i = 1, dim_p
-        d = obs_p(i, it) - state_p(i)
+        d = state_p(i) - obs_p(i, it)
         ! depar^2 = (d*d)*n_times/(n_times - 1)
         budget(i, it, 1) = d * d
         ! unsquared bias = -d
-        budget(i, it, 2) = -d
+        budget(i, it, 2) = d
         ! Bias^2
         bias_2(i) = bias_2(i) + d
      END DO
