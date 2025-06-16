@@ -1,11 +1,9 @@
 # TSMP-PDAF: Pre-patched PDAF
 
 This fork of PDAF contains the PDAF changes ("patches") for using it
-with TSMP (both TSMP1 <https://github.com/HPSCTerrSys/TSMP> and TSMP2
-<https://github.com/HPSCTerrSys/TSMP2>).
+with TSMP (<https://github.com/HPSCTerrSys/TSMP2>).
 
-User documentation of TSMP-PDAF:
-<https://hpscterrsys.github.io/TSMP/index.html>
+User documentation of TSMP-PDAF: <https://hpscterrsys.github.io/pdaf>
 
 **List of TSMP-related changes:**
 
@@ -14,10 +12,13 @@ User documentation of TSMP-PDAF:
 include file `cmake.h` for TSMP2-PDAF
    2. `src/`: debug output of the observation ensemble for EnKF/LEnKF
 2. `interface/` the interface routines for TSMP-PDAF
+3. `.github/`: GitHub workflow files
+   1. `docs.yml`: Deploying the user documentation.
+4. `docs/`: Documentation sources.
 
 **Explanation of the term "pre-patched"**: For TSMP1-PDAF, the source
-code of PDAF is changed during the build-process. F.e. PDAF source
-code files may be replaced by corresponding files from the
+code of PDAF has been changed during the build-process. Example: PDAF
+source code files could be replaced by corresponding files from the
 TSMP1-repository.  The process of changing the source code of PDAF is
 called "patching". For TSMP2-PDAF, there is no "patching" of
 PDAF. Instead, TSMP2-PDAF clones the source code of this fork of
