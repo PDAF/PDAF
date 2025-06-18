@@ -342,7 +342,7 @@ CONTAINS
 ! ***  (PDAF-internal names, real names are defined in the call to PDAF)
     EXTERNAL :: U_init_obs_l, &        !< Init. observation vector on local analysis domain
          U_g2l_obs, &                  !< Restrict full obs. vector to local analysis domain
-         U_init_dim_obs_l, &           !< Initialize dim. of obs. vector for local ana. domain
+         U_init_dim_obs_l              !< Initialize dim. of obs. vector for local ana. domain
 
 ! *** Local variables ***
     INTEGER :: member                  ! Counter
