@@ -39,7 +39,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_state, do_omi_obsstats
   USE PDAF, &                  ! PDAF diagnostic routine
-       ONLY: PDAF_diag_stddev
+       ONLY: PDAF_diag_stddev, PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
 
   IMPLICIT NONE
 
@@ -64,6 +64,10 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   REAL :: ens_stddev                  ! ensemble STDDEV = estimated RMS error
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
+  ! Variables for observation diagnostics
+  INTEGER :: nobs                     ! Number of active observation types
+  REAL, POINTER :: obsRMSD(:)         ! Pointer to array of observation RMSDs
+  REAL, POINTER :: obsstats(:,:)      ! Pointer to array  of observation statistics
 
 
 ! **********************
@@ -86,6 +90,20 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   CALL PDAF_diag_stddev(dim_p, dim_ens, state_p, ens_p, &
         ens_stddev, 1, COMM_filter, pdaf_status)
+
+
+! ***************************************
+! *** Compute observation diagnostics ***
+! ***************************************
+
+!TEMPLATE: We include two statistics here, which are optional
+  IF (do_omi_obsstats) THEN
+     ! Compute RMS deviation between observation and observed ensemble mean
+     CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1/(mype_filter+1))
+
+     ! Compute statistics on deviation between observation and observed ensemble
+     CALL PDAFomi_diag_stats(nobs, obsstats, 1/(mype_filter+1))
+  END IF
 
 
 ! *****************

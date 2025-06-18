@@ -58,16 +58,17 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER :: pdaf_status              ! status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
   REAL :: ens_stddev                  ! ensemble STDDEV = estimated RMS error
-  INTEGER :: nobs                     ! Number of observations in diagnostics
-  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
-  REAL, POINTER :: obsstats(:,:)      ! Array of observation statistics
   ! Variables for parallelization - global fields
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
   REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
+  ! Variables for observation diagnostics
+  INTEGER :: nobs                     ! Number of active observation types
+  REAL, POINTER :: obsRMSD(:)         ! Pointer to array of observation RMSDs
+  REAL, POINTER :: obsstats(:,:)      ! Pointer to array  of observation statistics
 
 
 ! **********************
@@ -100,12 +101,12 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   CALL PDAF_diag_stddev(dim_p, dim_ens, state_p, ens_p, &
         ens_stddev, 1, COMM_filter, pdaf_status)
 
- 
-! **************************************
-! *** Compute observation statistics ***
-! **************************************
 
-!TEMPLATE: We include two statistics here, which are optional and partly redundant
+! ***************************************
+! *** Compute observation diagnostics ***
+! ***************************************
+
+!TEMPLATE: We include two statistics here, which are optional
   IF (do_omi_obsstats) THEN
      ! Compute RMS deviation between observation and observed ensemble mean
      CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1/(mype_filter+1))
