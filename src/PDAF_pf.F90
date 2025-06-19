@@ -167,7 +167,7 @@ CONTAINS
   SUBROUTINE PDAF_pf_alloc(outflag)
 
     USE PDAF_mod_core, &
-         ONLY: dim_ens, dim_p, dim_bias_p
+         ONLY: dim_ens, dim_p
     USE PDAF_mod_parallel, &
          ONLY: dim_ens_l
     USE PDAF_utils, &
@@ -183,8 +183,7 @@ CONTAINS
 ! *** Allocate filter fields ***
 ! ******************************
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, 1, dim_bias_p, &
-         dim_lag, 0, outflag)
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, 1, 0, outflag)
 
   END SUBROUTINE PDAF_pf_alloc
 

@@ -18,21 +18,22 @@
 !
 !> Module collecting differrent utlility routines for PDAF
 MODULE PDAF_utils
-
+!> Utility routines for PDAF
+!!
+!! !  These are core routines of PDAF and
+!!    should not be changed by the user   !
+!!
 CONTAINS
 
 !-------------------------------------------------------------------------------
 !> General allocation routine of PDAF
 !!
-!! !  This is a core routine of PDAF and
-!!    should not be changed by the user   !
-!!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code from restructuring
 !! * Other revisions - see repository log
 !!
-SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
-     dim_lag, statetask, outflag)
+SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, &
+     statetask, outflag)
 
   USE mpi
   USE PDAF_memcounting, &
@@ -51,8 +52,6 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
   INTEGER, INTENT(in) :: dim_ens         !< Ensemble size
   INTEGER, INTENT(in) :: dim_ens_task    !< Ensemble size handled by a model task
   INTEGER, INTENT(in) :: dim_es          !< Dimension of error space (size of Ainv)
-  INTEGER, INTENT(in) :: dim_bias_p      !< Size of bias vector
-  INTEGER, INTENT(in) :: dim_lag         !< Smoother lag
   INTEGER, INTENT(in) :: statetask       !< Task ID forecasting a single state
   INTEGER, INTENT(inout):: outflag       !< Status flag
 
@@ -96,40 +95,14 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
         ALLOCATE(Ainv(1, 1), stat = allocstat)
      END IF
 
-     ! Allocate array for past ensembles for smoothing on filter-PEs
-     IF (dim_lag > 0) THEN
-        ALLOCATE(sens(dim_p, dim_ens, dim_lag), stat = allocstat)
-        IF (allocstat /= 0) THEN
-           WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of sens'
-           outflag = 20
-        END IF
-        ! count allocated memory
-        CALL PDAF_memcount(2, 'r', dim_p * dim_ens * dim_lag)
-     ELSE
-        ALLOCATE(sens(1, 1, 1), stat = allocstat)
-        IF (allocstat /= 0) THEN
-           WRITE (*,*) 'PDAF-ERROR(20): error in allocation of sens'
-           outflag = 20
-        END IF
-     END IF
-
-     IF (dim_bias_p > 0) THEN
-        ALLOCATE(bias(dim_bias_p), stat = allocstat)
-        ! count allocated memory
-        CALL PDAF_memcount(2, 'r', dim_bias_p)
-        
-        ! initialize bias field
-        bias = 0.0
-     ELSE
-        ALLOCATE(bias(1), stat = allocstat)
-     ENDIF
-     IF (allocstat /= 0) THEN
-        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of BIAS'
-        outflag = 20
-     END IF
-
      IF (screen > 2) WRITE (*,*) 'PDAF: alloc - allocate ens of size ', &
           dim_ens, ' on pe(f) ', mype
+
+     ! SENS and BIAS have their own allocation routines.
+     ! If they are not alled in PDAF_X_SET_IPARAM, we allocate
+     ! these arrays to their minimum size.
+     IF (.NOT.ALLOCATED(sens)) ALLOCATE(sens(1,1,1))
+     IF (.NOT.ALLOCATED(bias)) ALLOCATE(bias(1))
      
   ELSE on_filterpe
      ! Model-PEs that are not Filter-PEs only need an array for the local ensemble
@@ -167,6 +140,127 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
   END IF on_filterpe
 
 END SUBROUTINE PDAF_alloc
+
+!-------------------------------------------------------------------------------
+!> Allocation routine of PDAF for smoother array
+!!
+!! The smoother array is allocated here separate from the
+!! general allocation in PDAF_alloc. The routine is 
+!! called from the PDAF_X_set_iparam of each filter method
+!! that supports smoothing. The separation is needed to 
+!! allow setting dim_lag using PDAF_set_iparam.
+!!
+!! __Revision history:__
+!! * 2025-06 - Lars Nerger - Initial code from restructuring
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_alloc_sens(dim_p, dim_ens, dim_lag, outflag)
+
+  USE mpi
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
+  USE PDAF_mod_core, &
+       ONLY: sens
+  USE PDAF_mod_parallel, &
+       ONLY: filterpe 
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p           !< Size of state vector
+  INTEGER, INTENT(in) :: dim_ens         !< Ensemble size
+  INTEGER, INTENT(in) :: dim_lag         !< Smoother lag
+  INTEGER, INTENT(inout):: outflag       !< Status flag
+
+! *** local variables ***
+  INTEGER :: allocstat                   ! Status for allocate
+
+
+! ****************************
+! *** Allocate PDAF arrays ***
+! ****************************
+
+  on_filterpe: IF (filterpe) THEN
+     
+     IF (ALLOCATED(sens)) DEALLOCATE(sens)
+
+     ! Allocate array for past ensembles for smoothing on filter-PEs
+     IF (dim_lag > 0) THEN
+        ALLOCATE(sens(dim_p, dim_ens, dim_lag), stat = allocstat)
+
+        ! count allocated memory
+        CALL PDAF_memcount(2, 'r', dim_p * dim_ens * dim_lag)
+     ELSE
+        ALLOCATE(sens(1, 1, 1), stat = allocstat)
+     END IF
+     IF (allocstat /= 0) THEN
+        WRITE (*,*) 'PDAF-ERROR(20): error in allocation of sens'
+        outflag = 20
+     END IF
+
+  END IF on_filterpe
+
+END SUBROUTINE PDAF_alloc_sens
+
+!-------------------------------------------------------------------------------
+!> Allocation routine of PDAF for bias array
+!!
+!! The bias array is allocated here separate from the
+!! general allocation in PDAF_alloc. The routine should be
+!! called from the PDAF_X_set_iparam of each filter method
+!! that supports a bias estimation. The separation is needed
+!! to allow setting dim_bias using PDAF_set_iparam.
+!!
+!! __Revision history:__
+!! * 2025-06 - Lars Nerger - Initial code from restructuring
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_alloc_bias(dim_bias_p, outflag)
+
+  USE mpi
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
+  USE PDAF_mod_core, &
+       ONLY: bias
+  USE PDAF_mod_parallel, &
+       ONLY: filterpe 
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_bias_p      !< Size of bias vector
+  INTEGER, INTENT(inout):: outflag       !< Status flag
+
+! *** local variables ***
+  INTEGER :: allocstat                   ! Status for allocate
+
+
+! ****************************
+! *** Allocate PDAF arrays ***
+! ****************************
+
+  on_filterpe: IF (filterpe) THEN
+     
+     IF (ALLOCATED(bias)) DEALLOCATE(bias)
+
+     IF (dim_bias_p > 0) THEN
+        ALLOCATE(bias(dim_bias_p), stat = allocstat)
+        ! count allocated memory
+        CALL PDAF_memcount(2, 'r', dim_bias_p)
+        
+        ! initialize bias field
+        bias = 0.0
+     ELSE
+        ALLOCATE(bias(1), stat = allocstat)
+     ENDIF
+     IF (allocstat /= 0) THEN
+        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of BIAS'
+        outflag = 20
+     END IF
+
+  END IF on_filterpe
+
+END SUBROUTINE PDAF_alloc_bias
 
 
 !-------------------------------------------------------------------------------

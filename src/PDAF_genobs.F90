@@ -142,8 +142,7 @@ END SUBROUTINE PDAF_genobs_init
 ! *** Allocate filter fields ***
 ! ******************************
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, 1, 0, &
-         0, 0, outflag)
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, 1, 0, outflag)
 
   END SUBROUTINE PDAF_genobs_alloc
 

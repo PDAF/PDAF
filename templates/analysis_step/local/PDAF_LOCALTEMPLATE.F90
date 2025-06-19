@@ -272,6 +272,11 @@ CONTAINS
 
     USE PDAFobs, &
          ONLY: type_obs_init, observe_ens
+!TEMPLATE: activate these use-includes if smoothing is used
+!     USE PDAF_mod_core, &
+!          ONLY: dim_ens, dim_p
+!     USE PDAF_utils, &
+!          ONLY: PDAF_alloc_sens
 
     IMPLICIT NONE
 
@@ -297,7 +302,16 @@ CONTAINS
     CASE(2)
        CALL PDAF_reset_dim_ens(value, flag)
     CASE(3)
-       ! Not used
+! TEMPLATE: iparam(3) is commonly used for 'dim_lag' to define the smoother lag
+! Out-comment the following lines, if smoothing is used
+!        dim_lag = value
+!        IF (dim_lag<0) THEN
+!           WRITE (*,'(/5x, a/)') &
+!                'PDAF-ERROR(8): Invalid value for smoother lag - param_int(3)!'
+!           flag = 8
+!        END IF
+! 
+!        CALL PDAF_alloc_sens(dim_p, dim_ens, dim_lag, flag)
     CASE(4)
        ! Not used
     CASE(5)

@@ -169,7 +169,7 @@ CONTAINS
   SUBROUTINE PDAF_netf_alloc(outflag)
 
     USE PDAF_mod_core, &
-         ONLY: dim_ens, dim_p, dim_bias_p
+         ONLY: dim_ens, dim_p
     USE PDAF_mod_parallel, &
          ONLY: dim_ens_l
     USE PDAF_utils, &
@@ -185,8 +185,7 @@ CONTAINS
 ! *** Allocate filter fields ***
 ! ******************************
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, dim_bias_p, &
-         dim_lag, 0, outflag)
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, 0, outflag)
 
   END SUBROUTINE PDAF_netf_alloc
 
@@ -296,6 +295,10 @@ CONTAINS
 
     USE PDAFobs, &
          ONLY: type_obs_init, observe_ens
+    USE PDAF_mod_core, &
+         ONLY: dim_ens, dim_p
+    USE PDAF_utils, &
+         ONLY: PDAF_alloc_sens
 
     IMPLICIT NONE
 
@@ -324,6 +327,8 @@ CONTAINS
                'PDAF-ERROR(8): Invalid value for smoother lag - param_int(3)!'
           flag = 8
        END IF
+
+       CALL PDAF_alloc_sens(dim_p, dim_ens, dim_lag, flag)
     CASE(4)
        type_noise = value
        IF (type_noise < 0 .OR. type_noise > 2) THEN

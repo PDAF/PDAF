@@ -164,7 +164,7 @@ CONTAINS
   SUBROUTINE PDAF_estkf_alloc(outflag)
 
     USE PDAF_mod_core, &
-         ONLY: dim_ens, dim_p, dim_bias_p
+         ONLY: dim_ens, dim_p
     USE PDAF_mod_parallel, &
          ONLY: dim_ens_l
     USE PDAF_utils, &
@@ -180,8 +180,7 @@ CONTAINS
 ! *** Allocate filter fields ***
 ! ******************************
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens-1, dim_bias_p, &
-         dim_lag, 0, outflag)
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens-1, 0, outflag)
 
   END SUBROUTINE PDAF_estkf_alloc
 
@@ -227,6 +226,11 @@ CONTAINS
        ELSE IF (subtype == 11) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF with fixed state covariance matrix'
        END IF
+       IF (dim_lag > 0) THEN
+          WRITE(*, '(a, 10x, a, i3)') &
+               'PDAF', 'param_int(3) dim_lag=', dim_lag
+          WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+       END IF
        WRITE(*, '(a, 10x, a, i3)') &
             'PDAF', 'param_int(5) type_forget=', type_forget
        IF (type_forget == 0) THEN
@@ -264,8 +268,6 @@ CONTAINS
        ELSE IF (type_obs_init==1) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
-       IF (dim_lag > 0) &
-            WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
        WRITE(*, '(a, 10x, a, f10.3)') &
             'PDAF', 'param_real(1) forget=', forget
 
@@ -284,6 +286,10 @@ CONTAINS
 
     USE PDAFobs, &
          ONLY: type_obs_init, observe_ens
+    USE PDAF_mod_core, &
+         ONLY: dim_ens, dim_p
+    USE PDAF_utils, &
+         ONLY: PDAF_alloc_sens
 
     IMPLICIT NONE
 
@@ -312,6 +318,8 @@ CONTAINS
                'PDAF-ERROR(8): Invalid value for smoother lag - param_int(3)!'
           flag = 8
        END IF
+
+       CALL PDAF_alloc_sens(dim_p, dim_ens, dim_lag, flag)
     CASE(4)
        ! Not used
     CASE(5)

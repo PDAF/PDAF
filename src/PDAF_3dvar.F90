@@ -193,7 +193,7 @@ CONTAINS
   SUBROUTINE PDAF_3dvar_alloc(subtype, outflag)
 
     USE PDAF_mod_core, &
-         ONLY: dim_ens, dim_p, dim_bias_p
+         ONLY: dim_ens, dim_p
     USE PDAF_mod_parallel, &
          ONLY: dim_ens_l
     USE PDAF_utils, &
@@ -219,8 +219,7 @@ CONTAINS
        dim_es = dim_ens-1
     END IF
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_es, dim_bias_p, &
-         dim_lag, 0, outflag)
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_es, 0, outflag)
 
   END SUBROUTINE PDAF_3dvar_alloc
 
