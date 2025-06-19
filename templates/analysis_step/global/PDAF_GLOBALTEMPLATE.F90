@@ -146,7 +146,7 @@ CONTAINS
   SUBROUTINE PDAF_GLOBALTEMPLATE_alloc(outflag)
 
     USE PDAF_mod_core, &
-         ONLY: dim_ens, dim_p, dim_bias_p
+         ONLY: dim_ens, dim_p
     USE PDAF_mod_parallel, &
          ONLY: dim_ens_l
 
@@ -167,8 +167,7 @@ CONTAINS
 
 ! TEMPLATE: Adapt this call according to the required arrays of the DA-method
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, dim_bias_p, &
-         dim_lag, do_alloc_statetask, 0, outflag)
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, do_alloc_statetask, 0, outflag)
 
   END SUBROUTINE PDAF_GLOBALTEMPLATE_alloc
 
