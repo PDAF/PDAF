@@ -261,7 +261,7 @@ CONTAINS
     USE PDAFobs, &
          ONLY: type_obs_init, observe_ens
     USE PDAF_mod_core, &
-         ONLY: dim_ens, dim_p
+         ONLY: subtype_filter, dim_ens, dim_p
     USE PDAF_utils, &
          ONLY: PDAF_alloc_sens
 
@@ -292,6 +292,9 @@ CONTAINS
                'PDAF-ERROR(8): Invalid value for smoother lag - param_int(3)!'
           flag = 8
        END IF
+
+       ! only subtype=0 support smoother; if needed reset subtype
+       IF (subtype_filter==1 .AND. dim_lag>0) subtype_filter = 0
 
        CALL PDAF_alloc_sens(dim_p, dim_ens, dim_lag, flag)
     CASE(4)
@@ -403,8 +406,8 @@ CONTAINS
     WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for EnKF:'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '0: Full ensemble integration; analysis for 2*dim_obs>dim_ens'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '1: Full ensemble integration; analysis for 2*dim_obs<=dim_ens'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: recommended analysis for 2*dim_obs>dim_ens'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '1: recommended analysis for 2*dim_obs<=dim_ens'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1) dim_p'
@@ -415,6 +418,7 @@ CONTAINS
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Size of smoothing lag (>=0), optional'
     WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
     WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Note: smoothing is only available for subtype=0'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): rank_ana_enkf'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'maximum rank for inversion of HPH^T, optional, default=0'
     WRITE(*, '(a, 12x, a)') 'PDAF', 'for =0, HPH is inverted by solving the representer equation'

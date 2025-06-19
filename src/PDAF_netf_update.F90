@@ -298,9 +298,8 @@ SUBROUTINE  PDAFnetf_update(step, dim_p, dim_obs_p, dim_ens, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens*dim_ens)
 
      CALL PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
-          ens_p, rndmat, TA_noinfl,  &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
-          screen, flag)
+          ens_p, rndmat, TA_noinfl, HX_p, obs_p, &
+          U_likelihood, screen, flag)
 
      CALL PDAF_timeit(15, 'old')
   END IF

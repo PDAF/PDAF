@@ -409,9 +409,8 @@ END SUBROUTINE PDAF_netf_ana
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
-     ens_p, rndmat, T,  &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
-     screen, flag)
+     ens_p, rndmat, TA, HX_p, obs_p, &
+     U_likelihood, screen, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -429,20 +428,19 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Arguments ***
   INTEGER, INTENT(in) :: step         !< Current time step
   INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p   !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_obs_p    !< PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
   REAL, INTENT(in)    :: rndmat(dim_ens, dim_ens) !< Orthogonal random matrix
-  REAL, INTENT(inout) :: T(dim_ens, dim_ens)      !< Ensemble transform matrix
+  REAL, INTENT(inout) :: TA(dim_ens, dim_ens)      !< Ensemble transform matrix
+  REAL, INTENT(in) :: HX_p(dim_obs_p, dim_ens)    !< Temporary matrices for analysis
+  REAL, INTENT(in) :: obs_p(dim_obs_p)            !< PE-local observation vector
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
   INTEGER, INTENT(inout) :: flag      !< Status flag
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, &       !< Initialize dimension of observation vector
-       U_obs_op, &                    !< Observation operator
-       U_init_obs, &                  !< Initialize observation vector
-       U_likelihood                   !< Compute observation likelihood for an ensemble member
+  EXTERNAL :: U_likelihood            !< Compute observation likelihood for an ensemble member
        
 ! *** local variables ***
   INTEGER :: i, j, member, col, row   ! counters
@@ -454,7 +452,6 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
   REAL :: weight                      ! Ensemble weight (likelihood)
   INTEGER :: n_small_svals            ! Number of small eigenvalues
   REAL, ALLOCATABLE :: resid_i(:)     ! PE-local observation residual
-  REAL, ALLOCATABLE :: obs_p(:)       ! PE-local observation vector
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
   REAL, ALLOCATABLE :: T_tmp(:,:)     ! Square root of transform matrix
@@ -476,37 +473,16 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
 
-! *********************************
-! *** Get observation dimension ***
-! *********************************
-
-  CALL PDAF_timeit(15, 'new')
-  CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(15, 'old')
-
-  IF (screen > 0) THEN
-     WRITE (*, '(a, 5x, a13, 1x, i3, 1x, a, i8)') &
-          'PDAF', '--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
-  END IF
-
-
-  ! ***********************************************
-  ! *** Compute particle weights                ***
-  ! ***   w_i = exp(-0.5*(y-Hx_i)^TR-1(y-Hx_i)) ***
-  ! ***********************************************
+! ***********************************************
+! *** Compute particle weights                ***
+! ***   w_i = exp(-0.5*(y-Hx_i)^TR-1(y-Hx_i)) ***
+! ***********************************************
 
   ! Allocate weights
   ALLOCATE(weights(dim_ens))   
 
   haveobs: IF (dim_obs_p > 0) THEN
      ! *** The weights only exist for domains with observations ***
-
-     ALLOCATE(obs_p(dim_obs_p))
-
-     ! get observation vector
-     CALL PDAF_timeit(50, 'new')
-     CALL U_init_obs(step, dim_obs_p, obs_p)
-     CALL PDAF_timeit(50, 'old')
 
      ! Allocate tempory arrays for obs-ens_i
      ALLOCATE(resid_i(dim_obs_p))
@@ -515,12 +491,8 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
      ! Get residual as difference of observation and observed state for each ensemble member
      CALC_w: DO member = 1, dim_ens
 
-        CALL PDAF_timeit(44, 'new')
-        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i)
-        CALL PDAF_timeit(44, 'old')
-
         CALL PDAF_timeit(51, 'new')
-        resid_i = obs_p - resid_i 
+        resid_i = obs_p - HX_p(:, member)
         CALL PDAF_timeit(51, 'old')
 
         ! Compute likelihood
@@ -547,7 +519,7 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
         WRITE(*,'(/5x,a/)') 'PDAF-ERROR (3): Zero weights in NETF smoother'
      END IF
 
-     DEALLOCATE(obs_p, resid_i, Rinvresid)
+     DEALLOCATE(resid_i, Rinvresid)
 
      ! Diagnostic: Compute effective sample size
      CALL PDAF_diag_effsample(dim_ens, weights, effN)
@@ -567,11 +539,11 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(51, 'new')
 
-  ! ****************************************
-  ! *** Calculate the transform matrix   ***
-  ! ***      A= (diag(w)-w*w^t)          ***
-  ! *** with the weights w               ***
-  ! ****************************************
+! ****************************************
+! *** Calculate the transform matrix   ***
+! ***      A= (diag(w)-w*w^t)          ***
+! *** with the weights w               ***
+! ****************************************
 
   ALLOCATE(A(dim_ens,dim_ens))
 
@@ -585,9 +557,9 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
   END DO
 
 
-  ! ********************************************************************
-  ! *** Compute ensemble transformation matrix W as square-root of A ***
-  ! ********************************************************************
+! ********************************************************************
+! *** Compute ensemble transformation matrix W as square-root of A ***
+! ********************************************************************
 
   ! Compute symmetric square-root of A by EVD
   ALLOCATE(svals(dim_ens))
@@ -618,7 +590,7 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
 
   DO j = 1,dim_ens
      DO i = 1, dim_ens
-        T(j,i) = A(j,i) * SQRT(svals(i))
+        TA(j,i) = A(j,i) * SQRT(svals(i))
      END DO
   END DO
 
@@ -628,7 +600,7 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
 
   ! Calculate transform matrix T
   CALL gemmTYPE('n', 't', dim_ens, dim_ens, dim_ens, 1.0, &
-       T, dim_ens, A, dim_ens, 0.0, T_tmp, dim_ens)
+       TA, dim_ens, A, dim_ens, 0.0, T_tmp, dim_ens)
 
   ! Multiply T by m/(m-1) to get unbiased ensemble
   fac = SQRT(REAL(dim_ens))
@@ -636,12 +608,12 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
   ! Multiply random matrix with quare root of A (T)
   CALL gemmTYPE('n', 'n', dim_ens, dim_ens, dim_ens, &
          fac, T_tmp, dim_ens, rndmat, dim_ens, &
-         0.0, T, dim_ens)
+         0.0, TA, dim_ens)
 
   ! Compute W = sqrt(U) + w for efficient ensemble update
   DO col = 1, dim_ens
      DO row = 1, dim_ens
-        T(row, col) = T(row, col) + weights(row)
+        TA(row, col) = TA(row, col) + weights(row)
      END DO
   END DO
 
