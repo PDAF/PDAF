@@ -30,7 +30,7 @@ SUBROUTINE init_pdaf()
        rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, delt_obs, steps_iau, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
-       observe_ens, type_obs_init, do_omi_obsstats
+       observe_ens, type_obs_init, do_omi_obsstats, dim_lag
   USE mod_model, &                ! Model variables
        ONLY: nx, ny, nx_p, ndim
   USE obs_A_pdafomi, &            ! Variables for observation type A
@@ -95,6 +95,7 @@ SUBROUTINE init_pdaf()
   type_sqrt = 0      ! SEIK/LSEIK/ESTKF/LESTKF: Type of transform matrix square-root
   type_iau = 0       ! Type of incremental updating
   steps_iau = 5      ! Number of time steps over which IAU is applied
+  dim_lag = 0        ! Smoother lag
 
   !EnKF
   rank_ana_enkf = 0  ! EnKF: rank to be considered for inversion of HPH in analysis step
@@ -179,6 +180,7 @@ SUBROUTINE init_pdaf()
   ! *** Additional parameter specifications ***
 
   ! Generic settings for all filters
+  CALL PDAF_set_iparam(3, dim_lag, status_pdaf)
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)
   CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)

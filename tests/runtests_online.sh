@@ -12,7 +12,7 @@ RUNSTR="mpirun -np 4 ./PDAF_online"
 RUNPAR="mpirun -np 8 ./PDAF_online"
 
 
-COMPILEPDAF=1
+COMPILEPDAF=0
 COMPILE=1
 TEST_SUBTYPES=1
 TEST_IAU=1
