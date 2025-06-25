@@ -71,7 +71,11 @@ dtmult      =
 outdir = ""
 nreal =
 startreal =
+total_steps =
+tstartcycle =
 da_interval       =
+da_interval_final =
+flexible_da_interval =
 stat_dumpoffset   =
 point_obs =
 crns_flag =
@@ -625,6 +629,32 @@ errors. Recommendation: Use at least an ensemble size of 4.
 `DA:startreal`: (integer) Added to suffix-numbers for input file
 creation.
 
+### DA:total_steps ###
+
+`DA:total_steps`: (integer) Number of observation Intervals.
+
+Together with `DA:da_interval` and `DA:startcycle`, `DA:total_steps`
+determines the simulation time.
+
+If not set directly, `DA:total_steps` is determined from `PF:simtime`.
+
+`DA:total_steps` must be in sync with timing information from
+component models.
+
+- ParFlow: `DA:total_steps` times `DA:da_interval` should be
+  `TimingInfo.StopTime` minus `TimingInfo.StartTime` (from `*.pfidb`).
+
+- CLM: `DA:total_steps` times `DA:da_interval` should be the number of
+  CLM time steps in `stop_ymd` minus `start_ymd start_tod`. To be
+  safe, CLM's stoptime can be chosen later, such that it will be
+  stopped by the TSMP-PDAF stop alarm.
+
+### DA:tstartcycle ###
+
+`DA:tstartcycle`: (integer) First observation cycle (file) to use.
+
+This should be zero. Other values are currently not supported.
+
 (enkfpf:da:da_interval)=
 ### DA:da_interval ###
 
@@ -643,7 +673,9 @@ before performing the actual data assimilation.
 
 For CLM simulations, `DA:da_interval` determines the number of
 CLM-time-steps between two assimilations together with `PF:dt`. See
-the section of `PF:dt` for more detail.
+the section of `PF:dt` for more detail. In particular, for CLM
+simulations and `PF:dt==1.0`, `DA:da_interval` is in units of CLM time
+steps.
 
 One exception is that the observation file is empty at a data
 assimilation step. Then, no data assimilation takes place and the next
@@ -677,6 +709,41 @@ for a given setup. One reason is that after each simulation time of
 called, assembling EnKF state vectors and calling the PDAF
 library. Maximizing `da_interval`, minimizes the number of these calls
 and thus reduces compute time.
+
+### DA:stat_dumpoffset ###
+
+`DA:stat_dumpoffset`: File number offset for the data assimilation
+output files for ParFlow.  Can be used when an assimilation run is
+restarted.
+
+### DA:da_interval_final ###
+
+`DA:da_interval_final`: (float) Final `da_interval` for flexible time
+stepping using observation files.
+
+Used only if `DA:flexible_da_interval` is switched on.
+
+Note: If the last observation file contains observations,
+`da_interval_final` is set, but never used, as the simulation
+currently finishes exactly at the time the observations from the last
+observation file is assimilated.
+
+### DA:flexible_da_interval ###
+
+`DA:flexible_da_interval`: (integer) Switch for flexible time stepping
+using observation files.
+
+- `0`: default, fixed time stepping, single `da_interval`
+- `1`: flexible time stepping, `da_interval` read from next
+  observation file
+
+- Set `total_steps` using `PF:simtime` (`DA:da_interval` must be `1`)
+- Command line input [`delt_obs`](./input_cmd.md#delt_obs) must be
+  `1`!
+
+In observation files, the new input variable
+[`da_interval`](./input_obs.md#da_interval) determines the
+`da_interval` before the observation file in question.
 
 ### DA:stat_dumpoffset ###
 
@@ -825,6 +892,8 @@ Default: 0, output turned off.
  |           | `nreal`                 | 0             |
  |           | `outdir`                | \-            |
  |           | `da_interval`           | 1             |
+ |           | `da_interval_final`     | 1             |
+ |           | `flexible_da_interval`  | 0             |
  |           | `stat_dumpoffset`       | 0             |
  |           | `screen_wrapper`        | 1             |
  |           | `point_obs`             | 1             |

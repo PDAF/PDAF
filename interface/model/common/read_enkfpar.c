@@ -97,6 +97,8 @@ void read_enkfpar(char *parname)
   nreal                 = iniparser_getint(pardict,"DA:nreal",0);
   startreal             = iniparser_getint(pardict,"DA:startreal",0);
   da_interval           = iniparser_getdouble(pardict,"DA:da_interval",1);
+  da_interval_final     = iniparser_getdouble(pardict,"DA:da_interval_final",1);
+  flexible_da_interval  = iniparser_getint(pardict,"DA:flexible_da_interval",0);
   stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
   screen_wrapper        = iniparser_getint(pardict,"DA:screen_wrapper",1);
   point_obs             = iniparser_getint(pardict,"DA:point_obs",1);
@@ -130,6 +132,25 @@ void read_enkfpar(char *parname)
   if (point_obs != 0 && point_obs != 1){
     printf("point_obs=%d\n", point_obs);
     printf("Error: point_obs must be equal to either 0 or 1.\n");
+    exit(1);
+  }
+
+  /* Check: `flexible_da_interval` must be equal to either 0 or 1 */
+  /*        0: fixed da_interval (default) */
+  /*        1: flexible da_interval from observation files */
+  if (flexible_da_interval != 0 && flexible_da_interval != 1){
+    printf("flexible_da_interval=%d\n", flexible_da_interval);
+    printf("Error: flexible_da_interval must be equal to either 0 or 1.\n");
+    exit(1);
+  }
+
+  /* Check: `da_interval` must be 1 if `flexible_da_interval` is switched on.  */
+  /*        This way `PF:simtime` is direct input of `total_steps`
+  /*        and `PF:starttime` is direct input of `tstartcycle`.  */
+  if (flexible_da_interval == 1 && da_interval != 1){
+    printf("flexible_da_interval=%d\n", flexible_da_interval);
+    printf("da_interval=%lf\n", da_interval);
+    printf("Error: da_interval must be equal to 1 if flexible_da_interval is switched on.\n");
     exit(1);
   }
 

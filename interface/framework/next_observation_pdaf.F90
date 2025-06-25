@@ -57,10 +57,14 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
        ONLY: mype_world
   USE mod_tsmp, &
        ONLY: total_steps
+  USE mod_tsmp, ONLY: da_interval
+  USE mod_tsmp, ONLY: da_interval_final
+  USE mod_tsmp, ONLY: flexible_da_interval
   USE mod_assimilation, &
        ONLY: obs_filename
   use mod_read_obs, &
        only: check_n_observationfile
+  use mod_read_obs, ONLY: check_n_observationfile_da_interval
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -78,6 +82,8 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   integer :: no_obs=0
   character (len = 110) :: fn
   !kuw end
+
+  REAL :: da_interval_new
   
   time = 0.0    ! Not used in fully-parallel implementation variant
   doexit = 0
@@ -100,13 +106,75 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   do
     !nsteps  = nsteps  + delt_obs 
     counter = counter + delt_obs
+
+    ! Exit if past last observation file
     !if(counter>total_steps) exit
-    if(counter>(total_steps+toffset)) exit
+    if(counter>(total_steps+toffset)) then
+      exit
+    end if
+
+    ! Check observation file #counter for observations
     write(fn, '(a, i5.5)') trim(obs_filename)//'.', counter
     call check_n_observationfile(fn,no_obs)
-    if(no_obs>0) exit
+
+    ! Exit loop if observation file contains observations
+    if(no_obs>0) then
+      exit
+    end if
+
   end do
+
+  ! Set number of steps for PDAF
   nsteps = counter - stepnow
+
+  ! flexible_da_interval should be input (0/1)
+  if(flexible_da_interval.eq.1) then
+
+#ifdef PDAF_DEBUG
+    ! Error Check: delt_obs must be one for flexible time stepping
+    if (delt_obs /= 1) then
+      write(*,'(a,i10)') "delt_obs = ", delt_obs
+      write(*,'(a)') "delt_obs must be one for flexible time stepping"
+      stop "Stopped from incorrect delt_obs"
+    end if
+
+    ! Warning: nsteps should be one
+    if(nsteps > 1) then
+      write(*,'(a,i10)') "WARNING: nsteps = ", nsteps
+      write(*,'(a)') "WARNING: nsteps should be one for flexible time stepping"
+      write(*,'(a)') "WARNING: Any time differences can be encoded in observation files"
+      write(*,'(a)') "WARNING: using the variable da_interval."
+    end if
+#endif
+
+    ! Initialize da_interval_variable as zero
+    da_interval_new = 0.0
+
+    if(counter>(total_steps+toffset)) then
+      ! Set da_interval to da_interval_final from EnKF input file
+      da_interval_new = da_interval_final
+    else
+      ! Set da_interval from observation files
+      call check_n_observationfile_da_interval(fn,da_interval_new)
+    end if
+
+#ifdef PDAF_DEBUG
+    ! Error Check: da_interval_new should be set to at least one
+    if(da_interval_new < 1.0) then
+      write(*,'(a,es22.15)') "da_interval_new = ", da_interval_new
+      write(*,'(a)') "da_interval_new is too small, should be minimum of one"
+      stop "Stopped from incorrect da_interval_new"
+    end if
+#endif
+
+    ! Update da_interval
+    da_interval = da_interval_new
+
+    if (mype_world==0 .and. screen > 2) then
+      write(*,'(a,es22.15)')'TSMP-PDAF (next_observation_pdaf.F90) da_interval: ', da_interval
+    end if
+
+  end if
 
   if (mype_world==0 .and. screen > 2) then
       write(*,*)'TSMP-PDAF (next_observation_pdaf.F90) stepnow: ',stepnow

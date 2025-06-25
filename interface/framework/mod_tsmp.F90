@@ -26,6 +26,7 @@ module mod_tsmp
     use iso_c_binding
 
     integer(c_int) , bind(c) :: enkf_subvecsize, pf_statevecsize, nprocpf, nprocclm, nproccosmo
+    integer(c_int) , bind(c) :: flexible_da_interval
     integer(c_int) , bind(c) :: point_obs
     integer(c_int) , bind(c) :: is_dampfac_state_time_dependent
     integer(c_int) , bind(c) :: is_dampfac_param_time_dependent
@@ -49,6 +50,8 @@ module mod_tsmp
     integer(c_int), pointer  :: idx_map_subvec2state_fortran(:)
     type(c_ptr), bind(c)     :: soilay
     real(c_double), pointer  :: soilay_fortran(:)
+    real(c_double),bind(C) :: da_interval
+    real(c_double),bind(C) :: da_interval_final
     real(c_double),bind(C) :: dampfac_state_time_dependent
     real(c_double),bind(C) :: dampfac_param_time_dependent
 

@@ -75,6 +75,8 @@ In general, `delt_obs` should be as small as possible, in order to
 avoid performance loss. See remark in
 [`[DA]da_interval`](enkfpf:da:da_interval).
 
+For flexible time stepping, `delt_obs` must be one.
+
 (cmd:screen)=
 ## screen ##
 
