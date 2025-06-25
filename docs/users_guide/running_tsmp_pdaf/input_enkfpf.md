@@ -738,12 +738,11 @@ using observation files.
   observation file
 
 - Set `total_steps` using `PF:simtime` (`DA:da_interval` must be `1`)
-- Command line input [`delt_obs`](./input_cmd.md#delt_obs) must be
-  `1`!
+- Command line input [`delt_obs`](cmd:delt_obs) must be `1`!
 
 In observation files, the new input variable
-[`da_interval`](./input_obs.md#da_interval) determines the
-`da_interval` before the observation file in question.
+[`da_interval`](obs:timeflex:da_interval) determines the `da_interval`
+before the observation file in question.
 
 ### DA:stat_dumpoffset ###
 

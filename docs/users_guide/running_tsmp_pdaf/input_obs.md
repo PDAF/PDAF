@@ -397,11 +397,12 @@ f.variables["no_obs"].assignValue(0)
 f.close()
 ```
 
+(obs:timeflex:da_interval)=
 ### da_interval ###
 
 `da_interval`: (float) Value for
-[`da_interval`](./input_enkfpf.md#dada_interval) used in the
-assimilation cycle leading up to the observation file.
+[`da_interval`](enkfpf:da:da_interval) used in the assimilation cycle
+leading up to the observation file.
 
 ## Specifying type of observation at compile time ##
 
