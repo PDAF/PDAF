@@ -1,4 +1,4 @@
-!$Id: next_observation_pdaf.F90 261 2019-11-28 11:36:49Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: next_observation_pdaf --- Initialize information on next observation
@@ -18,7 +18,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 ! completed such that the ensemble loop in the model 
 ! routine can be exited.
 !
-! This version is for the Lorenz05b model
+! This version is for the Lorenz63 model
 ! without parallelization.
 !
 ! !REVISION HISTORY:
@@ -30,6 +30,8 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
        ONLY: delt_obs, mod_time => time
   USE mod_model, &
        ONLY: dt, step_final
+  USE mod_parallel, &
+       ONLY: mype_world  
   USE output_netcdf_asml, &
        ONLY: close_netcdf_asml
   USE obs_gp_pdafomi, &
@@ -75,27 +77,29 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
   setexit: IF (stepnow == step_final) THEN
     ! Already at final time step
-     WRITE (*, '(i7, 3x, a)') &
+     IF (mype_world == 0) WRITE (*, '(i7, 3x, a)') &
           stepnow,'No more observations, exit filtering'
      doexit = 1
      have_obs = .FALSE.
 
-     ! Close NetCDF output file
-     CALL close_netcdf_asml()
+     IF (mype_world == 0) THEN
+        ! Close NetCDF output file
+        CALL close_netcdf_asml()
 
-     ! Close NetCDF file holding true states
-     CALL close_netcdf_state()
+        ! Close NetCDF file holding true states
+        CALL close_netcdf_state()
+     END IF
 
   ELSE IF (stepnow + nsteps < step_final) THEN setexit
      ! Next observation ahead
-     WRITE (*, '(i7, 3x, a, i7)') &
+     IF (mype_world == 0) WRITE (*, '(i7, 3x, a, i7)') &
          stepnow, 'Next observation at time step', stepnow + nsteps
      doexit = 0
      have_obs = .TRUE.
 
   ELSE IF (stepnow + nsteps == step_final) THEN setexit
      ! Final observation ahead
-     WRITE (*, '(i7, 3x, a, i7)') &
+     IF (mype_world == 0) WRITE (*, '(i7, 3x, a, i7)') &
          stepnow, 'Final observation at time step', stepnow + nsteps
      doexit = 0
      have_obs = .TRUE.
@@ -107,7 +111,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
      mod_time = mod_time - REAL(nsteps) * dt + REAL(step_final - stepnow) * dt
      doexit = 0
      have_obs = .FALSE.
-     WRITE (*, '(i7, 3x, a, i7)') &
+     IF (mype_world == 0) WRITE (*, '(i7, 3x, a, i7)') &
          stepnow, 'No more observations, evolve up to time step', stepnow + nsteps
   END IF setexit
 

@@ -420,7 +420,7 @@ SUBROUTINE init_pdaf()
 
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 7, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -433,7 +433,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 3, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -449,7 +449,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 7, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -465,7 +465,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 6, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -481,7 +481,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 6, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -498,7 +498,7 @@ SUBROUTINE init_pdaf()
 
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 7, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -515,7 +515,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 7, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -528,7 +528,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 3, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -613,10 +613,12 @@ SUBROUTINE init_pdaf()
   time = time + REAL(step_null) * dt
 
   ! Initialize netcdf output
-  CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
-       dim_ens, forget, type_ensinit, cradius, cradius2, &
-       locweight, sradius, rms_obs, delt_obs, total_steps, &
-       seedset, stepnull_means, dim_lag)
+  IF (mype_world == 0) THEN
+     CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
+          dim_ens, forget, type_ensinit, cradius, cradius2, &
+          locweight, sradius, rms_obs, delt_obs, total_steps, &
+          seedset, stepnull_means, dim_lag)
+  END IF
 
   ! Initialize mask for observation gaps
   IF (use_obs_mask) THEN

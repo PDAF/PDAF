@@ -309,7 +309,7 @@ SUBROUTINE init_pdaf()
      ! *** SEIK with init by 2nd order exact sampling ***
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
@@ -317,7 +317,7 @@ SUBROUTINE init_pdaf()
 
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 7, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -330,7 +330,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 3, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -339,14 +339,14 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_r(1) = forget      ! Forgetting factor
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 6, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -355,7 +355,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
@@ -363,7 +363,7 @@ SUBROUTINE init_pdaf()
 
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 7, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -372,7 +372,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = dim_lag     ! Size of lag in smoother
-     filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
+     filter_param_i(4) = 0           ! Not used
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_winf   ! Type of weights inflation
@@ -393,7 +393,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 2, &
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -430,9 +430,11 @@ SUBROUTINE init_pdaf()
   time = time + REAL(step_null) * dt
 
   ! Initialize netcdf output
-  CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
-       dim_ens, forget, type_ensinit, rms_obs, delt_obs, total_steps, &
-       seedset, stepnull_means, dim_lag)
+  IF (mype_world == 0) THEN
+     CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
+          dim_ens, forget, type_ensinit, rms_obs, delt_obs, total_steps, &
+          seedset, stepnull_means, dim_lag)
+  END IF
 
   ! Initialize mask for observation gaps
   IF (use_obs_mask) THEN

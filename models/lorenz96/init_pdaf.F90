@@ -660,7 +660,6 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-
   ! Set initial time
   time = time + REAL(step_null) * dt
 
