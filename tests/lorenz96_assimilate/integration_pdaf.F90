@@ -128,6 +128,9 @@ SUBROUTINE integration_pdaf(time, nsteps)
      ! *** PDAF: Get state and forecast information (nsteps,time)  ***
      CALL PDAF_get_fcst_info(nsteps, timenow, doexit)
 
+     ! Set time
+     time = timenow
+
      ! *** Check exit flag ***
      IF (doexit==1) EXIT pdaf_modelloop
 !++ End addition for PDAF     
