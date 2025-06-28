@@ -28,6 +28,8 @@ SUBROUTINE integration(time, nsteps)
        ONLY: timeit      
   USE mod_model, &        ! Model variables
        ONLY: x, dt, dim_state
+  USE mod_parallel, &
+       ONLY: mype_world
 #ifdef USE_PDAF
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: filtertype, model_error
@@ -115,7 +117,7 @@ SUBROUTINE integration(time, nsteps)
 
 #ifndef USE_PDAF
   ! Close NetCDF file
-  CALL close_netcdf()
+  IF (mype_world == 0) CALL close_netcdf()
 #endif
 
   DEALLOCATE(x1, x2, x3, x4, x_tmp)
