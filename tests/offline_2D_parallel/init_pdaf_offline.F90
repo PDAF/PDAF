@@ -17,12 +17,11 @@
 SUBROUTINE init_pdaf()
 
   USE PDAF, &                     ! PDAF interfaces and parameters
-       ONLY: PDAF_init, PDAF_set_iparam, PDAF_set_rparam, &
+       ONLY: PDAF3_init, PDAF_set_iparam, PDAF_set_rparam, &
        PDAF_set_offline_mode, PDAF_DA_ENKF, PDAF_DA_PF, &
        PDAFomi_set_domain_limits, PDAFomi_set_obs_diag
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, mype_filter, n_modeltasks, task_id, &
-       COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
+       ONLY: mype_world, mype_filter, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: nx_p, ny, ndim, dim_state_p, local_dims, coords_p, &
        screen, filtertype, subtype, dim_ens, &
@@ -151,12 +150,10 @@ SUBROUTINE init_pdaf()
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_r(1) = forget      ! Forgetting factor
 
-  CALL PDAF_init(filtertype, subtype, 0, &
+  CALL PDAF3_init(filtertype, subtype, 0, &
        filter_param_i, 2,&
        filter_param_r, 1, &
-       COMM_model, COMM_filter, COMM_couple, &
-       task_id, n_modeltasks, filterpe, init_ens_offline, &
-       screen, status_pdaf)
+       init_ens_offline, screen, status_pdaf)
 
   ! *** Additional parameter specifications ***
 

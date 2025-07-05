@@ -80,6 +80,7 @@ SRC_PDAF_GEN =  PDAF_da.F90 \
 		PDAF_put_state_prepost.F90 \
 		PDAF_prepost.F90 \
 		PDAF_assimilate_prepost.F90 \
+		PDAF3_init.F90 \
 		PDAF3_assimilate_ens.F90 \
 		PDAF3_put_state_ens.F90 \
 		PDAF3_assim_offline_ens.F90 \
