@@ -17,14 +17,11 @@
 SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
-  USE PDAFomi, &                  ! PDAF-OMI routine
-       ONLY: PDAFomi_set_obs_diag
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, n_modeltasks, task_id, &
-       COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
+       ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       delt_obs, type_iau, steps_iau, time, &
+       delt_obs, type_iau, steps_iau, &
        type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, &
@@ -37,8 +34,8 @@ SUBROUTINE init_pdaf()
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(3) ! Real parameter array for filter
+  INTEGER :: filter_param_i(2) ! Integer parameter array for filter
+  REAL    :: filter_param_r(1) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
 
 ! *** External subroutines ***
@@ -113,25 +110,20 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs = 2      ! This should be set according to the data availability
+  delt_obs = 2       ! This should be set according to the data availability
 
   ! Incremental updating (IAU)
   type_iau = 0       ! Type of incremental updating
   steps_iau = 1      ! Number of time steps over which IAU is applied
 
 ! *** Which observation type to assimilate
-  assim_OBSTYPE = .true.
+  assim_OBSTYPE = .false.
 
 ! *** specifications for observations ***
   rms_obs_OBSTYPE = 0.5    ! Observation error standard deviation
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
-                    !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
-                    !   (2) use 5th-order polynomial
-                    !   (3) regulated localization of R with mean error variance
-                    !   (4) regulated localization of R with single-point error variance
   cradius = 2.0     ! Cut-off radius for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
@@ -155,16 +147,13 @@ SUBROUTINE init_pdaf()
 
   IF (mype_world == 0) call init_pdaf_info()
 
-! Set initial time
-  time = 0.0
-
 
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
 ! *** Here, the full selection of filters is        ***
 ! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
+! *** reduces this to selected filters.             ***
 ! ***                                               ***
 ! *** For all filters, PDAF_init is first called    ***
 ! *** specifying only the required parameters.      ***
@@ -178,12 +167,10 @@ SUBROUTINE init_pdaf()
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_r(1) = forget      ! Forgetting factor
 
-  CALL PDAF_init(filtertype, subtype, 0, &
+  CALL PDAF3_init(filtertype, subtype, 0, &
        filter_param_i, 2,&
        filter_param_r, 1, &
-       COMM_model, COMM_filter, COMM_couple, &
-       task_id, n_modeltasks, filterpe, init_ens_PDAF, &
-       screen, status_pdaf)
+       init_ens_pdaf, screen, status_pdaf)
 
   ! *** Additional parameter specifications ***
   ! *** -- These are all optional --        ***

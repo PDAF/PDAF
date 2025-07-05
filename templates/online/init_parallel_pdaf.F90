@@ -53,6 +53,8 @@
 SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
   USE mpi                         ! MPI
+  USE PDAF, &                     ! PDAF routines
+       ONLY: PDAF3_set_parallel
   USE mod_parallel_pdaf, &        ! PDAF parallelization variables
        ONLY: mype_world, npes_world, mype_model, npes_model, &
        COMM_model, mype_filter, npes_filter, COMM_filter, filterpe, &
@@ -75,6 +77,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   INTEGER :: pe_index           ! Index of PE
   INTEGER :: my_color, color_couple ! Variables for communicator-splitting 
   LOGICAL :: iniflag            ! Flag whether MPI is initialized
+  INTEGER :: flag               ! Status flag
 
 
   ! *** Initialize MPI if not yet initialized ***
@@ -86,7 +89,6 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! *** Initialize PE information on COMM_world ***
   CALL MPI_Comm_size(MPI_COMM_WORLD, npes_world, MPIerr)
   CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
-
 
   ! *** Initialize communicators for ensemble evaluations ***
   IF (mype_world == 0) &
@@ -129,7 +131,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   DO i = 1, (npes_world - n_modeltasks * local_npes_model(1))
      local_npes_model(i) = local_npes_model(i) + 1
   END DO
- 
+
 
   ! ***              COMM_MODEL               ***
   ! *** Generate communicators for model runs ***
@@ -228,6 +230,14 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   END IF
 
 
+! ***************************************************
+! *** Provide parallelization information to PDAF ***
+! ***************************************************
+
+  CALL PDAF3_set_parallel(COMM_ensemble, COMM_model, COMM_filter, COMM_couple, &
+       task_id, n_modeltasks, filterpe, flag)
+
+
 ! ******************************************************************************
 ! *** Initialize model equivalents to COMM_model, npes_model, and mype_model ***
 ! ******************************************************************************
@@ -238,6 +248,5 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
   ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_parallel_pdaf.F90: Initialize model communicator here!'
-
 
 END SUBROUTINE init_parallel_pdaf
