@@ -312,8 +312,6 @@ END SUBROUTINE PDAF_init
 !! * 2025-05 - Lars Nerger - Initial code as alias of PDAF_get_state
 !! * Other revisions - see repository log
 !!
-! SUBROUTINE PDAF_init_forecast(steps, time, doexit, U_next_observation, U_distribute_state, &
-!      U_prepoststep, outflag)
 SUBROUTINE PDAF_init_forecast(U_next_observation, U_distribute_state, &
      U_prepoststep, outflag)
 
@@ -323,9 +321,6 @@ SUBROUTINE PDAF_init_forecast(U_next_observation, U_distribute_state, &
   IMPLICIT NONE
 
 ! *** Arguments ***
-!   INTEGER, INTENT(inout) :: steps   !< Flag and number of time steps
-!   REAL, INTENT(inout)    :: time    !< current model time
-!   INTEGER, INTENT(inout) :: doexit  !< Whether to exit from forecasts
   INTEGER, INTENT(inout) :: outflag !< Status flag
 
 ! Loca variables

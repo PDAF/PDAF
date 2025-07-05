@@ -48,6 +48,7 @@ MODULE PDAF_mod_parallel
   INTEGER :: dim_eof_l                  !< Number of EOFs in my task (SEEK only)
   INTEGER :: COMM_filter, COMM_couple   !< MPI communicators
   INTEGER :: COMM_pdaf                  !< MPI communicator for all PEs involved in PDAF
+  INTEGER :: COMM_model                 !< MPI communicator for model tasks
   LOGICAL :: isset_comm_pdaf = .false.  !< Whether COMM_pdaf was set externally
   INTEGER :: task_id                    !< Which ensemble task I am belonging to
   LOGICAL :: filterpe                   !< Whether PE belongs to the filter PEs
@@ -64,6 +65,7 @@ MODULE PDAF_mod_parallel
   INTEGER, ALLOCATABLE :: all_dim_obs_p(:)    !< PE-Local observation dimensions
   INTEGER, ALLOCATABLE :: all_dis_obs_p(:)    !< PE-Local observation displacements
   INTEGER :: dimobs_p, dimobs_f               !< PE-local and global observation dimension
+  LOGICAL :: isset_parallel = .false.   !< Flag whether the parallelization information is already initialized
 
 CONTAINS
 !-------------------------------------------------------------------------------
@@ -73,7 +75,7 @@ CONTAINS
 !! information for PDAF.
 !!
   SUBROUTINE PDAF_init_parallel(dim_ens, ensemblefilter, fixedbasis, &
-       COMM_model, in_COMM_filter, in_COMM_couple, &
+       in_COMM_model, in_COMM_filter, in_COMM_couple, &
        in_n_modeltasks, in_task_id, screen, flag)
 
     IMPLICIT NONE    
@@ -82,7 +84,7 @@ CONTAINS
     INTEGER, INTENT(inout) :: dim_ens        !< Rank of covar matrix/ensemble size
     LOGICAL, INTENT(in) :: ensemblefilter    !< Is the filter ensemble-based?
     LOGICAL, INTENT(in) :: fixedbasis        !< Run with fixed error-space basis?
-    INTEGER, INTENT(in) :: COMM_model        !< Model communicator (not shared)
+    INTEGER, INTENT(in) :: in_COMM_model     !< Model communicator
     INTEGER, INTENT(in) :: in_COMM_filter    !< Filter communicator
     INTEGER, INTENT(in) :: in_COMM_couple    !< Coupling communicator
     INTEGER, INTENT(in) :: in_task_id        !< Task ID of current PE
@@ -139,10 +141,10 @@ CONTAINS
        mype_couple = -1
     END IF
 
-    ! *** Initialize PE information on COMM_model ***
-    IF (COMM_model /= MPI_COMM_NULL) THEN
-       CALL MPI_Comm_Size(COMM_model, npes_model, MPIerr)
-       CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
+    ! *** Initialize PE information on in_COMM_model ***
+    IF (in_COMM_model /= MPI_COMM_NULL) THEN
+       CALL MPI_Comm_Size(in_COMM_model, npes_model, MPIerr)
+       CALL MPI_Comm_Rank(in_COMM_model, mype_model, MPIerr)
        modelpe = .TRUE.
     ELSE
        filter_no_model = .TRUE.

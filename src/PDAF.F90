@@ -110,6 +110,7 @@ MODULE PDAF
   USE PDAFassimilate_hyb3dvar_lestkf
 
   ! PDAF-3 advanced interfaces
+  USE PDAF3init
   USE PDAF3_assimilate_ens
   USE PDAF3_put_state_ens
   USE PDAF3_assim_offline_ens
