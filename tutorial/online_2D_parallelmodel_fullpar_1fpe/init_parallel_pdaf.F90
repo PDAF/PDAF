@@ -32,9 +32,9 @@
 !! mype_model) are initialized. These variables can be used in the model part 
 !! of the program, but are not handed over to PDAF.
 !!
-!! This variant of init_parallel_pdaf is for the case that the filter
-!! processes are separate from the model tasks, but using the same number
-!! of processes. Thus, in practice this routine splits COMM_ensemble
+!! This variant of init_parallel_pdaf is for the case that a single
+!! process, separate from the model tasks, is used to compute the
+!! analysis step in PDAF. Thus, this routine splits COMM_ensemble
 !! into dim_ens+1 tasks and then declares dim_ens tasks to be model tasks
 !! and 1 task to be a pure filter task.
 !!
