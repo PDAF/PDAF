@@ -18,15 +18,15 @@ SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
-       ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, mype_filter
+       ONLY: n_modeltasks, mype_filter
   USE mod_parallel_model, &       ! Parallelization variables for model
-       ONLY: mype_world, COMM_model, abort_parallel
+       ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: dim_state_p, dim_state, &
-       screen, filtertype, subtype, dim_ens, &
+       ONLY: dim_state_p, dim_state, screen, filtertype, subtype, dim_ens, &
+       delt_obs, type_iau, steps_iau, &
        type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
-       type_trans, type_sqrt, delt_obs, &
+       type_trans, type_sqrt, &
        observe_ens, type_obs_init, do_omi_obsstats
   USE mod_model, &                ! Model variables
        ONLY: nx, ny, nx_p
@@ -148,15 +148,15 @@ SUBROUTINE init_pdaf()
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_r(1) = forget      ! Forgetting factor
 
-  CALL PDAF_init(filtertype, subtype, 0, &
+  CALL PDAF3_init(filtertype, subtype, 0, &
        filter_param_i, 2,&
        filter_param_r, 1, &
-       COMM_model, COMM_filter, COMM_couple, &
-       task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-       screen, status_pdaf)
+       init_ens_pdaf, screen, status_pdaf)
 
   ! *** Additional parameter specifications ***
   ! *** -- These are all optional --        ***
+
+  ! Generic settings
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)      ! Type of forgetting factor
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)       ! Type of ensemble transformation
   CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)        ! Type of transform square-root (SEIK-sub4/ESTKF)

@@ -19,9 +19,9 @@ SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_model, &       ! Parallelization variables for model
-       ONLY: mype_world, mype_model, npes_model, COMM_model, abort_parallel
+       ONLY: mype_world, mype_model, npes_model, abort_parallel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
-       ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe
+       ONLY: n_modeltasks, task_id, filterpe
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, dim_ens, &
        type_forget, forget, &
@@ -249,20 +249,16 @@ SUBROUTINE init_pdaf()
 
   IF (subtype==0) THEN
      ! parameterized 3D-Var
-     CALL PDAF_init(filtertype, subtype, 0, &
+     CALL PDAF3_init(filtertype, subtype, 0, &
           filter_param_i, 5,&
           filter_param_r, 1, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
-          screen, status_pdaf)
+          init_3dvar_pdaf, screen, status_pdaf)
   ELSE
      ! Ensemble or hybrid 3D-Var
-     CALL PDAF_init(filtertype, subtype, 0, &
+     CALL PDAF3_init(filtertype, subtype, 0, &
           filter_param_i, 5,&
           filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
+          init_ens_pdaf, screen, status_pdaf)
   END IF
 
 
