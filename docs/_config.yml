@@ -24,6 +24,12 @@ sphinx:
   config:
     language: en
 
+# Bibtex: From
+# https://jupyterbook.org/en/stable/tutorials/references.html#create-a-bibtex-file
+bibtex_bibfiles:
+  - references.bib
+bibtex_reference_style: author_year
+
 # Information about where the book exists on the web
 repository:
   url: https://github.com/HPSCTerrSys/pdaf  # Online location of your book

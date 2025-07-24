@@ -10,8 +10,7 @@ parts:
     - file: users_guide/introduction_to_tsmp_pdaf/README
       title: Introduction to TSMP-PDAF
       sections:
-      - file: users_guide/introduction_to_tsmp_pdaf/introduction
-      - file: users_guide/introduction_to_tsmp_pdaf/input_file
+      - file: users_guide/introduction_to_tsmp_pdaf/dev
       - file: users_guide/introduction_to_tsmp_pdaf/how_to_use_this_document
 
     - file: users_guide/building_tsmp_pdaf/README
@@ -32,8 +31,6 @@ parts:
 
     - file: users_guide/debugging_tsmp_pdaf/README
       title: Debugging TSMP-PDAF
-      sections:
-      - file: users_guide/debugging_tsmp_pdaf/debug
 
     - file: users_guide/misc/README
       title: Misc
@@ -45,6 +42,8 @@ parts:
     # - file: reference/history_fields
     - url: https://pdaf.awi.de/trac/wiki
       title: PDAF documentation
+    - url: https://github.com/HPSCTerrSys/TSMP2/
+      title: TSMP2 source code
     - url: https://hpscterrsys.github.io/pdaf/src
       title: TSMP-PDAF Source Code Browser (library)
     - url: https://hpscterrsys.github.io/pdaf/interface

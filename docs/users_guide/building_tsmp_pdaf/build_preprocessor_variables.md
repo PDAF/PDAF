@@ -3,12 +3,8 @@
 A number of preprocessor variables are set during the build process of
 TSMP-PDAF in order to make the code behave in specific ways.
 
-TSMP-PDAF environemnt variables are set in the machine-specific
-TSMP-PDAF build-script:
-
-```
-bldsva/intf_DA/pdaf/arch/build_interface_pdaf.ksh
-```
+TSMP-PDAF preprocessor variables are set in the TSMP2 CMake scripts
+`BuildPDAF.cmake` and `BuildPDAFMODEL.cmake`.
 
 (precompiler:example)=
 ## Example for setting preprocessor variables ##
@@ -16,45 +12,47 @@ bldsva/intf_DA/pdaf/arch/build_interface_pdaf.ksh
 Before listing the preprocessor variables, we give an example for
 setting them.
 
-Preprocessor variables can be set in the TSMP-PDAF-build script
-`TSMP/bldsva/intf_DA/pdaf/arch/build_interface_pdaf.ksh`.
+Preprocessor variables can be set in the TSMP2 cmake scripts
+`BuildPDAF.cmake` and `BuildPDAFMODEL.cmake`.
 
 A preprocessor variable `CPP_VAR` is set by adding a line of the form:
-```bash
-	cppdefs+=" ${pf}-DCPP_VAR "
+```cmake
+    list(APPEND PDAF_DEFS "-DCPP_VAR")
 ```
 
-If this line is added at the beginning of `configure_da()`, the
-preprocessor variable is activated for all combinations of component
-models.
-
-Later in the code, preprocessor variable can be set only for specific combinations of component models. Here is an example source code from script `build_interface_pdaf.ksh`:
-```bash
-  if [[ $withCLM == "true" && $withCOS == "false" && $withPFL == "true" ]] ; then
-     importFlags+=$importFlagsCLM
-     importFlags+=$importFlagsOAS
-     importFlags+=$importFlagsPFL
-     importFlags+=$importFlagsDA
-     cppdefs+=" ${pf}-DCOUP_OAS_PFL ${pf}-DMAXPATCH_PFT=1 "
-     cppdefs+=" ${pf}-DOBS_ONLY_PARFLOW " # Remove for observations from both ParFlow + CLM
-     if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
-     if [[ $freeDrain == "true" ]] ; then ; cppdefs+=" ${pf}-DFREEDRAINAGE " ; fi
-     libs+=$libsCLM
-     libs+=$libsOAS
-     libs+=$libsPFL
-     obj+=' $(OBJCLM) $(OBJPF) '
-  fi
+```{hint}
+Check that the preprocessor variable is set for the right model
+combinations. 
 ```
 
-The if-condition states that component models CLM and ParFlow are
-used. This corresponds to the flag `-c clm-pfl-pdaf` in the
-build-command.
+For example in 
+```cmake
+if(DEFINED OASIS_SRC)
+  list(APPEND PDAF_DEFS "-Duse_comm_da")
+  list(APPEND PDAF_DEFS "-DMAXPATCH_PFT=1")
+  if(DEFINED PARFLOW_SRC)
+    list(APPEND PDAF_DEFS "-DCOUP_OAS_PFL")
+    list(APPEND PDAF_DEFS "-DOBS_ONLY_PARFLOW")
+  endif()
+  if(DEFINED eCLM_SRC)
+    list(APPEND PDAF_DEFS "-DCLMFIVE")
+  endif()
+else()
+  if(DEFINED CLM35_SRC)
+    list(APPEND PDAF_DEFS "-DCLMSA")
+  endif()
+  if(DEFINED eCLM_SRC)
+    list(APPEND PDAF_DEFS "-DCLMSA")
+    list(APPEND PDAF_DEFS "-DCLMFIVE")
+  endif()
+endif()
+```
 
-The line `cppdefs+=" ${pf}-DOBS_ONLY_PARFLOW " # Remove for
-observations from both ParFlow + CLM` sets
-`OBS_ONLY_PARFLOW`. Analogously, any other preprocessor variable could
-be set.
-
+`CLMSA` is defined iff 
+- there is no coupling to ParFlow or ICON (`DEFINED OASIS_SRC` is
+false)
+- CLM is used in version 3.5 (`DEFINED CLM35_SRC` is true) or as eCLM
+(`DEFINED eCLM_SRC` is true).
 
 (precompiler:clmsa)=
 ## CLMSA ##
