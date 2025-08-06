@@ -955,7 +955,7 @@ SUBROUTINE PDAFomi_localize_covar_cb(dim_p, dim_obs, HP_p, HPH)
 ! *************************************
 
   IF (.NOT. ALLOCATED(coords_p)) THEN
-     WRITE (*,*) 'PDAFomi-ERROR: coords_p not initialized - cannot apply localization'
+     WRITE (*,*) 'PDAFomi-WARNING: state coordinates not initialized - cannot apply localization'
   ELSE
      
      DO i=1, n_obstypes
