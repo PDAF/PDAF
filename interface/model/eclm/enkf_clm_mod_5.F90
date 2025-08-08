@@ -78,8 +78,8 @@ module enkf_clm_mod
   logical :: flag
   integer(c_int),bind(C,name="clmprefixlen") :: clmprefixlen
   integer :: COMM_couple_clm    ! CLM-version of COMM_couple
-                                ! (currently not used for clm5_0)
-  logical :: newgridcell        !only clm5_0
+                                ! (currently not used for eclm)
+  logical :: newgridcell        !only eclm
 
   contains
 

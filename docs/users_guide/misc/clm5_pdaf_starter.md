@@ -1,109 +1,44 @@
-# CLM5-PDAF Starting instructions
+# eCLM-PDAF Starting instructions
 
 ## 1.  Install components
 
-The following instructions assume you are working on the JSC machine `JURECA`. If you are working on another JSC machine switch the name appropriately and the instructions should still work. Running CLM5-PDAF on non JSC machines is not covered in these instructions but should be similar if TSMP-PDAF, PDAF, and CLM5 can be installed on the machine. 
+The following instructions assume you are working on the JSC machine
+`JURECA`. If you are working on another JSC machine switch the name
+appropriately and the instructions should still work. Running
+eCLM-PDAF on non JSC machines is not covered in these instructions but
+should be similar if TSMP-PDAF, PDAF, and eCLM can be installed on the
+machine.
 
 ### 1.1 TSMP-PDAF
 
-Clone the TSMP-PDAF repository to your work folder like this:
+Clone the TSMP2 repository to your work folder like this:
 
 ```bash
- git clone https://github.com/HPSCTerrSys/TSMP.git tsmp
+ git clone https://github.com/HPSCTerrSys/TSMP2.git
 
- cd tsmp
+ cd TSMP2
 
 ```
 
-The directory `tsmp` is the root directory of TSMP, or in this case
-CLM5-PDAF.
+The directory `TSMP2` is the root directory of TSMP2. TSMP2 is used in
+this case to build eCLM-PDAF.
 
-### 1.2 PDAF
+### 1.4 Build eCLM-PDAF
 
-Get PDAF from <https://github.com/HPSCTerrSys/pdaf> and clone it into
-the `tsmp` directory:
-
-```bash
- git clone https://github.com/HPSCTerrSys/pdaf.git
-```
-
-### 1.3 CLM5
-
-Clone CLM5 and its dependencies from the HPSCTerrSys repo to the tsmp folder like this:
+The TSMP2 framework works with its own build system. The compilation
+of both ecLM-PDAF can be done with a single build command in the
+`TSMP2` directory:
 
 ```bash
-git clone --recurse-submodules https://github.com/HPSCTerrSys/clm5_0
-```
-
-- `--recurse-submodules`: Ensures cloning of the following internal
-  dependencies ("externals") of CLM5: CIME, FATES, CISM, MOSART, RTM
-
-### 1.4 Build CLM5-PDAF
-
-The TSMP framework works with its own build system. With the CLM5 and
-PDAF cloned as described, the compilation of both CLM5-PDAF can be
-done with a single build command in the `tsmp/bldsva` directory:
-
-```bash
-cd bldsva/
-
-./build_tsmp.ksh -c clm5-pdaf -m JURECA -O Intel
+./build_tsmp2.ksh --eCLM --PDAF
 ```
 
 If the build was successful, the executable can be found in path
-`$rootdir/bin/JURECA_clm/tsmp-pdaf`.
-
-#### 1.4.1 Potential build errors
-
-  * If you worked with CLM5 standalone and have created a `.cime`
-    folder in your home directory it can cause a conflict during
-    compilation. The error file will contain a line that says `ERROR:
-    No machine jureca found` for example. The easiest solution to this
-    is to move the `~/.cime` folder to `~/.cime_deactivated` while
-    working with CLM5-PDAF.
-
-*  Using the newest software stages from JSC there is an import
-    conflict with bigint for PERL.  See
-    [https://icg4geo.icg.kfa-juelich.de/ExternalRepos/tsmp-pdaf/tsmp/-/issues/67](https://icg4geo.icg.kfa-juelich.de/ExternalRepos/tsmp-pdaf/tsmp/-/issues/67)
-    for details. The error message will contain a line like this:
-    `err=Can't locate bigint.pm in @INC`. The solution for now is to
-    comment all lines with `bigint` and `bignum` in the script
-    `tsmp/clm5_0/bld/config_files/clm_phys_vers.pm` since this is only
-    needed to check some version numbers the PERL modules is not
-    strictly needed.
-
-#### 1.4.2 CLM5 environment variables
-
-If changes from the defaults are wanted, the following environmental
-variables may be set before compiling CLM5.
-
-##### `CESMDATAROOT`: User defined data paths
-
-Path to the root directory for all CESM / CLM input files
-
-If you exported your own `CESMDATAROOT`, it will be used by CLM5-PDAF.
-
-Default:
-```bash
-export CESMDATAROOT=$rootdir/cesm
-```
-
-##### `CSMDATA`: Path to the CSM specific input files
-
-`CSMDATA` is usually a subfolder of `CESMDATAROOT`.
-
-Default:
-```bash
-export CSMDATA=$CESMDATAROOT/inputdata
-```
-
-You may manipulate `CSMDATA` either by changing `CESMDATAROOT`
-(recommended), or in
-`$rootdir/bldsva/intf_oas3/clm5_0/arch/config/softwarepaths.ksh`.
+`bin/MACHINE_eCLM-PDAF/bin/tsmp-pdaf`.
 
 ## 2. File preparation
 
-For example files see [Example Case](clm5:example).
+For example files see [Example Case](eclm:example).
 
 ### 2.1 Ensemble generation
 
@@ -111,7 +46,7 @@ For data assimilation with the ensemble Kalman filter we usually
 create an ensemble by perturbing the atmospheric forcing files as well
 as the sand and clay fractions in the surface file.
 
-For CLM5 how these files are named and numbered can be customized, as
+For eCLM how these files are named and numbered can be customized, as
 shown in the next section. But a recommended approach is to have a
 suffix with zero filled numbering like
 `surfdata_DE-Wue_hist_78pfts_CMIP6_simyr2000_c191001.nc_00001.nc`.
@@ -135,10 +70,10 @@ In this script the following variables should be modified or at least considered
 
 ### 2.2 Case generation
 
-These instructions assume you already have a running CLM5 standalone
-case before moving to CLM5PDAF. If not instructions of how to generate
-the domain file, surface file, and download the default CLM5 inputfile
-can be found on the GitLab.
+These instructions assume you already have a running eCLM standalone
+case before moving to eCLM-PDAF. If not instructions of how to
+generate the domain file, surface file, and download the default eCLM
+inputfile can be found on the GitLab.
 
 We setup a new case in a new directory. In this directory we will need a few subfolders:
 
@@ -147,7 +82,7 @@ We setup a new case in a new directory. In this directory we will need a few sub
 
  mkdir timing/checkpoints -p
 ```
-CLM5-PDAF does not use the same case setup as CLM5 standalone, instead we skip to the final namelist files that are needed to run CLM5. The minimal set of namelists to run CLM5 is:
+eCLM-PDAF does not use the same case setup as eCLM standalone, instead we skip to the final namelist files that are needed to run eCLM. The minimal set of namelists to run eCLM is:
 
     * atm_modelio.nml
     * datm_in
@@ -179,7 +114,7 @@ In this script the following variables should be modified or at least considered
     *  num_ensemble (in main() number of ensemble members)
     *  b_dir (in main() path to build directory of clm within tsmp)
     *  r_dir (in main() path to the directory where the case will be run from i.e. the case directory)
-    *  Every other variable uses the default from a standalone CLM5 case, but may vary in your case, check the namelists in the run directory of your case against the variables listed in this script if you have customized the CLM5 case.
+    *  Every other variable uses the default from a standalone eCLM case, but may vary in your case, check the namelists in the run directory of your case against the variables listed in this script if you have customized the eCLM case.
 
 The script at the moment can either be called without arguments if all
 variables are modified within the script or with year_start and prefix
@@ -188,7 +123,7 @@ as arguments.
 To run PDAF an additional namelist is needed, `enkfpf.par` for details
 on the contents of this namelist refer to the TSMP-PDAF manual.
 
-Remark: For CLM5-PDAF it is recommended to set inside `enkfpf.par` the
+Remark: For eCLM-PDAF it is recommended to set inside `enkfpf.par` the
 following: `DA:startreal = 1`. For more information, see:
 https://github.com/HPSCTerrSys/eCLM/issues/41
 
@@ -224,7 +159,7 @@ Additionally, `-obs_filename` has the path to the observations and the prefix of
 
 ## 4. Post-processing the output
 
-CLM5-PDAF will create history files for each ensemble members
+eCLM-PDAF will create history files for each ensemble members
 according to the settings defined in the script
 `create_ensemble_namelists.py` with the hist variables. For large
 ensembles this will create a lot of files and should be processed and
@@ -235,7 +170,7 @@ this post-processing can be found at
 `/p/data1/jicg41/strebel2/CLM5PDAF_Example/collect_some_ensemble_stats.py`
 
 The script should be modified before use, by changing the
-`collect_vars` variable to a list with the CLM5 variable names that
+`collect_vars` variable to a list with the eCLM variable names that
 should be collected. The output netcdf file will be called
 `Ensemble_Collection_` and contain the listed variables with their
 ensemble minimum, maximum, mean, and standard deviation.
@@ -247,7 +182,7 @@ OL or DA, num_ensemble, case name. Where case name refers to the
 previously mentioned prefix that can be used to differentiate between
 different simulations within the same case.
 
-(clm5:example)=
+(eclm:example)=
 ## 5. Example case:
 
 All the input files necessary to create a 10 ensemble case for the

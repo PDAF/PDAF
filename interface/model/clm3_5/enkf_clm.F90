@@ -61,8 +61,8 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
 
 !  character(c_char),target   :: finname
   character(kind=c_char,len=1),dimension(100),intent(in) :: finname
-  integer(c_int), intent(in) :: pdaf_id !unused: only for clm5_0
-  integer(c_int), intent(in) :: pdaf_max !unused: only for clm5_0
+  integer(c_int), intent(in) :: pdaf_id !unused: only for eclm
+  integer(c_int), intent(in) :: pdaf_max !unused: only for eclm
   integer(c_int), intent(in) :: mype
   integer(c_int) :: counter
   !character(100),pointer :: pchar
