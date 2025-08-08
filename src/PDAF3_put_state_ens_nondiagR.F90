@@ -50,9 +50,9 @@ CONTAINS
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_local_nondiagR(collect_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, init_n_domains_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf, prodRinvA_l_pdaf, &
-           outflag)
+          prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAF_cb_procedures
@@ -63,9 +63,6 @@ SUBROUTINE PDAF3_put_state_local_nondiagR(collect_state_pdaf, &
   USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
   USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
   USE PDAFput_state_lestkf, ONLY: PDAF_put_state_lestkf
-  USE PDAFput_state_lnetf, ONLY: PDAF_put_state_lnetf
-  USE PDAFput_state_lknetf, ONLY: PDAF_put_state_lknetf
-  USE PDAFput_state_ensrf, ONLY: PDAF_put_state_ensrf
 
   IMPLICIT NONE
   
@@ -79,8 +76,8 @@ SUBROUTINE PDAF3_put_state_local_nondiagR(collect_state_pdaf, &
   PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
   PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
   PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
-  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
   PROCEDURE(prodRinvA_l_cb) :: prodRinvA_l_pdaf       !< Provide product of inverse of R with matrix A
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
 
 ! *** OMI-provided procedures ***
   PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
@@ -147,7 +144,8 @@ END SUBROUTINE PDAF3_put_state_local_nondiagR
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_global_nondiagR(collect_state_pdaf, &
-     init_dim_obs_pdaf, obs_op_pdaf, prodRinvA_pdaf, prepoststep_pdaf, outflag)
+     init_dim_obs_pdaf, obs_op_pdaf, prodRinvA_pdaf, &
+     prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAF_cb_procedures
@@ -165,8 +163,8 @@ SUBROUTINE PDAF3_put_state_global_nondiagR(collect_state_pdaf, &
   PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
   PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
   PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
-  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
   PROCEDURE(prodRinvA_cb) :: prodRinvA_pdaf           !< Provide product of inverse of R with matrix A
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
 
 ! *** OMI-provided procedures ***
   PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
@@ -230,9 +228,9 @@ END SUBROUTINE PDAF3_put_state_global_nondiagR
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_lnetf_nondiagR(collect_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, init_n_domains_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf, likelihood_l_pdaf,  &
-          outflag)
+          prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAF_cb_procedures
@@ -254,8 +252,8 @@ SUBROUTINE PDAF3_put_state_lnetf_nondiagR(collect_state_pdaf, &
   PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
   PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
   PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
-  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
   PROCEDURE(likelihood_l_cb) :: likelihood_l_pdaf     !< Compute likelihood and apply localization
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
 
 ! *** OMI-provided procedures ***
   PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
@@ -304,10 +302,10 @@ END SUBROUTINE PDAF3_put_state_lnetf_nondiagR
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_lknetf_nondiagR(collect_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, init_n_domains_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf, prodRinvA_l_pdaf, prodRinvA_hyb_l_pdaf, &
           likelihood_l_pdaf, likelihood_hyb_l_pdaf,  &
-          outflag)
+          prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAF_cb_procedures
@@ -329,11 +327,11 @@ SUBROUTINE PDAF3_put_state_lknetf_nondiagR(collect_state_pdaf, &
   PROCEDURE(init_n_domains_cb) :: init_n_domains_pdaf !< Provide number of local analysis domains
   PROCEDURE(init_dim_l_cb) :: init_dim_l_pdaf         !< Init state dimension for local ana. domain
   PROCEDURE(init_dim_obs_l_cb) :: init_dim_obs_l_pdaf !< Initialize local dimimension of obs. vector
-  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
   PROCEDURE(prodRinvA_l_cb) :: prodRinvA_l_pdaf       !< Provide product of inverse of R with matrix A
-  PROCEDURE(likelihood_l_cb) :: likelihood_l_pdaf     !< Compute likelihood and apply localization
   PROCEDURE(prodRinvA_hyb_l_cb) :: prodRinvA_hyb_l_pdaf   !< Product R^-1 A on local analysis domain with hybrid weight
+  PROCEDURE(likelihood_l_cb) :: likelihood_l_pdaf     !< Compute likelihood and apply localization
   PROCEDURE(likelihood_hyb_l_cb) :: likelihood_hyb_l_pdaf !< Compute likelihood and apply localization with tempering
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
 
 ! *** OMI-provided procedures ***
   PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb         !< Initialize full observation vector
@@ -401,10 +399,9 @@ SUBROUTINE PDAF3_put_state_enkf_nondiagR(collect_state_pdaf, &
   PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
   PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
   PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
-  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
-  PROCEDURE(prodRinvA_l_cb) :: prodRinvA_l_pdaf       !< Provide product of inverse of R with matrix A
-  PROCEDURE(init_obscovar_cb) :: init_obscovar_pdaf   !< Initialize mean observation error variance
   PROCEDURE(add_obs_error_cb) :: add_obs_error_pdaf   !< Add observation error covariance matrix
+  PROCEDURE(init_obscovar_cb) :: init_obscovar_pdaf   !< Initialize mean observation error variance
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
 
 ! *** OMI-provided procedures ***
   PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb     !< Initialize full observation vector
@@ -448,8 +445,9 @@ END SUBROUTINE PDAF3_put_state_enkf_nondiagR
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_lenkf_nondiagR(collect_state_pdaf, &
-     init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, localize_pdaf, &
-     add_obs_error_pdaf, init_obscovar_pdaf, outflag)
+     init_dim_obs_pdaf, obs_op_pdaf, localize_pdaf, &
+     add_obs_error_pdaf, init_obscovar_pdaf, &
+     prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: debug
   USE PDAF_cb_procedures
@@ -465,11 +463,10 @@ SUBROUTINE PDAF3_put_state_lenkf_nondiagR(collect_state_pdaf, &
   PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
   PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
   PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
-  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
-  PROCEDURE(prodRinvA_l_cb) :: prodRinvA_l_pdaf       !< Provide product of inverse of R with matrix A
-  PROCEDURE(init_obscovar_cb) :: init_obscovar_pdaf   !< Initialize mean observation error variance
-  PROCEDURE(add_obs_error_cb) :: add_obs_error_pdaf   !< Add observation error covariance matrix
   PROCEDURE(localize_cb) :: localize_pdaf             !< Apply covariance localization
+  PROCEDURE(add_obs_error_cb) :: add_obs_error_pdaf   !< Add observation error covariance matrix
+  PROCEDURE(init_obscovar_cb) :: init_obscovar_pdaf   !< Initialize mean observation error variance
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
 
 ! *** External procedures ***
   PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb     !< Initialize full observation vector
@@ -507,8 +504,8 @@ END SUBROUTINE PDAF3_put_state_lenkf_nondiagR
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_put_state_nonlin_nondiagR(collect_state_pdaf, &
-     init_dim_obs_pdaf, obs_op_pdaf, likelihood_pdaf, prepoststep_pdaf, &
-     outflag)
+     init_dim_obs_pdaf, obs_op_pdaf, likelihood_pdaf, &
+     prepoststep_pdaf, outflag)
 
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAF_cb_procedures
@@ -525,8 +522,8 @@ SUBROUTINE PDAF3_put_state_nonlin_nondiagR(collect_state_pdaf, &
   PROCEDURE(collect_cb) :: collect_state_pdaf         !< Routine to collect a state vector
   PROCEDURE(init_dim_obs_cb) :: init_dim_obs_pdaf     !< Initialize dimension of full observation vector
   PROCEDURE(obs_op_cb) :: obs_op_pdaf                 !< Full observation operator
+  PROCEDURE(likelihood_cb) :: likelihood_pdaf         !< Compute likelihood
   PROCEDURE(prepost_cb) :: prepoststep_pdaf           !< User supplied pre/poststep routine
-  PROCEDURE(likelihood_l_cb) :: likelihood_pdaf       !< Compute likelihood
 
 ! *** OMI-provided procedures ***
   PROCEDURE(init_obs_cb) :: PDAFomi_init_obs_f_cb     !< Initialize full observation vector

@@ -37,67 +37,70 @@ MODULE PDAFprepost
 
 CONTAINS
 
-SUBROUTINE PDAF_prepost(U_collect_state, U_distribute_state, &
-     U_prepoststep, U_next_observation, outflag)
+  SUBROUTINE PDAF_prepost(U_collect_state, U_distribute_state, &
+       U_prepoststep, U_next_observation, outflag)
 
-  USE PDAF_mod_core, &
-       ONLY: cnt_steps, nsteps
-  USE PDAF_mod_parallel, &
-       ONLY: mype_world
+    USE PDAF_mod_core, &
+         ONLY: cnt_steps, nsteps
+    USE PDAF_mod_parallel, &
+         ONLY: mype_world
+    USE PDAFget_state, &
+         ONLY: PDAF_get_state
+    USE PDAFput_state_prepost, &
+         ONLY: PDAF_put_state_prepost
 
-
-  IMPLICIT NONE
+    IMPLICIT NONE
   
 ! *** Arguments ***
-  INTEGER, INTENT(out) :: outflag  !< Status flag
+    INTEGER, INTENT(out) :: outflag  !< Status flag
   
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_collect_state, &  !< Routine to collect a state vector
-       U_prepoststep, &           !< User supplied pre/poststep routine
-       U_next_observation, &      !< Routine to provide time step, time and dimension
-                                  !<   of next observation
-       U_distribute_state         !< Routine to distribute a state vector
+    EXTERNAL :: U_collect_state, &  !< Routine to collect a state vector
+         U_prepoststep, &           !< User supplied pre/poststep routine
+         U_next_observation, &      !< Routine to provide time step, time and dimension
+                                    !<   of next observation
+         U_distribute_state         !< Routine to distribute a state vector
 
 ! *** Local variables ***
-  INTEGER :: steps     ! Number of time steps in next forecast phase
-  INTEGER :: doexit    ! Exit flag; not used in this variant
-  REAL :: time         ! Current model time; not used in this variant
+    INTEGER :: steps     ! Number of time steps in next forecast phase
+    INTEGER :: doexit    ! Exit flag; not used in this variant
+    REAL :: time         ! Current model time; not used in this variant
 
 
 ! *****************************
 ! ***   At each time step   ***
 ! *****************************
 
-  ! Increment time step counter
-  cnt_steps = cnt_steps + 1
+    ! Increment time step counter
+    cnt_steps = cnt_steps + 1
 
 
 ! ********************************
 ! *** At end of forecast phase ***
 ! ********************************
 
-  IF (cnt_steps == nsteps) THEN
+    IF (cnt_steps == nsteps) THEN
 
-     IF (mype_world==0) WRITE(*,'(a,5x,a)') 'PDAF','Perform pre/poststep of PDAF'
+       IF (mype_world==0) WRITE(*,'(a,5x,a)') 'PDAF','Perform pre/poststep of PDAF'
 
-     ! *** Call analysis step ***
+       ! *** Call analysis step ***
 
-     CALL PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
+       CALL PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
 
-     ! *** Prepare start of next ensemble forecast ***
+       ! *** Prepare start of next ensemble forecast ***
 
-     IF (outflag==0) THEN
-        CALL PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_state, &
-             U_prepoststep, outflag)
-     END IF
+       IF (outflag==0) THEN
+          CALL PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_state, &
+               U_prepoststep, outflag)
+       END IF
 
-     nsteps = steps
+       nsteps = steps
 
-  ELSE
-     outflag = 0
-  END IF
+    ELSE
+       outflag = 0
+    END IF
 
-END SUBROUTINE PDAF_prepost
+  END SUBROUTINE PDAF_prepost
 
 END MODULE PDAFprepost

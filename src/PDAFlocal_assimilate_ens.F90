@@ -61,7 +61,10 @@ SUBROUTINE PDAFlocal_assimilate_lseik(U_collect_state, U_distribute_state, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
-  USE PDAFput_state_lseik, ONLY: PDAF_put_state_lseik
+  USE PDAFget_state, &
+       ONLY: PDAF_get_state
+  USE PDAFput_state_lseik, &
+       ONLY: PDAF_put_state_lseik
 
   IMPLICIT NONE
 
@@ -168,7 +171,10 @@ SUBROUTINE PDAFlocal_assimilate_letkf(U_collect_state, U_distribute_state, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
-  USE PDAFput_state_letkf, ONLY: PDAF_put_state_letkf
+  USE PDAFget_state, &
+       ONLY: PDAF_get_state
+  USE PDAFput_state_letkf, &
+       ONLY: PDAF_put_state_letkf
 
   IMPLICIT NONE
   
@@ -273,7 +279,10 @@ SUBROUTINE PDAFlocal_assimilate_lestkf(U_collect_state, U_distribute_state, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
-  USE PDAFput_state_lestkf, ONLY: PDAF_put_state_lestkf
+  USE PDAFget_state, &
+       ONLY: PDAF_get_state
+  USE PDAFput_state_lestkf, &
+       ONLY: PDAF_put_state_lestkf
 
   IMPLICIT NONE
   
@@ -379,7 +388,10 @@ SUBROUTINE PDAFlocal_assimilate_lnetf(U_collect_state, U_distribute_state, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
-  USE PDAFput_state_lnetf, ONLY: PDAF_put_state_lnetf
+  USE PDAFget_state, &
+       ONLY: PDAF_get_state
+  USE PDAFput_state_lnetf, &
+       ONLY: PDAF_put_state_lnetf
 
   IMPLICIT NONE
   
@@ -487,7 +499,10 @@ SUBROUTINE PDAFlocal_assimilate_lknetf(U_collect_state, U_distribute_state, &
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
        PDAFlocal_l2g_cb                !< Project local to global state vecto
-  USE PDAFput_state_lknetf, ONLY: PDAF_put_state_lknetf
+  USE PDAFget_state, &
+       ONLY: PDAF_get_state
+  USE PDAFput_state_lknetf, &
+       ONLY: PDAF_put_state_lknetf
 
   IMPLICIT NONE
   

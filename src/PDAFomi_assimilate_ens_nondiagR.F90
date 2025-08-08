@@ -148,7 +148,7 @@ SUBROUTINE PDAFomi_assimilate_global_nondiagR(collect_state_pdaf, distribute_sta
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi_obs_l, ONLY: PDAFomi_dealloc
   USE PDAFassimilate_seik, ONLY: PDAF_assimilate_seik
-  USE PDAFassimilate_enkf, ONLY: PDAF_assimilate_enkf
+  USE PDAFassimilate_etkf, ONLY: PDAF_assimilate_etkf
   USE PDAFassimilate_estkf, ONLY: PDAF_assimilate_estkf
 
   IMPLICIT NONE

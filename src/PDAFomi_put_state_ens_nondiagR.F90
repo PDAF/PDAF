@@ -140,7 +140,7 @@ SUBROUTINE PDAFomi_put_state_global_nondiagR(collect_state_pdaf, &
   USE PDAF_mod_core, ONLY: filterstr, debug
   USE PDAFomi_obs_l, ONLY: PDAFomi_dealloc
   USE PDAFput_state_seik, ONLY: PDAF_put_state_seik
-  USE PDAFput_state_enkf, ONLY: PDAF_put_state_enkf
+  USE PDAFput_state_etkf, ONLY: PDAF_put_state_etkf
   USE PDAFput_state_estkf, ONLY: PDAF_put_state_estkf
 
   IMPLICIT NONE
