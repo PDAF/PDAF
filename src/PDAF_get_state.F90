@@ -359,7 +359,6 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
                  member_get = member_get + 1
               ELSE
                  ! Ensemble filter with fixed error-space basis 
-                 ! (Option ONLY for SEIK/LSEIK)
 
                  ! set member to maximum
                  member_get=dim_ens_l
@@ -375,6 +374,19 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
               IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
                    WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ', task_id, &
                    'distribute_state deactivated for IAU'
+
+              IF (subtype_filter/=10 .AND. subtype_filter/=11) THEN
+                 ! Dynamic ensemble filter with ensemble forecast
+
+                 ! Increment member counter
+                 member_get = member_get + 1
+              ELSE
+                 ! Ensemble filter with fixed error-space basis 
+
+                 ! set member to maximum
+                 member_get=dim_ens_l
+                 member_put=dim_ens_l
+              END IF
            END IF
 
         END IF modelpes

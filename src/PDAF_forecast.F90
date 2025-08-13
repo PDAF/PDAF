@@ -39,7 +39,7 @@ CONTAINS
        U_init_dim_obs, U_obs_op, U_init_obs, outflag)
 
     USE PDAF_mod_core, &
-         ONLY: dim_p, ens
+         ONLY: dim_p, ens, state
     USE PDAF_mod_parallel, &
          ONLY: dim_ens_task
     USE PDAF_iau, &
@@ -71,7 +71,7 @@ CONTAINS
 ! ***   Apply IAU   ***
 ! *********************
 
-    CALL PDAF_iau_add_inc_ens(step, dim_p, dim_ens_task, ens, &
+    CALL PDAF_iau_add_inc_ens(step, dim_p, dim_ens_task, ens, state, &
          U_collect_state, U_distribute_state)
 
   END SUBROUTINE PDAF_fcst_operations

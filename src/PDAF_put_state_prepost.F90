@@ -125,10 +125,10 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
 
      IF (.not.filterpe) THEN
         ! Non filter PEs only store a sub-ensemble
-        CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
+        CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, state, screen)
      ELSE
         ! On filter PEs, the ensemble array has full size
-        CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
+        CALL PDAF_gather_ens(dim_p, dim_ens, ens, state, screen)
      END IF
 
   end IF doevolB

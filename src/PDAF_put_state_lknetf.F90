@@ -165,10 +165,10 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, state, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, state, screen)
         END IF
 
      END IF doevolB

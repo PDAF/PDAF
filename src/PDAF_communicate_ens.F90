@@ -55,7 +55,7 @@ CONTAINS
 !! * 2011-12 - Lars Nerger - Initial code extracted from PDAF_put_state_seik
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, ens, screen)
+  SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, ens, state, screen)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -77,6 +77,7 @@ CONTAINS
     INTEGER, INTENT(in) :: dim_p       !< PE-local dimension of model state
     INTEGER, INTENT(in) :: dim_ens_p   !< Size of ensemble
     REAL, INTENT(inout) :: ens(:, :)   !< PE-local state ensemble
+    REAL, INTENT(inout) :: state(:)    !< PE-local state vector (for SEEK)
     INTEGER, INTENT(in) :: screen      !< Verbosity flag
 
 ! local variables
@@ -89,7 +90,7 @@ CONTAINS
 ! *** Store local ensembles in case of IAU ***
 ! ********************************************
 
-    CALL PDAF_iau_update_ens(ens)
+    CALL PDAF_iau_update_ens(ens, state)
 
 
 ! **********************************************
@@ -371,7 +372,7 @@ CONTAINS
 ! *** Update ensemble increment for IAU ***
 ! *****************************************
 
-    CALL PDAF_iau_update_inc(ens)
+    CALL PDAF_iau_update_inc(ens, state)
 
   END SUBROUTINE PDAF_scatter_ens
 
