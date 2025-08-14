@@ -92,7 +92,7 @@ SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_
 ! *** Only done on the filter Pes                ***
 ! **************************************************
 
-! TEMPLATE: This is generic as long as subtype_filter 2 and 3 are fixed ensemble cases
+! TEMPLATE: This is generic as long as subtype_filter 10 and 11 are EnOI (fixed ensemble) cases
   doevol: IF (nsteps > 0 .OR. .NOT.offline_mode) THEN
 
      CALL PDAF_timeit(41, 'new')
@@ -102,8 +102,8 @@ SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_
         ! Store member index for PDAF_get_memberid
         member_save = member
 
-! TEMPLATE: Only this IF-statement should be adapted if subtype_filter 2, 3 are used differently
-        IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
+! TEMPLATE: This IF-statement should only be modified if subtype_filter 10, 11 (EnOI modes) are used differently
+        IF (subtype_filter /= 10 .AND. subtype_filter /= 11) THEN
            ! Save evolved state in ensemble matrix
            CALL U_collect_state(dim_p, ens(1 : dim_p, member))
         ELSE
@@ -153,10 +153,10 @@ SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, state, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, state, screen)
         END IF
 
      END IF doevolB
