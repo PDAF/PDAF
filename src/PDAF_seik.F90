@@ -221,8 +221,8 @@ CONTAINS
     writeout: IF (verbose > 0) THEN
 
        WRITE (*, '(/a, 4x, a)') 'PDAF', 'SEIK configuration'
-       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
-       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i3)') 'PDAF', 'filter sub-type= ', subtype
        IF (subtype == 0) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard SEIK'
        ELSE IF (subtype == 1) THEN
@@ -230,9 +230,7 @@ CONTAINS
        ELSE IF (subtype == 2) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with ensemble transformation'
        ELSE IF (subtype == 10) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with fixed error-space basis'
-       ELSE IF (subtype == 11) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with fixed state covariance matrix'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK-EnOI (non-dynamic ensemble updated at analysis)'
        END IF
        WRITE(*, '(a, 10x, a, i3)') &
             'PDAF', 'param_int(5) type_forget=', type_forget
@@ -441,8 +439,7 @@ CONTAINS
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: full ensemble integration; left-sided application of T'
     WRITE(*, '(a, 7x, a)') 'PDAF', '1: full ensemble integration; right-sided application of T'
     WRITE(*, '(a, 7x, a)') 'PDAF', '2: full ensemble integration; explicit ensemble transformation'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '10: Fixed error space basis'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '11: Fixed state covariance matrix'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '10: EnOI mode (non-dynamic ensemble updated at analysis)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') &

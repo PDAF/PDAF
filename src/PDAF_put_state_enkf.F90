@@ -103,8 +103,13 @@ SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
         ! Store member index for PDAF_get_memberid
         member_save = member
 
-        ! Save evolved state in ensemble matrix
-        CALL U_collect_state(dim_p, ens(1:dim_p, member))
+        IF (subtype_filter /= 10 .AND. subtype_filter /= 11) THEN
+           ! Save evolved state in ensemble matrix
+           CALL U_collect_state(dim_p, ens(1 : dim_p, member))
+        ELSE
+           ! Save evolved ensemble mean state
+           CALL U_collect_state(dim_p, state(1:dim_p))
+        END IF
      END IF modelpes
 
      CALL PDAF_timeit(41, 'old')

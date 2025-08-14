@@ -230,8 +230,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
         IF ((mype_world == 0) .AND. (screen > 0)) THEN
            IF (subtype_filter == 10 .OR. subtype_filter == 11) THEN
-              ! Output for fixed-basis (only SEEK/SEIK/LSEIK/ESTKF/LESTKF)
-              WRITE (*, '(a, 5x, a)') 'PDAF', 'Fixed basis - evolve only state estimate'
+              ! Output for EnOI-mode 
+              WRITE (*, '(a, 5x, a)') 'PDAF', 'EnOI-mode (fixed basis) - evolve only state estimate'
            ELSE
               IF (ensemblefilter) THEN
                  ! Ensemble-based filters

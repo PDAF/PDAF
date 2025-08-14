@@ -515,7 +515,7 @@ CONTAINS
                 WRITE (*, '(a,5x,a)') 'PDAF', 'Setting initial increment for IAU - IAU activated'
              END IF
 
-             on_filterpe: IF (filterpe) THEN
+             on_filterpeA: IF (filterpe) THEN
 
                 ! Initialize increment if filter task is also model task
                 IF (task_id > 0) THEN
@@ -527,7 +527,7 @@ CONTAINS
                 ! Initialize increment on all model tasks
                 ens_iau(:, 1:dim_ens_task) = ens_inc(:, 1:dim_ens_task)
 
-             END IF on_filterpe
+             END IF on_filterpeA
 
           ELSE
              WRITE (*,'(/5x, a/)') &
@@ -542,7 +542,7 @@ CONTAINS
              WRITE (*, '(a,5x,a)') 'PDAF', 'Setting initial increment for IAU - IAU activated'
           END IF
 
-          on_filterpe: IF (filterpe) THEN
+          on_filterpeB: IF (filterpe) THEN
 
              ! Initialize increment if filter task is also model task
              IF (task_id > 0) THEN
@@ -554,7 +554,7 @@ CONTAINS
              ! Initialize increment on all model tasks
              state_iau(:) = ens_inc(:, 1)
 
-          END IF on_filterpe
+          END IF on_filterpeB
 
        END IF dynamic_ens
 

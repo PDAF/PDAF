@@ -222,14 +222,14 @@ CONTAINS
     writeout: IF (verbose > 0) THEN
 
        WRITE (*, '(/a, 4x, a)') 'PDAF', 'LESTKF configuration'
-       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
-       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i3)') 'PDAF', 'filter sub-type= ', subtype
        IF (subtype == 0) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard LESTKF'
        ELSE IF (subtype == 10) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF with fixed error-space basis'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF-EnOI (non-dynamic ensemble updated at analysis)'
        ELSE IF (subtype == 11) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF with fixed state covariance matrix'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF-EnOI (fixed ensemble peturbations)'
        END IF
        IF (dim_lag > 0) &
             WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
@@ -449,8 +449,8 @@ CONTAINS
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard implementation with ensemble integration'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '10: Fixed error space basis'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '11: Fixed state covariance matrix'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '10: EnOI mode (non-dynamic ensemble updated at analysis)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '11: EnOI mode (fixed ensemble perturbations)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1) dim_p'

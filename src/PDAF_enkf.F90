@@ -137,7 +137,7 @@ CONTAINS
 ! *** Check subtype ***
 ! *********************
 
-    IF (subtype<0 .OR. subtype>1) THEN
+    IF (.NOT.(subtype==0 .OR. subtype==1)) THEN
        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
        outflag = 3
     END IF
@@ -214,6 +214,10 @@ CONTAINS
           WRITE (*, '(a, 14x, a)') 'PDAF', '--> EnKF with analysis for large observation dimension'
        ELSE IF (subtype == 1) THEN
           WRITE (*, '(a, 14x, a)') 'PDAF', '--> EnKF with analysis for small observation dimension'
+!        ELSE IF (subtype == 10) THEN
+!           WRITE (*, '(a, 12x, a)') 'PDAF', '--> EnKF large-obs in EnOI-mode (non-dynamic ensemble updated at analysis)'
+!        ELSE IF (subtype == 11) THEN
+!           WRITE (*, '(a, 12x, a)') 'PDAF', '--> EnKF small-obs in EnOI-mode (non-dynamic ensemble updated at analysis)'
        END IF
        IF (dim_lag > 0) &
             WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'param_int(3) Apply smoother up to dim_lag=',dim_lag
@@ -293,8 +297,9 @@ CONTAINS
           flag = 8
        END IF
 
-       ! only subtype=0 support smoother; if needed reset subtype
+       ! only subtypes=0 and 10 support smoother; if needed reset subtype
        IF (subtype_filter==1 .AND. dim_lag>0) subtype_filter = 0
+       IF (subtype_filter==11 .AND. dim_lag>0) subtype_filter = 10
 
        CALL PDAF_alloc_sens(dim_p, dim_ens, dim_lag, flag)
     CASE(4)
@@ -408,6 +413,8 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: recommended analysis for 2*dim_obs>dim_ens'
     WRITE(*, '(a, 7x, a)') 'PDAF', '1: recommended analysis for 2*dim_obs<=dim_ens'
+!     WRITE(*, '(a, 7x, a)') 'PDAF', '10: As subtype=0, but in EnOI mode (non-dynamic ensemble updated at analysis)'
+!     WRITE(*, '(a, 7x, a)') 'PDAF', '11: As subtype=1, but in EnOI mode (non-dynamic ensemble updated at analysis)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1) dim_p'
@@ -610,7 +617,7 @@ CONTAINS
           WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'EnKF analysis (3):', pdaf_time_tot(3), 's'
           WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'
           WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
-          IF (subtype_filter == 1) THEN
+          IF (subtype_filter == 1 .OR. subtype_filter == 11) THEN
              WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R and HP (10):', pdaf_time_tot(10), 's'
           ELSE
              WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R (10):', pdaf_time_tot(10), 's'
@@ -649,13 +656,13 @@ CONTAINS
           WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'EnKF analysis (3):', pdaf_time_tot(3), 's'
           WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'
           WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
-          IF (subtype_filter == 1) THEN
+          IF (subtype_filter == 1 .OR. subtype_filter == 11) THEN
              WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R and HP (10):', pdaf_time_tot(10), 's'
           ELSE
              WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R (10):', pdaf_time_tot(10), 's'
           END IF
           WRITE (*, '(a, 33x, a, F11.3, 1x, a)') 'PDAF', 'HXpert (30):', pdaf_time_tot(30), 's'
-          IF (subtype_filter == 1) THEN
+          IF (subtype_filter == 1 .OR. subtype_filter == 11) THEN
              WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete HP_p (31):', pdaf_time_tot(31), 's'
           END IF
           WRITE (*, '(a, 36x, a, F11.3, 1x, a)') 'PDAF', 'HPH (32):', pdaf_time_tot(32), 's'

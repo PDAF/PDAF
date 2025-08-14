@@ -235,9 +235,9 @@ CONTAINS
        ELSE IF (subtype == 1) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK with ensemble transformation'
        ELSE IF (subtype == 10) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK with fixed error-space basis'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK-EnOI (non-dynamic ensemble updated at analysis)'
        ELSE IF (subtype == 11) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK with fixed state covariance matrix'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK-EnOI (fixed ensemble peturbations)'
        END IF
        WRITE(*, '(a, 10x, a, i3)') &
             'PDAF', 'param_int(5) type_forget=', type_forget
@@ -456,8 +456,8 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: full ensemble integration; left-sided application of T'
     WRITE(*, '(a, 7x, a)') 'PDAF', '1: full ensemble integration; explicit ensemble transformation'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '10: Fixed error space basis'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '11: Fixed state covariance matrix'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '10: EnOI mode (non-dynamic ensemble updated at analysis)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '11: EnOI mode (fixed ensemble perturbations)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') &
