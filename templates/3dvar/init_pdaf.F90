@@ -19,11 +19,12 @@ SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, n_modeltasks, task_id, &
-       COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
+       ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       type_iau, steps_iau, forget, locweight, cradius, sradius, delt_obs, &
+       delt_obs, type_iau, steps_iau, &
+       type_forget, forget, &
+       locweight, cradius, sradius, &
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar, &
        solver_iparam1, solver_iparam2, solver_rparam1, solver_rparam2
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
@@ -188,20 +189,16 @@ SUBROUTINE init_pdaf()
 
   IF (subtype==0) THEN
      ! parameterized 3D-Var
-     CALL PDAF_init(filtertype, subtype, 0, &
+     CALL PDAF3_init(filtertype, subtype, 0, &
           filter_param_i, 7,&
           filter_param_r, 4, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
-          screen, status_pdaf)
+          init_3dvar_pdaf, screen, status_pdaf)
   ELSE
      ! Ensemble or hybrid 3D-Var
-     CALL PDAF_init(filtertype, subtype, 0, &
+     CALL PDAF3_init(filtertype, subtype, 0, &
           filter_param_i, 7,&
           filter_param_r, 4, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
+          init_ens_pdaf, screen, status_pdaf)
   END IF
 
 
