@@ -4,13 +4,12 @@
 export ARCH=linux_gfortran_openmpi
 DA_SPECS=" -dim_ens 4 -forget 0.8 -screen 1 -cradius 5.0 -locweight 2 -delt_obs 9"
 DA_SPECS_PF=" -dim_ens 4 -forget 1.0 -pf_noise_amp 0.8 -screen 1"
-#DA_SPECS_IAU=" -dim_ens 4 -forget 0.8 -screen 1 -cradius 5.0 -locweight 2 -delt_obs 9 -type_iau 1 -steps_iau 5"
 DA_SPECS_IAU=" $DA_SPECS -type_iau 1 -steps_iau 5"
 DA_SPECS_PF_IAU=" $DA_SPECS_PF -type_iau 1 -steps_iau 5"
 DA_SPECS_2OBS=" $DA_SPECS -assim_B T"
 RUNSTR="mpirun -np 4 ./PDAF_online"
 RUNPAR="mpirun -np 8 ./PDAF_online"
-
+RUNENOI="mpirun -np 1 ./PDAF_online"
 
 COMPILEPDAF=0
 COMPILE=1
@@ -90,6 +89,28 @@ then
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
 
+    FTYPE=1
+    STYPE=10
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=1
+    STYPE=11
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
     # LSEIK ##############
 
     echo "     +++++++++++++ LSEIK online 1 task per model +++++++++++++"
@@ -102,6 +123,28 @@ then
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
     $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=3
+    STYPE=10
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=3
+    STYPE=11
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
 
@@ -174,6 +217,28 @@ then
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
 
+    FTYPE=4
+    STYPE=10
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=4
+    STYPE=11
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
 
     # LETKF ##############
 
@@ -187,6 +252,28 @@ then
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
     $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=5
+    STYPE=10
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=5
+    STYPE=11
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
 
@@ -206,6 +293,28 @@ then
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
 
+    FTYPE=6
+    STYPE=10
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=6
+    STYPE=11
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
 
     # LESTKF ##############
 
@@ -219,6 +328,28 @@ then
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
     $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=7
+    STYPE=10
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=7
+    STYPE=11
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
 
@@ -335,6 +466,28 @@ then
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype13s${STYPE}
 
+    FTYPE=13
+    STYPE=10
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=13
+    STYPE=11
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
 fi
 
 #--------- ONLINE SUBTYPE IAU -------------
@@ -418,7 +571,6 @@ then
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_IAU_ftype${FTYPE}s${STYPE}
 
-
     # LETKF ##############
 
     echo "     +++++++++++++ LETKF online IAU 1 task per model +++++++++++++"
@@ -450,6 +602,32 @@ then
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_IAU_ftype${FTYPE}s${STYPE}
 
+
+    # ESTKF-EnOI  ##############
+
+    echo "     +++++++++++++ ESTKF-EnOI online IAU 1 task per model +++++++++++++"
+
+    FTYPE=6
+    STYPE=10
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS_IAU -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS_IAU  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_IAU_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_IAU_ftype${FTYPE}s${STYPE}
+
+    FTYPE=6
+    STYPE=11
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", EnOI subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNENOI $DA_SPECS_IAU -filtertype $FTYPE -subtype $STYPE
+    $RUNENOI $DA_SPECS_IAU  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_IAU_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_IAU_ftype${FTYPE}s${STYPE}
 
     # LESTKF ##############
 

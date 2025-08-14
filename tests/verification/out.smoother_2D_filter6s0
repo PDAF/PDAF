@@ -46,7 +46,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -87,8 +87,8 @@ PDAF: Call ensemble initialization
 PDAF: Initialization completed
 
 PDAF    ESTKF configuration
-PDAF          ensemble size:    4
-PDAF          filter sub-type= 0
+PDAF          ensemble size=     4
+PDAF          filter sub-type=   0
 PDAF            --> Standard ESTKF
 PDAF          param_int(3) dim_lag= 10
 PDAF            --> Apply smoother up to lag:    10
@@ -415,14 +415,14 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.018 s
-PDAF            MPI communication in PDAF:           0.017 s
+PDAF          Ensemble forecast:                   0.019 s
+PDAF            MPI communication in PDAF:           0.019 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.003 s
-PDAF            PDAF-internal operations:            0.038 s
+PDAF          ESTKF analysis:                      0.001 s
+PDAF            PDAF-internal operations:            0.039 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.003 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.041 s
+PDAF          prepoststep_pdaf:                    0.040 s
