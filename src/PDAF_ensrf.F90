@@ -210,8 +210,8 @@ CONTAINS
     writeout: IF (verbose > 0) THEN
 
        WRITE (*, '(/a, 4x, a)') 'PDAF', 'ENSRF configuration'
-       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
-       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i3)') 'PDAF', 'filter sub-type= ', subtype
        IF (subtype == 0) THEN
           WRITE (*, '(a, 14x, a)') 'PDAF', '--> ENSRF with serial observation processing cf. Whitaker & Hamill (2002) '
        ELSEIF (subtype == 1) THEN
