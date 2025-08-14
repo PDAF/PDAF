@@ -39,7 +39,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -85,8 +85,8 @@ PDAF: Call ensemble initialization
 PDAF: Initialization completed
 
 PDAF    ENSRF configuration
-PDAF          ensemble size:    4
-PDAF          filter sub-type= 0
+PDAF          ensemble size:     4
+PDAF          filter sub-type=   0
 PDAF              --> ENSRF with serial observation processing cf. Whitaker & Hamill (2002) 
 PDAF          Use fixed forgetting factor: 0.80
 PDAF          param_int(8) observe_ens
@@ -183,23 +183,23 @@ PDAF          ---------------------------------------------
 PDAF                 Globally allocated memory  (MiB)
 PDAF              state and A:        0.005 MiB (persistent)
 PDAF           ensemble array:        0.035 MiB (persistent)
-PDAF            analysis step:        0.028 MiB (temporary)
-PDAF                 PDAF-OMI:        0.001 MiB (temporary)
+PDAF            analysis step:        0.031 MiB (temporary)
+PDAF                 PDAF-OMI:        0.003 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
+PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.002 s
-PDAF            MPI communication in PDAF:           0.002 s
+PDAF          Ensemble forecast:                   0.004 s
+PDAF            MPI communication in PDAF:           0.004 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ENSRF analysis:                        0.003 s
+PDAF          ENSRF analysis:                        0.002 s
 PDAF            PDAF-internal operations:             0.000 s
 PDAF            OMI-internal routines:                0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:               0.001 s
+PDAF              init_dim_obs_pdafomi:               0.000 s
 PDAF              obs_op_pdafomi:                     0.000 s
 PDAF              localize_covar_serial_pdafomi:      0.002 s
 PDAF          prepoststep_pdaf:                     0.009 s

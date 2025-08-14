@@ -44,7 +44,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -87,8 +87,8 @@ PDAF: Call ensemble initialization
 PDAF: Initialization completed
 
 PDAF    LESTKF configuration
-PDAF          ensemble size:    4
-PDAF          filter sub-type= 0
+PDAF          ensemble size:     4
+PDAF          filter sub-type=   0
 PDAF            --> Standard LESTKF
 PDAF          param_int(5) type_forget=  0
 PDAF            --> Use fixed forgetting factor: 0.80
@@ -220,25 +220,25 @@ PDAF          ---------------------------------------------
 PDAF                 Globally allocated memory  (MiB)
 PDAF              state and A:        0.005 MiB (persistent)
 PDAF           ensemble array:        0.035 MiB (persistent)
-PDAF            analysis step:        0.029 MiB (temporary)
-PDAF                 PDAF-OMI:        0.001 MiB (temporary)
+PDAF            analysis step:        0.032 MiB (temporary)
+PDAF                 PDAF-OMI:        0.003 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.003 s
-PDAF            MPI communication in PDAF:           0.003 s
+PDAF          Ensemble forecast:                   0.005 s
+PDAF            MPI communication in PDAF:           0.005 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.003 s
-PDAF            PDAF-internal operations:            0.011 s
+PDAF          LESTKF analysis:                     0.005 s
+PDAF            PDAF-internal operations:            0.013 s
 PDAF            OMI-internal routines:               0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.000 s
+PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.009 s
+PDAF          prepoststep_pdaf:                    0.013 s

@@ -42,7 +42,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -88,8 +88,8 @@ PDAF: Initialization completed
   PDAF offline mode: START ASSIMILATION
 
 PDAF    LSEIK configuration
-PDAF          ensemble size:    8
-PDAF          filter sub-type= 0
+PDAF          ensemble size:     8
+PDAF          filter sub-type=   0
 PDAF            --> Standard LSEIK
 PDAF          param_int(5) type_forget=  0
 PDAF            --> Use fixed forgetting factor: 0.80
@@ -154,9 +154,9 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and U:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.010 MiB (temporary)
+PDAF            analysis step:      0.013 MiB (temporary)
 PDAF                resampling:     0.055 MiB (temporary)
-PDAF                 PDAF-OMI:      0.002 MiB (temporary)
+PDAF                 PDAF-OMI:      0.006 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -192,16 +192,16 @@ PDAF              localize observations (11):          0.000 s
 PDAF                init_dim_obs_l_pdaf (38):            0.000 s
 PDAF                g2l_obs_pdaf (46):                   0.000 s
 PDAF                init_obs_l_pdaf (47):                0.000 s
-PDAF              local state analysis (12):           0.001 s
+PDAF              local state analysis (12):           0.000 s
 PDAF                compute Ainv (16):                   0.000 s
 PDAF                  init innovation (20):                0.000 s
 PDAF                  prodRinvA_pdaf (48):                 0.000 s
 PDAF                  complete Ainv (21):                  0.000 s
-PDAF                get state weight vector (22):        0.001 s
+PDAF                get state weight vector (22):        0.000 s
 PDAF                update state (23):                   0.000 s
-PDAF              ensemble transformation (13):        0.001 s
-PDAF                prepare ens. weights (24):           0.001 s
-PDAF                  SQRT(Ainv) (32):                     0.001 s
+PDAF              ensemble transformation (13):        0.002 s
+PDAF                prepare ens. weights (24):           0.002 s
+PDAF                  SQRT(Ainv) (32):                     0.002 s
 PDAF                  compute C^T OmegaT (34):             0.000 s
 PDAF                update ensemble (18):                  0.000 s
 PDAF              local to global (14):                0.000 s

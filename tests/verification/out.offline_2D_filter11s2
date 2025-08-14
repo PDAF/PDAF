@@ -44,7 +44,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -170,8 +170,8 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.018 MiB (temporary)
-PDAF                 PDAF-OMI:      0.002 MiB (temporary)
+PDAF            analysis step:      0.021 MiB (temporary)
+PDAF                 PDAF-OMI:      0.006 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -179,7 +179,7 @@ PDAF        ------------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LKNETF analysis:                     0.003 s
-PDAF            PDAF-internal operations:            0.003 s
+PDAF            PDAF-internal operations:            0.002 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s

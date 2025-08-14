@@ -45,7 +45,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -88,8 +88,8 @@ PDAF: Initialization completed
   PDAF offline mode: START ASSIMILATION
 
 PDAF    ESTKF configuration
-PDAF          ensemble size:    8
-PDAF          filter sub-type= 0
+PDAF          ensemble size=     8
+PDAF          filter sub-type=   0
 PDAF            --> Standard ESTKF
 PDAF          param_int(5) type_forget=  0
 PDAF            --> Use fixed forgetting factor: 0.80
@@ -138,8 +138,8 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.017 MiB (temporary)
-PDAF                 PDAF-OMI:      0.000 MiB (temporary)
+PDAF            analysis step:      0.018 MiB (temporary)
+PDAF                 PDAF-OMI:      0.002 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
