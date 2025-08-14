@@ -80,32 +80,50 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
        U_prepoststep                !< User supplied pre/poststep routine
 
 ! *** local variables ***
-  INTEGER :: i                    ! Counters
-  INTEGER :: minusStep            ! Time step counter
-  INTEGER, SAVE :: allocflag = 0  ! Flag whether first time allocation is done
-  LOGICAL :: do_init_dim_obs      ! Flag for initializing dim_obs_p in PDAFobs_init
-  LOGICAL :: do_ensmean           ! Flag for computing ensemble mean state
-  REAL :: Ainv(1, 1)              ! Unused array, but required in call to U_prepoststep
+  INTEGER :: i, j                   ! Counters
+  INTEGER :: minusStep              ! Time step counter
+  INTEGER, SAVE :: allocflag = 0    ! Flag whether first time allocation is done
+  LOGICAL :: do_init_dim_obs        ! Flag for initializing dim_obs_p in PDAFobs_init
+  LOGICAL :: do_ensmean             ! Flag for computing ensemble mean state
+  REAL :: Ainv(1, 1)                ! Unused array, but required in call to U_prepoststep
 
 
 ! **********************
 ! ***  Update phase  ***
 ! **********************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_ensrf_update -- START'
+
+
+! ***********************************************************
+! *** For fixed error space basis compute ensemble states ***
+! ***********************************************************
+
+  CALL PDAF_timeit(3, 'new')
+  CALL PDAF_timeit(51, 'new')
+
+  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
+     ! *** Add mean/central state to ensemble members ***
+     DO j = 1, dim_ens
+        DO i = 1, dim_p
+           ens_p(i, j) = ens_p(i, j) + state_p(i)
+        END DO
+     END DO
+  END IF fixed_basis
+
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_ensrf_update -- START'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_ensrf_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
+  CALL PDAF_timeit(51, 'old')
 
 
 ! ************************
 ! *** Inflate ensemble ***
 ! ************************
-
-  CALL PDAF_timeit(3, 'new')
 
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! We need to call the inflation of the forecast ensemble before
@@ -253,12 +271,12 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   END IF
 
   ! *** analysis with representer method - with 2m>n ***
-  IF (subtype == 0) THEN
+  IF (subtype == 0 .OR. subtype == 10) THEN
      ! ENSRF in formulation of Whitaker/Hamill (2002)
      CALL PDAF_ensrf_ana(step, dim_p, dim_obs_p, dim_ens, &
           state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
           U_localize_covar_serial, screen, debug)
-  ELSEIF (subtype == 1) THEN
+  ELSEIF (subtype == 1 .OR. subtype == 11) THEN
      ! 2-step update with local least squares formulation by Anderson (2003)
      CALL PDAF_ensrf_ana_2step(step, dim_p, dim_obs_p, dim_ens, &
           state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &

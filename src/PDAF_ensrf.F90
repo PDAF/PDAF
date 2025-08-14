@@ -139,7 +139,7 @@ CONTAINS
 ! *** Check subtype ***
 ! *********************
 
-    IF (subtype<0 .OR. subtype>2) THEN
+    IF (.NOT.(subtype==0 .OR. subtype==1 .OR. subtype==10 .OR. subtype==11)) THEN
        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
        outflag = 3
     END IF
@@ -216,6 +216,10 @@ CONTAINS
           WRITE (*, '(a, 14x, a)') 'PDAF', '--> ENSRF with serial observation processing cf. Whitaker & Hamill (2002) '
        ELSEIF (subtype == 1) THEN
           WRITE (*, '(a, 14x, a)') 'PDAF', '--> 2-step local least squares EAKF cf. Anderson (2003)'
+       ELSE IF (subtype == 10) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> EnSRF in EnOI-mode (non-dynamic ensemble updated at analysis)'
+       ELSE IF (subtype == 11) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> EAKF in EnOI-mode (non-dynamic ensemble updated at analysis)'
        END IF
        IF (dim_lag > 0) &
             WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'Apply smoother up to lag:',dim_lag
@@ -382,6 +386,8 @@ CONTAINS
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: ENSRF with serial observation processing (cf. Houtekamer/Hamill, 2002)'
     WRITE(*, '(a, 7x, a)') 'PDAF', '1: EAKF/2-step local least squares filter (cf. Anderson, 2003)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '10: ENSRF in EnOI mode (non-dynamic ensemble updated at analysis)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '11: EAKF in EnOI mode (non-dynamic ensemble updated at analysis)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1) dim_p'
@@ -582,7 +588,7 @@ CONTAINS
           WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'EnSRF analysis (3):', pdaf_time_tot(3), 's'
           WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
           WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute ensemble mean (9):', pdaf_time_tot(9), 's'
-          IF (subtype_filter == 0) THEN
+          IF (subtype_filter == 0 .OR. subtype_filter == 10) THEN
              WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute HPH+R and HP (10):', pdaf_time_tot(10), 's'
              WRITE (*, '(a, 14x, a, 5x, F11.3, 1x, a)') 'PDAF', 'Xpert, HXpert, HXbar (30):', pdaf_time_tot(30), 's'
              WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'complete HP_p (31):', pdaf_time_tot(31), 's'
