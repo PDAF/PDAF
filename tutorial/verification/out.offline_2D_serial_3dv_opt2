@@ -35,7 +35,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -130,6 +130,7 @@ INITIAL VALUES:
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     --- update duration:     0.000 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
@@ -147,7 +148,7 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.005 MiB (persistent)
 PDAF            analysis step:      0.012 MiB (temporary)
-PDAF                 PDAF-OMI:      0.001 MiB (temporary)
+PDAF                 PDAF-OMI:      0.002 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines

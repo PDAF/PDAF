@@ -34,7 +34,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -77,8 +77,8 @@ PDAF: Initialization completed
   PDAF offline mode: START ASSIMILATION
 
 PDAF    ESTKF configuration
-PDAF          ensemble size:    9
-PDAF          filter sub-type= 0
+PDAF          ensemble size=     9
+PDAF          filter sub-type=   0
 PDAF            --> Standard ESTKF
 PDAF          param_int(5) type_forget=  0
 PDAF            --> Use fixed forgetting factor: 1.00
@@ -128,20 +128,20 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.044 MiB (persistent)
-PDAF            analysis step:      0.022 MiB (temporary)
-PDAF                 PDAF-OMI:      0.001 MiB (temporary)
+PDAF            analysis step:      0.024 MiB (temporary)
+PDAF                 PDAF-OMI:      0.004 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.003 s
-PDAF          ESTKF analysis:                      0.002 s
-PDAF            PDAF-internal operations:            0.002 s
+PDAF          ESTKF analysis:                      0.001 s
+PDAF            PDAF-internal operations:            0.005 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.004 s
+PDAF          prepoststep_pdaf:                    0.005 s
 
  PDAF offline mode: END

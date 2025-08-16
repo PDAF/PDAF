@@ -34,7 +34,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.0                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -75,7 +75,7 @@ PDAF: Call ensemble initialization
          Initialize B^1/2 for 3D-Var
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 
   PDAF offline mode: START ASSIMILATION
 
@@ -149,6 +149,7 @@ PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
 PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -165,18 +166,18 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.044 MiB (persistent)
-PDAF            analysis step:      0.035 MiB (temporary)
-PDAF                 PDAF-OMI:      0.001 MiB (temporary)
+PDAF            analysis step:      0.038 MiB (temporary)
+PDAF                 PDAF-OMI:      0.004 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          Hyb3DVAR analysis:                   0.001 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
-PDAF            Solver:                              0.000 s
+PDAF            Solver:                              0.001 s
 PDAF            cvt_ens_pdaf:                        0.000 s
 PDAF            cvt_ens_adj_pdaf:                    0.000 s
 PDAF            Time in OMI observation module routines 
