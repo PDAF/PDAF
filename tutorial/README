@@ -177,7 +177,7 @@ can yield the highest compute performance.
 
 ---- Implementations using PDAFomi and PDAFlocalomi (final status of PDAF 2.3.1) -----
 
-PDAF2/
+PDAF2_OMI/
 With PDAF V3.0 a new interface was introduced that combines the 
 features of PDAF-OMI and PDAF-local, which were introduced with
 PDAF V1.1.6 (OMI) and PDAF 2.3 (PDAF-local). With PDAF V3.0 the
