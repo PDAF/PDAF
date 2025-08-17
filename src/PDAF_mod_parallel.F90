@@ -96,9 +96,60 @@ CONTAINS
     INTEGER :: i, task                       ! Counters
     CHARACTER(len=200) :: tskstr1, tskstr2   ! Strings for ensemble overview
     CHARACTER(len=200) :: tskstr3, tskstrtmp ! Strings for ensemble overview
+    LOGICAL :: iniflag                       ! Flag whether MPI is initialized
 
 
-    ! Check parallelization setting
+    ! *** Check whether MPI variables are initialized ***
+    self_init: IF (isset_parallel) THEN
+
+       ! *** Initialize configuration values using provided arguments
+
+       task_id = in_task_id
+       n_modeltasks = in_n_modeltasks
+
+       ! Initialize model variables for communicators
+       COMM_filter = in_COMM_filter
+       COMM_couple = in_COMM_couple
+       COMM_model = in_COMM_model
+
+    ELSE self_init
+
+       ! *** PDAF was called without provision of MPI variables
+       ! *** do self-initialization of PDAF's parallelization
+
+       CALL MPI_Initialized(iniflag, MPIerr) 
+       IF (.not.iniflag) THEN
+          CALL MPI_Init(MPIerr)
+       END IF
+       COMM_pdaf = MPI_COMM_WORLD
+
+       CALL MPI_Comm_size(COMM_pdaf, npes_world, MPIerr)
+
+       ! Self-initialization is only valid for single-process 
+       IF (npes_world == 1) THEN
+
+          ! Set configuration variables
+          task_id = 1
+          n_modeltasks = 1
+          filterpe = .TRUE.
+
+          ! Set communicators
+          COMM_filter = COMM_pdaf
+          COMM_couple = COMM_pdaf
+          COMM_model = COMM_pdaf
+       ELSE
+          IF (mype_filter == 0) THEN
+             WRITE (*, '(/5x, a)') 'PDAF-ERROR: PDAF self-initialization of MPI is'
+             WRITE (*, '(5x, a)') 'PDAF-ERROR: only possible with a single process!'
+             WRITE (*, '(5x, a)') 'PDAF-ERROR: STOPPING PROGRAM !!!'
+          END IF
+          CALL  MPI_Finalize(MPIerr)
+          STOP
+       END IF
+
+    END IF self_init
+
+    ! *** Check parallelization setting ***
     IF (fixedbasis .AND. in_n_modeltasks > 1) THEN
        IF (mype_filter == 0) THEN
           WRITE (*, '(/5x, a)') 'PDAF-ERROR: Fixed basis filters can only be run'
@@ -109,15 +160,8 @@ CONTAINS
        STOP
     END IF
 
-    ! Initialize values
-    task_id = in_task_id
-    n_modeltasks = in_n_modeltasks
 
-    ! Initialize model variables for communicators
-    COMM_filter = in_COMM_filter
-    COMM_couple = in_COMM_couple
-
-    ! *** Initialize PE information on COMM_world ***
+    ! *** Initialize PE information on COMM_pdaf ***
     CALL MPI_Comm_size(COMM_pdaf, npes_world, MPIerr)
     CALL MPI_Comm_rank(COMM_pdaf, mype_world, MPIerr)
 
@@ -142,9 +186,9 @@ CONTAINS
     END IF
 
     ! *** Initialize PE information on in_COMM_model ***
-    IF (in_COMM_model /= MPI_COMM_NULL) THEN
-       CALL MPI_Comm_Size(in_COMM_model, npes_model, MPIerr)
-       CALL MPI_Comm_Rank(in_COMM_model, mype_model, MPIerr)
+    IF (COMM_model /= MPI_COMM_NULL) THEN
+       CALL MPI_Comm_Size(COMM_model, npes_model, MPIerr)
+       CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
        modelpe = .TRUE.
     ELSE
        filter_no_model = .TRUE.
@@ -275,6 +319,8 @@ CONTAINS
     filter_pe: IF (filterpe .AND. mype == 0 .AND. screen > 0 .AND. flag == 0) THEN
 
        WRITE (*, '(/a)') 'PDAF: Initialize Parallelization'
+       IF (.NOT.isset_parallel) WRITE (*,'(a,5x,a)') 'PDAF','-- use PDAF self-initialization for MPI --'
+
 
        ! *** Parallelization information ***
        WRITE (*, '(a)') 'PDAF     Parallelization - Filter on model PEs:'

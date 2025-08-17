@@ -205,7 +205,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
              dim_preal, filterstr, ensemblefilter, fixedbasis, screen, flag)
      END IF
 
-  
+
 ! **********************************
 ! *** Initialize parallelization ***
 ! **********************************
