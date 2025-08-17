@@ -645,8 +645,6 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_update_inc(ens_ana, state_ana)
 
-    USE PDAF_mod_core, &
-         ONLY: use_pdaf_assim
     USE PDAF_mod_parallel, &
          ONLY: filterpe, task_id, dim_ens_task
 
