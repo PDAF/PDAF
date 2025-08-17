@@ -49,7 +49,7 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_ens, state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, U_init_obsvar, &
-     screen, subtype, flag)
+     screen, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -83,7 +83,6 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: Ainv(dim_ens-1, dim_ens-1) !< Transform matrix
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      !< PE-local ensemble matrix
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: subtype      !< Filter subtype
   INTEGER, INTENT(inout) :: flag      !< Status flag
 
 ! *** External subroutines ***
@@ -112,40 +111,23 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- START'
-
-  CALL PDAF_timeit(3, 'new')
-  CALL PDAF_timeit(51, 'new')
-
-  ALLOCATE(state_inc_p(dim_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_p)
-
-
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
-
-  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-     ! *** Add mean/central state to ensemble members ***
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_p(i)
-        END DO
-     END DO
-  END IF fixed_basis
-
   IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- START'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
 
+  ALLOCATE(state_inc_p(dim_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_p)
+
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
+
+  CALL PDAF_timeit(3, 'new')
 
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
@@ -357,7 +339,7 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
      U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-     screen, subtype, flag)
+     screen, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -393,7 +375,6 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: Ainv(dim_ens-1, dim_ens-1)  !< Transform matrix
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)       !< PE-local ensemble matrix
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: subtype      !< Filter subtype
   INTEGER, INTENT(inout) :: flag      !< Status flag
 
 ! *** External subroutines ***
@@ -434,40 +415,23 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- START'
-
-  CALL PDAF_timeit(3, 'new')
-  CALL PDAF_timeit(51, 'new')
-
-  ALLOCATE(state_inc_p(dim_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_p)
-
-
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
-
-  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-     ! *** Add mean/central state to ensemble members ***
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_p(i)
-        END DO
-     END DO
-  END IF fixed_basis
-
   IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- START'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
 
+  ALLOCATE(state_inc_p(dim_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_p)
+
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
+
+  CALL PDAF_timeit(3, 'new')
 
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs

@@ -198,7 +198,7 @@ SUBROUTINE PDAFlocal_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U
              U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
              U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
              PDAFlocal_l2g_cb, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-             screen, subtype_filter, flag)
+             screen, flag)
 
      END IF OnFilterPE
 
@@ -386,7 +386,7 @@ SUBROUTINE PDAFlocal_put_state_hyb3dvar_lestkf(U_collect_state, &
              U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
              U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
              PDAFlocal_l2g_cb, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-             screen, subtype_filter, flag)
+             screen, flag)
 
      END IF OnFilterPE
 

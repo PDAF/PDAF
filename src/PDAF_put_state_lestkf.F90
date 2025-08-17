@@ -76,7 +76,7 @@ SUBROUTINE PDAF_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
   IMPLICIT NONE
   
 ! *** Arguments ***
-  INTEGER, INTENT(out) :: outflag  !< Status flag
+  INTEGER, INTENT(out) :: outflag !< Status flag
   
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
@@ -97,7 +97,7 @@ SUBROUTINE PDAF_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
        U_prepoststep              !< User supplied pre/poststep routine
 
 ! *** local variables ***
-  INTEGER :: i   ! Counter
+  INTEGER :: i, j                 ! Counters
 
 
 ! **************************************************
@@ -166,6 +166,19 @@ SUBROUTINE PDAF_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
         END IF
 
      end IF doevolB
+
+
+     ! **********************************************************
+     ! *** For EnOI mode: add state to ensemble perturbations ***
+     ! **********************************************************
+
+     EnOI_mode: IF (subtype_filter==10 .OR. subtype_filter==11) THEN
+        DO j = 1, dim_ens
+           DO i = 1, dim_p
+              ens(i, j) = ens(i, j) + state(i)
+           END DO
+        END DO
+     END IF EnOI_mode
 
      ! *** call timer
      CALL PDAF_timeit(2, 'old')

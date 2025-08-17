@@ -88,43 +88,30 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
        U_prodRinvA              !< Provide product R^-1 A for SEIK analysis
 
 ! *** local variables ***
-  INTEGER :: i, j               ! Counters
+  INTEGER :: i                  ! Counters
   INTEGER :: minusStep          ! Time step counter
   REAL :: forget_ana            ! Forgetting factor actually used in analysis
   LOGICAL :: do_init_dim_obs    ! Flag for initializing dim_obs_p in PDAFobs_init
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- START'
-
-  CALL PDAF_timeit(3, 'new')
-  CALL PDAF_timeit(51, 'new')
-
-  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-     ! *** Add mean/central state to ensemble members ***
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_p(i)
-        END DO
-     END DO
-  END IF fixed_basis
+! ********************
+! *** Update phase ***
+! ********************
 
   IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- START'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
-  CALL PDAF_timeit(51, 'old')
 
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
+
+  CALL PDAF_timeit(3, 'new')
 
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs

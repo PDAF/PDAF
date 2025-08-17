@@ -195,7 +195,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
              dim_cvec, state, Ainv, ens, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-             screen, subtype_filter, flag)
+             screen, flag)
 
      END IF OnFilterPE
 

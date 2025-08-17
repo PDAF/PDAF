@@ -129,7 +129,7 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
         meanstate(:) = meanstate(:) + states(:, i) / REAL(nstates)
      END DO
 
-     ! *** get peturbation matrix ***
+     ! *** get perturbation matrix ***
      DO i = 1, nstates
         states(:,i) = states(:,i) - meanstate(:)
      END DO
@@ -346,7 +346,7 @@ END SUBROUTINE PDAF_mvnormalize
 !> Sample an ensemble from EOF modes
 !!
 !! This routine generates an ensemble of model states from a provided
-!! mean state and EOF modes (singular vectors of a peturbation matrix)
+!! mean state and EOF modes (singular vectors of a perturbation matrix)
 !! and singular values. The resulting ensemble is the 2nd order-exact
 !! sample covariance matrix and mean state. 
 !! the ensemble state vectors are computed as

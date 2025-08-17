@@ -53,7 +53,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        debug
   USE PDAF_mod_parallel, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
-       isset_comm_pdaf
+       isset_comm_pdaf, isset_parallel
   USE PDAF_info, &
        ONLY: PDAF_print_version
   USE PDAF_DA, ONLY: &
@@ -129,6 +129,9 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'Use user-defined communicator for COMM_PDAF'
   END IF
+
+  ! Set flag for initialized parallelization variables
+  isset_parallel = .true.
 
   ! Print version information
   CALL PDAF_print_version()

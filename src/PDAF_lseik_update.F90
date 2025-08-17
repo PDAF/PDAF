@@ -114,7 +114,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        U_prepoststep         !< User supplied pre/poststep routine
 
 ! *** local variables ***
-  INTEGER :: i, j, member            ! Counters
+  INTEGER :: i, member               ! Counters
   INTEGER :: domain_p                ! Counter for local analysis domain
   INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
   INTEGER :: minusStep               ! Time step counter
@@ -134,31 +134,24 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, ALLOCATABLE :: Uinv_l(:,:)   ! thread-local matrix Uinv
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
+! ********************
+! *** Update phase ***
+! ********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- START'
-
-  CALL PDAF_timeit(3, 'new')
-  CALL PDAF_timeit(51, 'new')
-
-  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-     ! *** Add mean/central state to ensemble members ***
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_p(i)
-        END DO
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- START'
+     DO i = 1, dim_ens
+        WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, 'ensemble member', i, &
+             ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
-  END IF fixed_basis
-
-  CALL PDAF_timeit(51, 'old')
+  END IF
 
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
+
+  CALL PDAF_timeit(3, 'new')
 
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs

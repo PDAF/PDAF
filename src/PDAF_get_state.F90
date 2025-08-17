@@ -270,7 +270,6 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
               ens(i, j) = ens(i, j) - state(i)
            END DO
         END DO
-
      END IF ENSF1
 
      ! *** Set INIT flag ***

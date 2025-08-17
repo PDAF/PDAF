@@ -86,40 +86,28 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & !< Initialize dimension of observation vector
-       U_obs_op, &              !< Observation operator
-       U_init_obs, &            !< Initialize observation vector
-       U_init_obsvar, &         !< Initialize mean observation error variance
-       U_prepoststep, &         !< User supplied pre/poststep routine
-       U_prodRinvA              !< Provide product R^-1 A for ESTKF analysis
+  EXTERNAL :: U_init_dim_obs, &      !< Initialize dimension of observation vector
+       U_obs_op, &                   !< Observation operator
+       U_init_obs, &                 !< Initialize observation vector
+       U_init_obsvar, &              !< Initialize mean observation error variance
+       U_prepoststep, &              !< User supplied pre/poststep routine
+       U_prodRinvA                   !< Provide product R^-1 A for ESTKF analysis
 
 ! *** local variables ***
-  INTEGER :: i, j                   ! Counters
-  INTEGER :: minusStep              ! Time step counter
-  REAL :: forget_ana                ! Forgetting factor actually used in analysis
-  INTEGER, SAVE :: allocflag = 0    ! Flag whether first time allocation is done
-  REAL, ALLOCATABLE :: TA(:,:)      ! Ensemble transform matrix
-  LOGICAL :: do_init_dim_obs        ! Flag for initializing dim_obs_p in PDAFobs_init
+  INTEGER :: i                       ! Counter
+  INTEGER :: minusStep               ! Time step counter
+  REAL :: forget_ana                 ! Forgetting factor actually used in analysis
+  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
+  REAL, ALLOCATABLE :: TA(:,:)       ! Ensemble transform matrix
+  LOGICAL :: do_init_dim_obs         ! Flag for initializing dim_obs_p in PDAFobs_init
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
+! ********************
+! *** Update phase ***
+! ********************
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_update -- START'
-
-  CALL PDAF_timeit(3, 'new')
-  CALL PDAF_timeit(51, 'new')
-
-  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-     ! *** Add mean/central state to ensemble members ***
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_p(i)
-        END DO
-     END DO
-  END IF fixed_basis
 
   IF (debug>0 .AND. envar_mode<2) THEN
      DO i = 1, dim_ens
@@ -127,12 +115,13 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
-  CALL PDAF_timeit(51, 'old')
 
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
+
+  CALL PDAF_timeit(3, 'new')
 
   IF ((type_obs_init==0 .OR. type_obs_init==2) .AND. envar_mode<2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs

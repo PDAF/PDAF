@@ -197,8 +197,7 @@ CONTAINS
     USE PDAF_mod_core, &
          ONLY: dim_p, dim_ens, assim_flag, step_obs, &
          subtype_filter, screen, flag, offline_mode, &
-         state, ens, Ainv, &
-         sens, dim_lag, cnt_maxlag
+         state, ens, Ainv
     USE PDAF_mod_parallel, &
          ONLY: mype_world, filterpe
     USE PDAF_utils_filters, &
@@ -274,7 +273,7 @@ CONTAINS
             U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
             U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
             U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-            screen, subtype_filter, flag)
+            screen, flag)
     END IF OnFilterPE
 
 

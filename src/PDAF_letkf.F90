@@ -228,7 +228,7 @@ CONTAINS
        ELSE IF (subtype == 10) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> LETKF-EnOI (non-dynamic ensemble updated at analysis)'
        ELSE IF (subtype == 11) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LETKF-EnOI (fixed ensemble peturbations)'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LETKF-EnOI (fixed ensemble perturbations)'
        END IF
        IF (dim_lag > 0) &
             WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
@@ -435,8 +435,8 @@ CONTAINS
          'PDAF', '0: full ensemble integration;  apply T-matrix analogously to SEIK'
     WRITE(*, '(a, 7x, a)') 'PDAF', &
          '1: full ensemble integration; formulation cf. Hunt et al. (2007) without T matrix'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '10: EnOI mode (non-dynamic ensemble updated at analysis)'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '11: EnOI mode (fixed ensemble perturbations)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '10: LETKF T-matrix; EnOI mode (non-dynamic ensemble updated at analysis)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '11: LETKF T-matrix; EnOI mode (fixed ensemble perturbations)'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1) dim_p'

@@ -224,7 +224,7 @@ CONTAINS
        ELSE IF (subtype == 10) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF-EnOI (non-dynamic ensemble updated at analysis)'
        ELSE IF (subtype == 11) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF-EnOI (fixed ensemble peturbations)'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF-EnOI (fixed ensemble perturbations)'
        END IF
        IF (dim_lag > 0) THEN
           WRITE(*, '(a, 10x, a, i3)') &

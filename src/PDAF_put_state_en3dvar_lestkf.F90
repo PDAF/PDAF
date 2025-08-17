@@ -113,7 +113,7 @@ SUBROUTINE PDAF_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_
        U_prodRinvA_l               !< Provide product R^-1 A on local analysis domain
 
 ! *** local variables ***
-  INTEGER :: i                     ! Counter
+  INTEGER :: i, j                  ! Counters
 
 
 ! **************************************************
@@ -183,6 +183,19 @@ SUBROUTINE PDAF_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_
 
      END IF doevolB
 
+
+     ! **********************************************************
+     ! *** For EnOI mode: add state to ensemble perturbations ***
+     ! **********************************************************
+
+     EnOI_mode: IF (subtype_filter==10 .OR. subtype_filter==11) THEN
+        DO j = 1, dim_ens
+           DO i = 1, dim_p
+              ens(i, j) = ens(i, j) + state(i)
+           END DO
+        END DO
+     END IF EnOI_mode
+
      ! *** call timer
      CALL PDAF_timeit(2, 'old')
 
@@ -214,7 +227,7 @@ SUBROUTINE PDAF_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_
              U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
              U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
              U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-             screen, subtype_filter, flag)
+             screen, flag)
 
      END IF OnFilterPE
 

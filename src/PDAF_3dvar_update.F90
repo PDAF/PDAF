@@ -36,7 +36,7 @@ SUBROUTINE  PDAF3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec, state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     screen, subtype, flag)
+     screen, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -66,7 +66,6 @@ SUBROUTINE  PDAF3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: Ainv(1, 1)            !< Not used in 3D-Var
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
-  INTEGER, INTENT(in) :: subtype     !< Filter subtype
   INTEGER, INTENT(inout) :: flag     !< Status flag
 
 ! *** External subroutines ***
@@ -82,38 +81,27 @@ SUBROUTINE  PDAF3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
        U_obs_op_adj                  !< Adjoint observation operator
 
 ! *** local variables ***
-  INTEGER :: i, j                    ! Counters
+  INTEGER :: i                       ! Counter
   INTEGER :: minusStep               ! Time step counter
   LOGICAL :: do_init_dim_obs         ! Flag for initializing dim_obs_p in PDAFobs_init
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
+! ********************
+! *** Update phase ***
+! ********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_update -- START'
-
-  CALL PDAF_timeit(3, 'new')
-  CALL PDAF_timeit(51, 'new')
-
-  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-     ! *** Add mean/central state to ensemble members ***
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_p(i)
-        END DO
-     END DO
-  END IF fixed_basis
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update:', debug, &
-       ' forecast state (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),1)
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_update -- START'
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update:', debug, &
+          ' forecast state (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),1)
+  END IF
 
 
 ! **********************************************
 ! *** Initialize state_p from ensemble array ***
 ! **********************************************
+
+  CALL PDAF_timeit(3, 'new')
 
   state_p(:) = ens_p(:, 1)
 

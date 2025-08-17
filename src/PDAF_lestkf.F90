@@ -229,7 +229,7 @@ CONTAINS
        ELSE IF (subtype == 10) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF-EnOI (non-dynamic ensemble updated at analysis)'
        ELSE IF (subtype == 11) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF-EnOI (fixed ensemble peturbations)'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF-EnOI (fixed ensemble perturbations)'
        END IF
        IF (dim_lag > 0) &
             WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag

@@ -389,19 +389,19 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in) :: domain_p  !< Current local analysis domain
-  INTEGER, INTENT(in) :: subtype   !< Specification of filter subtype
-  INTEGER, INTENT(in) :: dim_l     !< State dimension on local analysis domain
-  INTEGER, INTENT(in) :: dim_ens   !< Size of ensemble
-  INTEGER, INTENT(in) :: rank      !< Rank of initial covariance matrix
+  INTEGER, INTENT(in) :: domain_p     !< Current local analysis domain
+  INTEGER, INTENT(in) :: subtype      !< Specification of filter subtype
+  INTEGER, INTENT(in) :: dim_l        !< State dimension on local analysis domain
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  INTEGER, INTENT(in) :: rank         !< Rank of initial covariance matrix
   REAL, INTENT(inout) :: Uinv_l(rank, rank)       !< Inverse of matrix U
   REAL, INTENT(inout) :: state_l(dim_l)           !< Local model state
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    !< Local state ensemble
   REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) !< Matrix Omega
-  INTEGER, INTENT(in) :: type_sqrt !< Type of square-root of A
-                                   !< (0): symmetric sqrt; (1): Cholesky decomposition
-  INTEGER, INTENT(in) :: screen    !< Verbosity flag
-  INTEGER, INTENT(inout) :: flag   !< Status flag
+  INTEGER, INTENT(in) :: type_sqrt    !< Type of square-root of A
+                                      !< (0): symmetric sqrt; (1): Cholesky decomposition
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
 ! *** local variables ***
   INTEGER :: i, j, row, col           ! Counters
@@ -417,6 +417,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   REAL, ALLOCATABLE :: TA(:,:)        ! Temporary matrix
   REAL, ALLOCATABLE :: ens_block(:,:) ! Temporary blocked state ensemble
   REAL, ALLOCATABLE :: tmpUinv_l(:,:) ! Temporary matrix Uinv
+  REAL, ALLOCATABLE :: tmpBUinv_l(:,:) ! Temporary matrix Uinv
   REAL, ALLOCATABLE :: Ttrans(:,:)    ! Temporary matrix T^T
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
@@ -528,17 +529,19 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   ELSE
      ! Compute symmetric square-root by SVD of Uinv
 
+     ALLOCATE(tmpBUinv_l(rank, rank))
      ALLOCATE(svals(rank))
      ALLOCATE(work(3 * rank))
      ldwork = 3 * rank
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4 * rank)
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4 * rank + rank**2)
 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lseik_resample:', debug, &
           '  Compute eigenvalue decomposition of U^-1_l'
 
      ! Compute SVD of Uinv
-     CALL syevTYPE('v', 'l', rank, Uinv_l, rank, svals, work, ldwork, lib_info)
+     tmpBUinv_l = tmpUinv_l
+     CALL syevTYPE('v', 'l', rank, tmpBUinv_l, rank, svals, work, ldwork, lib_info)
 
      DEALLOCATE(work)
 
@@ -548,15 +551,15 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      ! Use OmegaT as temporary array
      DO col = 1, rank
         DO row = 1, rank
-           OmegaT(row, col) = Uinv_l(row, col) / SQRT(svals(col))
+           OmegaT(row, col) = tmpBUinv_l(row, col) / SQRT(svals(col))
         END DO
      END DO
 
      CALL gemmTYPE('n', 't', rank, rank, rank, &
-          1.0, OmegaT, rank, Uinv_l, rank, &
+          1.0, OmegaT, rank, tmpBUinv_l, rank, &
           0.0, tmpUinv_l, rank)
 
-     DEALLOCATE(svals)
+     DEALLOCATE(svals, tmpBUinv_l)
 
   END IF typesqrtU
 

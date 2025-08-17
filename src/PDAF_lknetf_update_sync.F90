@@ -98,93 +98,79 @@ SUBROUTINE  PDAFlknetf_update_sync(step, dim_p, dim_obs_f, dim_ens, &
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_obs_op, &    !< Observation operator
-       U_init_n_domains_p, & !< Provide number of local analysis domains
-       U_init_dim_l, &       !< Init state dimension for local ana. domain
-       U_init_dim_obs, &     !< Initialize dimension of observation vector
-       U_init_dim_obs_l, &   !< Initialize dim. of obs. vector for local ana. domain
-       U_init_obs, &         !< Initialize observation vector
-       U_init_obs_l, &       !< Init. observation vector on local analysis domain
-       U_init_obsvar, &      !< Initialize mean observation error variance
-       U_init_obsvar_l, &    !< Initialize local mean observation error variance
-       U_g2l_state, &        !< Get state on local ana. domain from global state
-       U_l2g_state, &        !< Init full state from state on local analysis domain
-       U_g2l_obs, &          !< Restrict full obs. vector to local analysis domain
-       U_prodRinvA_l, &      !< Compute product of R^(-1) with HV
-       U_likelihood_l, &     !< Compute likelihood
-       U_prepoststep         !< User supplied pre/poststep routine
+  EXTERNAL :: U_obs_op, &              !< Observation operator
+       U_init_n_domains_p, &           !< Provide number of local analysis domains
+       U_init_dim_l, &                 !< Init state dimension for local ana. domain
+       U_init_dim_obs, &               !< Initialize dimension of observation vector
+       U_init_dim_obs_l, &             !< Initialize dim. of obs. vector for local ana. domain
+       U_init_obs, &                   !< Initialize observation vector
+       U_init_obs_l, &                 !< Init. observation vector on local analysis domain
+       U_init_obsvar, &                !< Initialize mean observation error variance
+       U_init_obsvar_l, &              !< Initialize local mean observation error variance
+       U_g2l_state, &                  !< Get state on local ana. domain from global state
+       U_l2g_state, &                  !< Init full state from state on local analysis domain
+       U_g2l_obs, &                    !< Restrict full obs. vector to local analysis domain
+       U_prodRinvA_l, &                !< Compute product of R^(-1) with HV
+       U_likelihood_l, &               !< Compute likelihood
+       U_prepoststep                   !< User supplied pre/poststep routine
 
 ! *** local variables ***
-  INTEGER :: i, j, member            ! Counters
-  INTEGER :: domain_p                ! Counter for local analysis domain
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  INTEGER :: minusStep               ! Time step counter
-  INTEGER :: n_domains_p             ! number of PE-local analysis domains
-  REAL    :: forget_ana_l            ! forgetting factor supplied to analysis routine
-  REAL    :: forget_ana              ! Possibly globally adaptive forgetting factor
-  LOGICAL :: storerndmat = .FALSE.   ! Store and reuse random rotation matrix
-  LOGICAL :: do_init_dim_obs         ! Flag for initializing dim_obs_p in PDAFobs_init
-  LOGICAL :: do_ensmean              ! Flag for computing ensemble mean state
-  REAL, ALLOCATABLE :: rndmat(:,:)   ! random rotation matrix for ensemble trans.
-  REAL, SAVE, ALLOCATABLE :: rndmat_save(:,:) ! Stored rndmat
-  REAL :: invforget                  ! inverse forgetting factor
+  INTEGER :: i, member                 ! Counters
+  INTEGER :: domain_p                  ! Counter for local analysis domain
+  INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  INTEGER :: minusStep                 ! Time step counter
+  INTEGER :: n_domains_p               ! number of PE-local analysis domains
+  REAL    :: forget_ana_l              ! forgetting factor supplied to analysis routine
+  REAL    :: forget_ana                ! Possibly globally adaptive forgetting factor
+  LOGICAL :: storerndmat = .FALSE.     ! Store and reuse random rotation matrix
+  LOGICAL :: do_init_dim_obs           ! Flag for initializing dim_obs_p in PDAFobs_init
+  LOGICAL :: do_ensmean                ! Flag for computing ensemble mean state
+  REAL, ALLOCATABLE :: rndmat(:,:)     ! random rotation matrix for ensemble trans.
+  REAL, SAVE, ALLOCATABLE :: rndmat_save(:,:)   ! Stored rndmat
+  REAL :: invforget                    ! inverse forgetting factor
   ! Variables on local analysis domain
-  INTEGER :: dim_l                   ! State dimension on local analysis domain
-  INTEGER :: dim_obs_l               ! Observation dimension on local analysis domain
-  REAL, ALLOCATABLE :: resid_l(:)    ! local residual
-  REAL, ALLOCATABLE :: ens_l(:,:)    ! State ensemble on local analysis domain
-  REAL, ALLOCATABLE :: state_l(:)    ! Mean state on local analysis domain
-  REAL, ALLOCATABLE :: Ainv_l(:,:)   ! thread-local matrix Ainv
-  REAL, ALLOCATABLE :: n_eff(:)      ! Effective sample size for each local domain
-  LOGICAL, ALLOCATABLE :: MASK(:)    ! Mask for effective sample sizes > 0
-  REAL :: max_n_eff_l, min_n_eff_l   ! PE-local min/max. effective ensemble sizes
-  REAL :: max_n_eff, min_n_eff       ! Global min/max. effective ensemble sizes
-  REAL :: max_gamma_l, min_gamma_l   ! PE-local min/max. hybrid weight
-  REAL :: max_gamma, min_gamma       ! Global min/max. hybrid weight
-  REAL :: sum_gamma_l, mean_gamma    ! Local alpha sum; global mean alpha
-  REAL :: sum_n_eff_l, mean_n_eff    ! Local sum of N_eff; global mean N_eff
+  INTEGER :: dim_l                     ! State dimension on local analysis domain
+  INTEGER :: dim_obs_l                 ! Observation dimension on local analysis domain
+  REAL, ALLOCATABLE :: resid_l(:)      ! local residual
+  REAL, ALLOCATABLE :: ens_l(:,:)      ! State ensemble on local analysis domain
+  REAL, ALLOCATABLE :: state_l(:)      ! Mean state on local analysis domain
+  REAL, ALLOCATABLE :: Ainv_l(:,:)     ! thread-local matrix Ainv
+  REAL, ALLOCATABLE :: n_eff(:)        ! Effective sample size for each local domain
+  LOGICAL, ALLOCATABLE :: MASK(:)      ! Mask for effective sample sizes > 0
+  REAL :: max_n_eff_l, min_n_eff_l     ! PE-local min/max. effective ensemble sizes
+  REAL :: max_n_eff, min_n_eff         ! Global min/max. effective ensemble sizes
+  REAL :: max_gamma_l, min_gamma_l     ! PE-local min/max. hybrid weight
+  REAL :: max_gamma, min_gamma         ! Global min/max. hybrid weight
+  REAL :: sum_gamma_l, mean_gamma      ! Local alpha sum; global mean alpha
+  REAL :: sum_n_eff_l, mean_n_eff      ! Local sum of N_eff; global mean N_eff
   REAL :: max_stats_l(2), min_stats_l(2)   ! PE-local min/max of skewness and kurtosis
   REAL :: max_stats(2), min_stats(2)       ! Global min/max of skewness and kurtosis
-  REAL :: sum_stats_l(2)             ! PE-local sum of skewness and kurtosis for averaging
-  REAL :: mean_stats(2)              ! Global average skewness and kurtosis
-  REAL, ALLOCATABLE :: gamma(:)      ! Hybrid weight for state update
-  INTEGER :: cnt_small_svals         ! Counter for small values
-  INTEGER :: n_domains_with_obs_p    ! Domain-local number of local domains with observations
-  INTEGER :: n_domains_with_obs      ! Global number of local domains with observations
+  REAL :: sum_stats_l(2)               ! PE-local sum of skewness and kurtosis for averaging
+  REAL :: mean_stats(2)                ! Global average skewness and kurtosis
+  REAL, ALLOCATABLE :: gamma(:)        ! Hybrid weight for state update
+  INTEGER :: cnt_small_svals           ! Counter for small values
+  INTEGER :: n_domains_with_obs_p      ! Domain-local number of local domains with observations
+  INTEGER :: n_domains_with_obs        ! Global number of local domains with observations
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- START'
-
-  CALL PDAF_timeit(3, 'new')
-
-  CALL PDAF_timeit(51, 'new')
-
-  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-     ! *** Add mean/central state to ensemble members ***
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_p(i)
-        END DO
-     END DO
-  END IF fixed_basis
+! ********************
+! *** Update phase ***
+! ********************
 
   IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- START'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
-  CALL PDAF_timeit(51, 'old')
 
 
 ! ************************
 ! *** Inflate ensemble ***
 ! ************************
+
+  CALL PDAF_timeit(3, 'new')
 
   do_ensmean = .true.
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN

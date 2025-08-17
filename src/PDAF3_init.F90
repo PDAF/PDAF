@@ -93,7 +93,7 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                     ! Counter
-    LOGICAL :: fixedbasis            ! Does the filter run with fixed error-space basis?
+    LOGICAL :: fixedbasis            ! Does the filter run with fixed error-space basis (EnOI mode)?
 
 
 ! ********************************************

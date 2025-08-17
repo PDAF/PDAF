@@ -237,7 +237,7 @@ CONTAINS
        ELSE IF (subtype == 10) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK-EnOI (non-dynamic ensemble updated at analysis)'
        ELSE IF (subtype == 11) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK-EnOI (fixed ensemble peturbations)'
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK-EnOI (fixed ensemble perturbations)'
        END IF
        WRITE(*, '(a, 10x, a, i3)') &
             'PDAF', 'param_int(5) type_forget=', type_forget

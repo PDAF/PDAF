@@ -119,7 +119,7 @@ SUBROUTINE  PDAFlknetf_update_step(step, dim_p, dim_obs_f, dim_ens, &
        U_prepoststep         !< User supplied pre/poststep routine
 
 ! *** local variables ***
-  INTEGER :: i, j, member          ! Counters
+  INTEGER :: i, member             ! Counters
   INTEGER :: domain_p              ! Counter for local analysis domain
   INTEGER, SAVE :: allocflag = 0   ! Flag whether first time allocation is done
   INTEGER :: minusStep             ! Time step counter
@@ -158,38 +158,24 @@ SUBROUTINE  PDAFlknetf_update_step(step, dim_p, dim_obs_f, dim_ens, &
   INTEGER :: n_domains_with_obs    ! Global number of local domains with observations
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- START'
-
-  CALL PDAF_timeit(3, 'new')
-
-  CALL PDAF_timeit(51, 'new')
-
-  fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-     ! *** Add mean/central state to ensemble members ***
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_p(i)
-        END DO
-     END DO
-  END IF fixed_basis
+! ********************
+! *** Update phase ***
+! ********************
 
   IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- START'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
-  CALL PDAF_timeit(51, 'old')
 
 
 ! ************************
 ! *** Inflate ensemble ***
 ! ************************
+
+  CALL PDAF_timeit(3, 'new')
 
   do_ensmean = .true.
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN

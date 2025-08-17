@@ -409,6 +409,7 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, Uinv, &
   REAL, ALLOCATABLE :: TA(:,:)               ! Temporary matrix
   REAL, ALLOCATABLE :: ens_blk(:,:)          ! Temporary blocked state ensemble
   REAL, ALLOCATABLE :: tempUinv(:,:)         ! Temporary matrix Uinv
+  REAL, ALLOCATABLE :: tempBUinv(:,:)        ! Temporary matrix Uinv
   REAL, ALLOCATABLE :: Ttrans(:,:)           ! Temporary matrix T^T
   REAL, ALLOCATABLE :: svals(:)   ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)    ! Work array for SYEV
@@ -494,17 +495,19 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, Uinv, &
   ELSE
      ! Compute symmetric square-root by SVD of Uinv
 
+     ALLOCATE(tempBUinv(rank, rank))
      ALLOCATE(svals(rank))
      ALLOCATE(work(3 * rank))
      ldwork = 3 * rank
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * rank)
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4 * rank + rank**2)
 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_seik_resample:', debug, &
           '  Compute eigenvalue decomposition of U^-1'
 
      ! Compute SVD of Uinv
-     CALL syevTYPE('v', 'l', rank, Uinv, rank, svals, work, ldwork, lib_info)
+     tempBUinv = tempUinv
+     CALL syevTYPE('v', 'l', rank, tempBUinv, rank, svals, work, ldwork, lib_info)
 
      DEALLOCATE(work)
 
@@ -513,14 +516,15 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, Uinv, &
 
      DO col = 1, rank
         DO row = 1, rank
-           Usqrt(row, col) = Uinv(row, col) / SQRT(svals(col))
+           Usqrt(row, col) = tempBUinv(row, col) / SQRT(svals(col))
         END DO
      END DO
 
      CALL gemmTYPE('n', 't', rank, rank, rank, &
-          1.0, Usqrt, rank, Uinv, rank, &
+          1.0, Usqrt, rank, tempBUinv, rank, &
           0.0, tempUinv, rank)
-     DEALLOCATE(svals)
+
+     DEALLOCATE(svals, tempBUinv)
 
   END IF typesqrtU
 

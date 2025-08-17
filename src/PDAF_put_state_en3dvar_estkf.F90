@@ -99,7 +99,7 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
   EXTERNAL :: U_init_obsvar        !< Initialize mean observation error variance
 
 ! *** local variables ***
-  INTEGER :: i                     ! Counter
+  INTEGER :: i, j                  ! Counters
 
 
 ! **************************************************
@@ -169,6 +169,19 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
 
      END IF doevolB
 
+
+     ! **********************************************************
+     ! *** For EnOI mode: add state to ensemble perturbations ***
+     ! **********************************************************
+
+     EnOI_mode: IF (subtype_filter==10 .OR. subtype_filter==11) THEN
+        DO j = 1, dim_ens
+           DO i = 1, dim_p
+              ens(i, j) = ens(i, j) + state(i)
+           END DO
+        END DO
+     END IF EnOI_mode
+
      ! *** call timer
      CALL PDAF_timeit(2, 'old')
 
@@ -197,7 +210,7 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
              dim_cvec_ens, state, Ainv, ens, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, U_init_obsvar, &
-             screen, subtype_filter, flag)
+             screen, flag)
 
      END IF OnFilterPE
 
