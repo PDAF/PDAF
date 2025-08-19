@@ -154,14 +154,6 @@ CONTAINS
           flag = 4
        END IF
 
-       ! *** Check whether MPI variables are initialized (by call to PDAF3_set_parallel)
-       IF (.not. isset_parallel) THEN
-          WRITE (*,'(/5x,a)') &
-               'PDAF-WARNING: Parallelization variables are not set! Was PDAF3_set_parallel called?'
-          WRITE (*,'(5x,a/)') &
-               'PDAF-WARNING: PDAF will attempt to perform MPI self-initialization'
-       END IF
-
        ! *** Initialize variables for all PEs
        type_filter    = filtertype   ! Set filter type
        subtype_filter = subtype      ! Set sub-type of filter

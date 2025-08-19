@@ -138,13 +138,15 @@ CONTAINS
           COMM_couple = COMM_pdaf
           COMM_model = COMM_pdaf
        ELSE
-          IF (mype_filter == 0) THEN
-             WRITE (*, '(/5x, a)') 'PDAF-ERROR: PDAF self-initialization of MPI is'
-             WRITE (*, '(5x, a)') 'PDAF-ERROR: only possible with a single process!'
-             WRITE (*, '(5x, a)') 'PDAF-ERROR: STOPPING PROGRAM !!!'
-          END IF
+
+          ! *** MPI variables are not initialized and npes_world>1 
+          WRITE (*,'(/5x,a)') &
+               'PDAF-ERROR: Parallelization variables are not set! Is call to PDAF3_set_parallel missing?'
+          WRITE (*, '(5x, a)') 'PDAF-ERROR: PDAF self-init of MPI is only possible with a single process!'
+          WRITE (*, '(5x, a)') 'PDAF-ERROR: STOPPING PROGRAM !!!'
           CALL  MPI_Finalize(MPIerr)
           STOP
+
        END IF
 
     END IF self_init
