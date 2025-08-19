@@ -106,6 +106,7 @@ SUBROUTINE PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   REAL, ALLOCATABLE :: tmp_Ainv_l(:,:) ! Temporary storage of Ainv
   REAL, ALLOCATABLE :: svals(:)        ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
+  REAL, ALLOCATABLE :: state_inc_l(:)  ! Local state increment
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
   INTEGER :: screen_dummy              ! Dummy variable to avoid compiler warning
 
@@ -402,16 +403,23 @@ SUBROUTINE PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
 
      CALL PDAF_timeit(18, 'new')
 
+     ALLOCATE(state_inc_l(dim_l))
+
      CALL gemvTYPE('n', dim_l, dim_ens, 1.0, ens_l, &
-          dim_l, RiHZd_l, 1, 1.0, state_l, 1)
-     DEALLOCATE(RiHZd_l)
-     
+          dim_l, RiHZd_l, 1, 0.0, state_inc_l, 1)
+    
      ! Shift ensemble
      DO col = 1, dim_ens
         DO row = 1, dim_l
-           ens_l(row, col) = ens_l(row, col) + state_l(row)
+           ens_l(row, col) = ens_l(row, col) + state_inc_l(row)
         END DO
      END DO
+
+     ! Update state estimate
+     state_l = state_l + state_inc_l
+
+     DEALLOCATE(RiHZd_l)
+     DEALLOCATE(state_inc_l)
 
      CALL PDAF_timeit(18, 'old')
 

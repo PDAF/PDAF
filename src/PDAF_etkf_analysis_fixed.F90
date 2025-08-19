@@ -94,6 +94,7 @@ SUBROUTINE PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: Asqrt(:, :)    ! Square-root of matrix Ainv
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
+  REAL, ALLOCATABLE :: state_inc_p(:) ! Local state increment
   INTEGER :: dummy                    ! Dummy integer variable
 
   
@@ -359,16 +360,23 @@ SUBROUTINE PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
 
      CALL PDAF_timeit(21, 'new')
 
+     ALLOCATE(state_inc_p(dim_p))
+
      CALL gemvTYPE('n', dim_p, dim_ens, 1.0, ens_p, &
-          dim_p, RiHZd, 1, 1.0, state_p, 1)
+          dim_p, RiHZd, 1, 0.0, state_inc_p, 1)
      DEALLOCATE(RiHZd)
      
      ! Shift ensemble
      DO col = 1, dim_ens
         DO row = 1, dim_p
-           ens_p(row, col) = ens_p(row, col) + state_p(row)
+           ens_p(row, col) = ens_p(row, col) + state_inc_p(row)
         END DO
      END DO
+
+     ! Update state estimate
+     state_p = state_p + state_inc_p
+
+     DEALLOCATE(state_inc_p)
 
      CALL PDAF_timeit(21, 'old')
 

@@ -86,22 +86,23 @@ SUBROUTINE PDAF_estkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
        U_prodRinvA                    !< Provide product R^-1 with some matrix
 
 ! *** local variables ***
-  INTEGER :: i, col, row             ! counters
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  INTEGER :: lib_info                ! Status flag for LAPACK calls
-  INTEGER :: ldwork                  ! Size of work array for syevTYPE
-  REAL, ALLOCATABLE :: RiHL_p(:,:)   ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: innov_p(:)    ! PE-local observation residual
-  REAL, ALLOCATABLE :: RiHLd(:)      ! Temporary vector for analysis 
-  REAL, ALLOCATABLE :: RiHLd_p(:)    ! PE-local RiHLd
-  REAL, ALLOCATABLE :: VRiHLd(:)     ! Temporary vector for analysis
-  REAL, ALLOCATABLE :: Ainv_p(:,:)   ! Ainv for PE-local domain
-  REAL, ALLOCATABLE :: tmp_Ainv(:,:) ! Temporary storage of Ainv
-  REAL, ALLOCATABLE :: TRiHLd(:,:)   ! Temporary vector for analysis 
-  REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
-  REAL, ALLOCATABLE :: work(:)       ! Work array for SYEVTYPE
-  INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESVTYPE
-  INTEGER :: dummy                   ! Dummy integer variable
+  INTEGER :: i, col, row              ! counters
+  INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
+  INTEGER :: lib_info                 ! Status flag for LAPACK calls
+  INTEGER :: ldwork                   ! Size of work array for syevTYPE
+  REAL, ALLOCATABLE :: RiHL_p(:,:)    ! Temporary matrices for analysis
+  REAL, ALLOCATABLE :: innov_p(:)     ! PE-local observation residual
+  REAL, ALLOCATABLE :: RiHLd(:)       ! Temporary vector for analysis 
+  REAL, ALLOCATABLE :: RiHLd_p(:)     ! PE-local RiHLd
+  REAL, ALLOCATABLE :: VRiHLd(:)      ! Temporary vector for analysis
+  REAL, ALLOCATABLE :: Ainv_p(:,:)    ! Ainv for PE-local domain
+  REAL, ALLOCATABLE :: tmp_Ainv(:,:)  ! Temporary storage of Ainv
+  REAL, ALLOCATABLE :: TRiHLd(:,:)    ! Temporary vector for analysis 
+  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
+  REAL, ALLOCATABLE :: work(:)        ! Work array for SYEVTYPE
+  INTEGER, ALLOCATABLE :: ipiv(:)     ! vector of pivot indices for GESVTYPE
+  REAL, ALLOCATABLE :: state_inc_p(:) ! Local state increment
+  INTEGER :: dummy                    ! Dummy integer variable
 
   
 ! **********************
@@ -406,16 +407,23 @@ SUBROUTINE PDAF_estkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      CALL PDAF_timeit(21, 'new')
 
+     ALLOCATE(state_inc_p(dim_p))
+
      CALL gemvTYPE('n', dim_p, dim_ens, 1.0, ens_p, &
-          dim_p, TRiHLd, 1, 1.0, state_p, 1)
-     DEALLOCATE(TRiHLd)
+          dim_p, TRiHLd, 1, 0.0, state_inc_p, 1)
      
      ! Shift ensemble
      DO col = 1, dim_ens
         DO row = 1, dim_p
-           ens_p(row, col) = ens_p(row, col) + state_p(row)
+           ens_p(row, col) = ens_p(row, col) + state_inc_p(row)
         END DO
      END DO
+
+     ! Update state estimate
+     state_p = state_p + state_inc_p
+
+     DEALLOCATE(state_inc_p)
+     DEALLOCATE(TRiHLd)
 
      CALL PDAF_timeit(21, 'old')
 

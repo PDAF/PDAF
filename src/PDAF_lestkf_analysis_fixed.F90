@@ -102,6 +102,7 @@ SUBROUTINE PDAF_lestkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   REAL, ALLOCATABLE :: TRiHLd_l(:,:) ! Temporary vector for analysis 
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)       ! Work array for syevTYPE
+  REAL, ALLOCATABLE :: state_inc_l(:)  ! Local state increment
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESVTYPE
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
   INTEGER :: screen_dummy              ! Dummy variable to avoid compiler warning
@@ -424,16 +425,23 @@ SUBROUTINE PDAF_lestkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
 
      CALL PDAF_timeit(18, 'new')
 
+     ALLOCATE(state_inc_l(dim_l))
+
      CALL gemvTYPE('n', dim_l, dim_ens, 1.0, ens_l, &
-          dim_l, TRiHLd_l, 1, 1.0, state_l, 1)
-     DEALLOCATE(TRiHLd_l)
+          dim_l, TRiHLd_l, 1, 0.0, state_inc_l, 1)
      
      ! Shift ensemble
      DO col = 1, dim_ens
         DO row = 1, dim_l
-           ens_l(row, col) = ens_l(row, col) + state_l(row)
+           ens_l(row, col) = ens_l(row, col) + state_inc_l(row)
         END DO
      END DO
+
+     ! Update state estimate
+     state_l = state_l + state_inc_l
+
+     DEALLOCATE(TRiHLd_l)
+     DEALLOCATE(state_inc_l)
 
      CALL PDAF_timeit(18, 'old')
 
