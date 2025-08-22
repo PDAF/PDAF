@@ -60,12 +60,13 @@ MODULE PDAF_mod_parallel
   INTEGER, ALLOCATABLE :: all_dim_ens_l(:)    !< Size of ensembles per task
   INTEGER, ALLOCATABLE :: all_dis_ens_l(:)    !< Displacements
   INTEGER, ALLOCATABLE :: all_npes_model_l(:) !< # PEs per model task
-  INTEGER :: statetask = -1             !< SEEK: Index of model task holding the state forecast
+  INTEGER :: statetask = -1                   !< SEEK: Index of model task holding the state forecast
   LOGICAL :: filter_no_model = .FALSE.
   INTEGER, ALLOCATABLE :: all_dim_obs_p(:)    !< PE-Local observation dimensions
   INTEGER, ALLOCATABLE :: all_dis_obs_p(:)    !< PE-Local observation displacements
   INTEGER :: dimobs_p, dimobs_f               !< PE-local and global observation dimension
-  LOGICAL :: isset_parallel = .false.   !< Flag whether the parallelization information is already initialized
+  LOGICAL :: isset_parallel = .false.         !< Flag whether the parallelization information is already initialized
+  LOGICAL :: mpi_init_by_pdaf = .false.       !< Flag whether PDAF itself called MPI_Init
 
 CONTAINS
 !-------------------------------------------------------------------------------
@@ -120,6 +121,7 @@ CONTAINS
        CALL MPI_Initialized(iniflag, MPIerr) 
        IF (.not.iniflag) THEN
           CALL MPI_Init(MPIerr)
+          mpi_init_by_pdaf = .true.
        END IF
        COMM_pdaf = MPI_COMM_WORLD
 

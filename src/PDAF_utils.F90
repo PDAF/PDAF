@@ -282,7 +282,7 @@ SUBROUTINE PDAF_deallocate()
        ONLY: dim_bias_p, state, Ainv, ens, &
        sens, bias, dim_lag
   USE PDAF_mod_parallel, &
-       ONLY: filterpe, COMM_couple
+       ONLY: filterpe, COMM_couple, mpi_init_by_pdaf, MPIerr
   USE PDAF_iau, &
        ONLY: PDAF_iau_dealloc
 
@@ -324,6 +324,9 @@ SUBROUTINE PDAF_deallocate()
      END IF
 
   END IF on_filterpe
+
+  ! Finalize MPI, if initialized by PDAF
+  IF (mpi_init_by_pdaf) CALL MPI_finalize(MPIerr)
 
 END SUBROUTINE PDAF_deallocate
 

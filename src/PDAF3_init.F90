@@ -52,7 +52,7 @@ CONTAINS
     USE PDAF_mod_parallel, &
          ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
          isset_comm_pdaf, COMM_model, COMM_filter, COMM_couple, &
-         task_id, n_modeltasks, isset_parallel
+         task_id, n_modeltasks
     USE PDAF_info, &
          ONLY: PDAF_print_version
     USE PDAF_DA, ONLY: &
