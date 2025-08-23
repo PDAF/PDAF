@@ -132,7 +132,7 @@ CONTAINS
 ! *********************
 
 ! TEMPLATE: Adapt if more subtypes exist
-    IF (subtype/=0) THEN
+    IF (.NOT.(subtype==0 .OR. subtype==10)) THEN
        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
        outflag = 3
     END IF
@@ -212,7 +212,7 @@ CONTAINS
              WRITE (*, '(a, 12x, a)') 'PDAF', '--> GLOBALTEMPLATE analysis scheme'
 ! TEMPLATE: Add other sub-types if they exist
 ! Subtypes 10 and 11 have special meaning as EnOI methods in which PDAF
-! only integrates the stae estimate, but not the full ensemble
+! only integrates the state estimate, but not the full ensemble
        END IF
 ! TEMPLATE: Keep output on smoother, if a smoother is implemented
        IF (dim_lag > 0) &

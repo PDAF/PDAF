@@ -128,35 +128,16 @@ CONTAINS
     REAL, ALLOCATABLE :: Ainv_l(:,:)  ! thread-local matrix Ainv
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
-
-! +++ TEMPLATE:
-! +++ For fixed-ensemble cases (like Ensemble OI) only the
-! +++ central state is integrated by the model. Here, we
-! +++ then need to add the ensemble perturbations
-
-    CALL PDAF_timeit(3, 'new')
-    CALL PDAF_timeit(51, 'new')
-
-    fixed_basis: IF (subtype == 10 .OR. subtype == 11) THEN
-       ! Add mean/central state to ensemble members
-       DO j = 1, dim_ens
-          DO i = 1, dim_p
-             ens_p(i, j) = ens_p(i, j) + state_p(i)
-          END DO
-       END DO
-    END IF fixed_basis
-
-    CALL PDAF_timeit(51, 'old')
+! ********************
+! *** Update phase ***
+! ********************
 
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
-! +++ TEMPLATE: The observation can be initialized here before
+! +++ TEMPLATE: The observations can be initialized here before
 ! +++ the call to U_prepoststep, or afterwards (see below)
 ! +++ The observation arrays (obs_p, HX_p, HXbar_p) are declared
 ! +++ in the module PDAFobs. The routine PDAFobs_initialize
@@ -166,6 +147,8 @@ CONTAINS
 ! +++ are executed in the subroutine (see subroutine for its
 ! +++ documentation).
 
+    CALL PDAF_timeit(3, 'new')
+
     IF (type_obs_init==0 .OR. type_obs_init==2) THEN
        ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
        ! It also compute the ensemble mean and stores it in state_p
@@ -173,6 +156,7 @@ CONTAINS
             state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
             screen, debug, .true., .true., .true., .true., .true.)
     END IF
+
     CALL PDAF_timeit(3, 'old')
 
 
@@ -254,7 +238,7 @@ CONTAINS
        WRITE (*,*) '++ PDAF-debug PDAF_LOCALTEMPLATE_update', debug, &
             'Configuration: param_int(3) dim_lag     ', dim_lag
        WRITE (*,*) '++ PDAF-debug PDAF_LOCALTEMPLATE_update', debug, &
-            'Configuration: param_int(8) observe_ens           ', observe_ens
+            'Configuration: param_int(8) observe_ens ', observe_ens
 
        WRITE (*,*) '++ PDAF-debug PDAF_LOCALTEMPLATE_update', debug, &
             'Configuration: param_real(1) forget     ', forget

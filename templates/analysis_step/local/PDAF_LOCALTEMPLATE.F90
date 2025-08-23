@@ -142,7 +142,7 @@ CONTAINS
 ! *********************
 
 ! TEMPLATE: Adapt if more subtypes exist
-    IF (subtype/=0) THEN
+    IF (.NOT.(subtype==0 .OR. subtype==10)) THEN
        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
        outflag = 3
     END IF

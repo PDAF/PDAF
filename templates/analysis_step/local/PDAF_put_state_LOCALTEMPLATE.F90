@@ -65,15 +65,15 @@ CONTAINS
 ! TEMPLATE: 'outflag' is standard and should be kept
 
 ! *** Arguments ***
-    INTEGER, INTENT(out) :: outflag  ! Status flag
+    INTEGER, INTENT(out) :: outflag   ! Status flag
 
 ! TEMPLATE: The external subroutines depends on the DA method and should be adapted
 
 ! *** External subroutines ***
 ! (PDAF-internal names, real names are defined in the call to PDAF)
     ! Routines for ensemble framework - generic and always needed
-    EXTERNAL :: U_collect_state, &    ! Write model fields into state vector
-         U_prepoststep                ! User supplied pre/poststep routine
+    EXTERNAL :: U_collect_state, &    !< Write model fields into state vector
+         U_prepoststep                !< User supplied pre/poststep routine
     ! Observation-related routines for analysis step - generic and always needed
     EXTERNAL :: U_init_dim_obs, &     !< Initialize dimension of observation vector
          U_obs_op, &                  !< Observation operator
@@ -94,7 +94,7 @@ CONTAINS
 ! TEMPLATE: The local variables are usually generic and don't need changes
 
 ! *** Local variables ***
-    INTEGER :: i                      ! Counter
+    INTEGER :: i, j                   ! Counters
 
 
 ! ***************************************************************
@@ -103,7 +103,9 @@ CONTAINS
 ! *** Only done on the filter processes                       ***
 ! ***************************************************************
 
-! TEMPLATE: This is generic as long as subtype_filter 10 and 11 are EnKF (fixed ensemble) cases
+! TEMPLATE: PDAF uses subtype_filter 10 and 11 for EnOI modes in which only the
+!   state is integrated, but not the full ensemble. This is generic as long as
+!   subtype_filter 10 and 11 aare used in this way/
     doevol: IF (nsteps > 0 .OR. .NOT.offline_mode) THEN
 
        CALL PDAF_timeit(41, 'new')
@@ -113,7 +115,6 @@ CONTAINS
           ! Store member index for PDAF_get_memberid
           member_save = member
 
-! TEMPLATE: This IF-statement should only be modified if subtype_filter 10, 11 (EnOI modes) are used differently
           IF (subtype_filter /= 10 .AND. subtype_filter /= 11) THEN
              ! Save evolved state in ensemble matrix
              CALL U_collect_state(dim_p, ens(1:dim_p, member))
@@ -171,6 +172,19 @@ CONTAINS
           END IF
 
        END IF doevolB
+
+
+       ! **********************************************************
+       ! *** For EnOI mode: add state to ensemble perturbations ***
+       ! **********************************************************
+
+       fixed_basis: IF (subtype_filter==10 .OR. subtype_filter==11) THEN
+          DO j = 1, dim_ens
+             DO i = 1, dim_p
+                ens(i, j) = ens(i, j) + state(i)
+             END DO
+          END DO
+       END IF fixed_basis
 
        ! *** call timer
        CALL PDAF_timeit(2, 'old')

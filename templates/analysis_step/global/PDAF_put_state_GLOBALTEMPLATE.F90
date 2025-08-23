@@ -35,98 +35,100 @@ MODULE PDAFput_state_GLOBALTEMPLATE
 
 CONTAINS
 
-SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, outflag)
+  SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_op, &
+       U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, outflag)
 
-  USE PDAF_timer, &                 ! Routines for timings
-       ONLY: PDAF_timeit, PDAF_time_temp
-  USE PDAF_memcounting, &           ! Routine for memory counting
-       ONLY: PDAF_memcount
-  USE PDAF_mod_core, &              ! Variables for framework functionality
-       ONLY: screen, flag, initevol, offline_mode, assim_flag, &
-       dim_p, dim_ens, local_dim_ens, nsteps, step_obs, step, &
-       state, ens, Ainv, member, member_save, &
-       subtype_filter, sens, dim_lag, cnt_maxlag
-  USE PDAF_mod_parallel, &         ! Variables for parallelization
-       ONLY: mype_world, filterpe, &
-       dim_ens_l, modelpe, filter_no_model
-  USE PDAF_communicate_ens, &       ! Ensemble gathering or scattering
-       ONLY: PDAF_gather_ens
-  USE PDAFobs, &                    ! Routines and variables for observations
-       ONLY: dim_obs
-  USE PDAF_iau, &                   ! Step counter for incremental updating
-       ONLY: step_cnt_iau
-  USE PDAF_GLOBALTEMPLATE_update, & ! Name of method-specific update routine
-       ONLY: PDAFGLOBALTEMPLATE_update
+    USE PDAF_timer, &                 ! Routines for timings
+         ONLY: PDAF_timeit, PDAF_time_temp
+    USE PDAF_memcounting, &           ! Routine for memory counting
+         ONLY: PDAF_memcount
+    USE PDAF_mod_core, &              ! Variables for framework functionality
+         ONLY: screen, flag, initevol, offline_mode, assim_flag, &
+         dim_p, dim_ens, local_dim_ens, nsteps, step_obs, step, &
+         state, ens, Ainv, member, member_save, &
+         subtype_filter, sens, dim_lag, cnt_maxlag
+    USE PDAF_mod_parallel, &         ! Variables for parallelization
+         ONLY: mype_world, filterpe, &
+         dim_ens_l, modelpe, filter_no_model
+    USE PDAF_communicate_ens, &       ! Ensemble gathering or scattering
+         ONLY: PDAF_gather_ens
+    USE PDAFobs, &                    ! Routines and variables for observations
+         ONLY: dim_obs
+    USE PDAF_iau, &                   ! Step counter for incremental updating
+         ONLY: step_cnt_iau
+    USE PDAF_GLOBALTEMPLATE_update, & ! Name of method-specific update routine
+         ONLY: PDAFGLOBALTEMPLATE_update
 
-  IMPLICIT NONE
+    IMPLICIT NONE
   
 ! TEMPLATE: 'outflag' is standard and should be kept
 
 ! *** Arguments ***
-  INTEGER, INTENT(out) :: outflag  !< Status flag
+    INTEGER, INTENT(out) :: outflag   !< Status flag
   
 ! TEMPLATE: The external subroutines depends on the DA method and should be adapted
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  ! Routines for ensemble framework - generic and always needed
-  EXTERNAL :: U_collect_state, &   !< Write model fields into state vector
-       U_prepoststep               !< User supplied pre/poststep routine
-  ! Observation-related routines for analysis step - generic and always needed
-  EXTERNAL :: U_init_dim_obs, &    !< Initialize dimension of observation vector
-       U_obs_op, &                 !< Observation operator
-       U_init_obs                  !< Initialize observation vector
-  ! Observation-related routines for analysis step - specific for the DA method
-  EXTERNAL :: U_init_obsvar, &     ! Initialize mean observation error variance
-       U_prodRinvA                 !< Provide product R^-1 A
+    ! Routines for ensemble framework - generic and always needed
+    EXTERNAL :: U_collect_state, &    !< Write model fields into state vector
+         U_prepoststep                !< User supplied pre/poststep routine
+    ! Observation-related routines for analysis step - generic and always needed
+    EXTERNAL :: U_init_dim_obs, &     !< Initialize dimension of observation vector
+         U_obs_op, &                  !< Observation operator
+         U_init_obs                   !< Initialize observation vector
+    ! Observation-related routines for analysis step - specific for the DA method
+    EXTERNAL :: U_init_obsvar, &      !< Initialize mean observation error variance
+         U_prodRinvA                  !< Provide product R^-1 A
 
 ! TEMPLATE: The local variables are usually generic and don't need changes
 
 ! *** local variables ***
-  INTEGER :: i                     ! Counter
+    INTEGER :: i, j                   ! Counters
 
 
-! **************************************************
-! *** Save forecasted state back to the ensemble ***
-! *** Only done on the filter Pes                ***
-! **************************************************
+! ***************************************************************
+! *** Store forecasted state back to the ensemble array ens   ***
+! *** and increment counter `member` for ensemble state index ***
+! *** Only done on the filter processes                       ***
+! ***************************************************************
 
-! TEMPLATE: This is generic as long as subtype_filter 10 and 11 are EnOI (fixed ensemble) cases
-  doevol: IF (nsteps > 0 .OR. .NOT.offline_mode) THEN
+! TEMPLATE: PDAF uses subtype_filter 10 and 11 for EnOI modes in which only the
+!   state is integrated, but not the full ensemble. This is generic as long as
+!   subtype_filter 10 and 11 aare used in this way/
+    doevol: IF (nsteps > 0 .OR. .NOT.offline_mode) THEN
 
-     CALL PDAF_timeit(41, 'new')
+       CALL PDAF_timeit(41, 'new')
 
-     modelpes: IF (modelpe) THEN
+       modelpes: IF (modelpe) THEN
 
-        ! Store member index for PDAF_get_memberid
-        member_save = member
+          ! Store member index for PDAF_get_memberid
+          member_save = member
 
-! TEMPLATE: This IF-statement should only be modified if subtype_filter 10, 11 (EnOI modes) are used differently
-        IF (subtype_filter /= 10 .AND. subtype_filter /= 11) THEN
-           ! Save evolved state in ensemble matrix
-           CALL U_collect_state(dim_p, ens(1 : dim_p, member))
-        ELSE
-           ! Save evolved ensemble mean state
-           CALL U_collect_state(dim_p, state(1:dim_p))
-        END IF
-     END IF modelpes
+          IF (subtype_filter /= 10 .AND. subtype_filter /= 11) THEN
+             ! Save evolved state in ensemble matrix
+             CALL U_collect_state(dim_p, ens(1 : dim_p, member))
+          ELSE
+             ! Save evolved ensemble mean state
+             CALL U_collect_state(dim_p, state(1:dim_p))
+          END IF
+       END IF modelpes
 
-     CALL PDAF_timeit(41, 'old')
+       CALL PDAF_timeit(41, 'old')
 
 ! TEMPLATE: do NOT change the member counting as it will break PDAF's ensemble forecast handling
 
-     member = member + 1
+       member = member + 1
 
-     ! Reset step counter for IAU
-     step_cnt_iau = 0
-  ELSE
-     member = local_dim_ens + 1
-  END IF doevol
+       ! Reset step counter for IAU
+       step_cnt_iau = 0
+    ELSE
+       member = local_dim_ens + 1
+    END IF doevol
 
-  IF (filter_no_model .AND. filterpe) THEN
-     member = local_dim_ens + 1
-  END IF
+    IF (filter_no_model .AND. filterpe) THEN
+       member = local_dim_ens + 1
+    END IF
 
 
 ! ********************************************************
@@ -138,80 +140,93 @@ SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_
 
 ! TEMPLATE: Everything below is generic except the call to PDAFGLOBALTEMPLATE_update
 
-  completeforecast: IF (member == local_dim_ens + 1 &
-       .OR. offline_mode) THEN
+    completeforecast: IF (member == local_dim_ens + 1 &
+         .OR. offline_mode) THEN
 
-     ! Set flag for assimilation
-     assim_flag = 1
-
-
-     ! ***********************************************
-     ! *** Collect forecast ensemble on filter PEs ***
-     ! ***********************************************
-
-     doevolB: IF (nsteps > 0) THEN
-
-        IF (.not.filterpe) THEN
-           ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, state, screen)
-        ELSE
-           ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, ens, state, screen)
-        END IF
-
-     END IF doevolB
-
-     ! *** call timer
-     CALL PDAF_timeit(2, 'old')
-
-     IF (.NOT.offline_mode .AND. mype_world == 0 .AND. screen > 1) THEN
-        WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
-             'PDAF', '--- duration of forecast phase:', PDAF_time_temp(2), 's'
-     END IF
+       ! Set flag for assimilation
+       assim_flag = 1
 
 
-     ! **************************************
-     ! *** Perform analysis on filter PEs ***
-     ! **************************************
+       ! ***********************************************
+       ! *** Collect forecast ensemble on filter PEs ***
+       ! ***********************************************
 
-     ! Screen output
-     IF (offline_mode .AND. mype_world == 0 .AND. screen > 0) THEN
-        WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
-        WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
-        WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)
-     ELSE IF (.NOT.offline_mode .AND. mype_world==0 .AND. screen > 0) THEN
-        WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
-     ENDIF
+       doevolB: IF (nsteps > 0) THEN
 
-     OnFilterPE: IF (filterpe) THEN
+          IF (.not.filterpe) THEN
+             ! Non filter PEs only store a sub-ensemble
+             CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, state, screen)
+          ELSE
+             ! On filter PEs, the ensemble array has full size
+             CALL PDAF_gather_ens(dim_p, dim_ens, ens, state, screen)
+          END IF
+
+       END IF doevolB
+
+
+       ! **********************************************************
+       ! *** For EnOI mode: add state to ensemble perturbations ***
+       ! **********************************************************
+
+       EnOI_mode: IF (subtype_filter==10 .OR. subtype_filter==11) THEN
+          DO j = 1, dim_ens
+             DO i = 1, dim_p
+                ens(i, j) = ens(i, j) + state(i)
+             END DO
+          END DO
+       END IF EnOI_mode
+
+       ! *** call timer
+       CALL PDAF_timeit(2, 'old')
+
+       IF (.NOT.offline_mode .AND. mype_world == 0 .AND. screen > 1) THEN
+          WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
+               'PDAF', '--- duration of forecast phase:', PDAF_time_temp(2), 's'
+       END IF
+
+
+       ! **************************************
+       ! *** Perform analysis on filter PEs ***
+       ! **************************************
+
+       ! Screen output
+       IF (offline_mode .AND. mype_world == 0 .AND. screen > 0) THEN
+          WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
+          WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
+          WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)
+       ELSE IF (.NOT.offline_mode .AND. mype_world==0 .AND. screen > 0) THEN
+          WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
+       ENDIF
+
+       OnFilterPE: IF (filterpe) THEN
 
 ! TEMPLATE: This needs to be adapted according use features of the DA method
 !   Usually only the included call-back routines (U_*) are changed, but other
 !   variables are kept unchanged
-        CALL PDAFGLOBALTEMPLATE_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, Ainv, ens, U_init_dim_obs, U_obs_op, &
-             U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, &
-             screen, subtype_filter, dim_lag, sens, cnt_maxlag, flag)
+          CALL PDAFGLOBALTEMPLATE_update(step_obs, dim_p, dim_obs, dim_ens, &
+               state, Ainv, ens, U_init_dim_obs, U_obs_op, &
+               U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, &
+               screen, subtype_filter, dim_lag, sens, cnt_maxlag, flag)
 
-     END IF OnFilterPE
+       END IF OnFilterPE
 
 
-     ! ***********************************
-     ! *** Set forecast counters/flags ***
-     ! ***********************************
-     initevol = 1
-     member   = 1
-     step     = step_obs + 1
+       ! ***********************************
+       ! *** Set forecast counters/flags ***
+       ! ***********************************
+       initevol = 1
+       member   = 1
+       step     = step_obs + 1
 
-  END IF completeforecast
+    END IF completeforecast
 
 
 ! ********************
 ! *** finishing up ***
 ! ********************
 
-  outflag = flag
+    outflag = flag
 
-END SUBROUTINE PDAF_put_state_GLOBALTEMPLATE
+  END SUBROUTINE PDAF_put_state_GLOBALTEMPLATE
 
 END MODULE PDAFput_state_GLOBALTEMPLATE
