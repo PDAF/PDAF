@@ -50,7 +50,7 @@ CONTAINS
          subtype_filter, ensemblefilter, state, Ainv, ens, &
          debug
     USE PDAF_mod_parallel, &
-         ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
+         ONLY: mype, filterpe, PDAF_MPI_init, PDAF_init_parallel, COMM_pdaf, &
          isset_comm_pdaf, COMM_model, COMM_filter, COMM_couple, &
          task_id, n_modeltasks
     USE PDAF_info, &
@@ -102,6 +102,9 @@ CONTAINS
 
     IF (debug>0) &
          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_init -- START'
+
+    ! Initialize MPI if not done before calling PDAF3_init
+    CALL PDAF_MPI_init()
 
     ! set number of timers
     CALL PDAF_timeit(66, 'ini')

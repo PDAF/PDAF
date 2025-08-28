@@ -70,6 +70,28 @@ MODULE PDAF_mod_parallel
 
 CONTAINS
 !-------------------------------------------------------------------------------
+!> Call MPI_init if reguired
+!!
+!! If PDAF3_init was called without calling MPI_init in the user code
+!! before, we call it here for potential self-initialization of PDAF.
+!!
+  SUBROUTINE PDAF_MPI_init()
+
+    IMPLICIT NONE
+
+! *** local variables ***
+    LOGICAL :: iniflag                       ! Flag whether MPI is initialized
+
+    CALL MPI_Initialized(iniflag, MPIerr) 
+    IF (.not.iniflag) THEN
+       CALL MPI_Init(MPIerr)
+       mpi_init_by_pdaf = .true.
+    END IF
+
+  END SUBROUTINE PDAF_MPI_init
+
+
+!-------------------------------------------------------------------------------
 !> Initialize parallelization variables for PDAF
 !!
 !! This subroutine initializes internal parallelization 
