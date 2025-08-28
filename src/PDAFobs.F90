@@ -109,7 +109,7 @@ CONTAINS
 ! ***********************************
 
     IF (do_ens_mean) THEN
-       CALL PDAF_timeit(51, 'old')
+       CALL PDAF_timeit(51, 'new')
        CALL PDAF_timeit(9, 'new')
 
        state_p = 0.0
