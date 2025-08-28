@@ -23,22 +23,22 @@ MODULE mod_parallel_pdaf
   SAVE 
 
   ! Basic variables for model state integrations
-  INTEGER :: COMM_model  !< MPI communicator for model tasks
-  INTEGER :: mype_model  !< Number of PEs in COMM_model
-  INTEGER :: npes_model  !< PE rank in COMM_model
+  INTEGER :: COMM_model               !< MPI communicator for model tasks
+  INTEGER :: mype_model = 0           !< Number of PEs in COMM_model
+  INTEGER :: npes_model = 1           !< PE rank in COMM_model
 
   ! Additional variables for use with PDAF
   INTEGER :: n_modeltasks = 1         !< Number of parallel model tasks
   INTEGER :: n_filterpes  = 1         !< Number of PEs for filter analysis
-  INTEGER :: npes_world               !< Number of processes in MPI_COMM_WORLD
-  INTEGER :: mype_world               !< Process rank in MPI_COMM_WORLD
+  INTEGER :: npes_world = 1           !< Number of processes in MPI_COMM_WORLD
+  INTEGER :: mype_world = 0           !< Process rank in MPI_COMM_WORLD
   INTEGER :: COMM_filter              !< MPI communicator for filter PEs 
-  INTEGER :: npes_filter              !< Number of processes in COMM_filter
-  INTEGER :: mype_filter              !< Process rank in COMM_filter
+  INTEGER :: npes_filter = 1          !< Number of processes in COMM_filter
+  INTEGER :: mype_filter = 0          !< Process rank in COMM_filter
   INTEGER :: COMM_couple              !< MPI communicator for coupling filter and model
   LOGICAL :: modelpe                  !< Whether we are on a PE in a COMM_model
-  LOGICAL :: filterpe                 !< Whether we are on a PE in a COMM_filter
-  INTEGER :: task_id                  !< Index of my model task (1,...,n_modeltasks)
+  LOGICAL :: filterpe = .true.        !< Whether we are on a PE in a COMM_filter
+  INTEGER :: task_id = 1              !< Index of my model task (1,...,n_modeltasks)
   INTEGER :: MPIerr                   !< Error flag for MPI
   INTEGER :: MPIstatus(MPI_STATUS_SIZE)       !< Status array for MPI
   INTEGER, ALLOCATABLE :: local_npes_model(:) !< Number of processes per ensemble

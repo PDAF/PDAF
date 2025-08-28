@@ -93,9 +93,15 @@ CONTAINS
     CHARACTER(len=32) :: string
     INTEGER :: parsed_int
     LOGICAL :: modified
+    LOGICAL :: iniflag_mpi
 
 ! *** Initialization ***
-    CALL MPI_Comm_Rank(MPI_COMM_WORLD, mype, MPIerr)
+    CALL MPI_Initialized(iniflag_mpi, MPIerr) 
+    IF (iniflag_mpi) THEN
+       CALL MPI_Comm_Rank(MPI_COMM_WORLD, mype, MPIerr)
+    ELSE
+       mype = 0
+    END IF
 
     string = '-' // TRIM(handle)
     modified = .FALSE.
@@ -142,9 +148,15 @@ CONTAINS
     CHARACTER(len=32) :: string
     REAL :: parsed_real
     LOGICAL :: modified
+    LOGICAL :: iniflag_mpi
 
 ! *** Initialize ***
-    CALL MPI_Comm_Rank(MPI_COMM_WORLD, mype, MPIerr)
+    CALL MPI_Initialized(iniflag_mpi, MPIerr) 
+    IF (iniflag_mpi) THEN
+       CALL MPI_Comm_Rank(MPI_COMM_WORLD, mype, MPIerr)
+    ELSE
+       mype = 0
+    END IF
 
     string = '-' // TRIM(handle)
     modified = .FALSE.
@@ -192,9 +204,15 @@ CONTAINS
     CHARACTER(len=110) :: str1_check
     CHARACTER(len=110) :: str2_check
     LOGICAL :: modified
+    LOGICAL :: iniflag_mpi
 
 ! *** Initialize ***
-    CALL MPI_Comm_Rank(MPI_COMM_WORLD, mype, MPIerr)
+    CALL MPI_Initialized(iniflag_mpi, MPIerr) 
+    IF (iniflag_mpi) THEN
+       CALL MPI_Comm_Rank(MPI_COMM_WORLD, mype, MPIerr)
+    ELSE
+       mype = 0
+    END IF
 
     string = '-' // TRIM(handle)
     modified = .FALSE.
@@ -258,9 +276,15 @@ CONTAINS
     CHARACTER(len=32) :: string
     LOGICAL :: parsed_log
     LOGICAL :: modified
+    LOGICAL :: iniflag_mpi
 
 ! *** Initialization ***
-    CALL MPI_Comm_Rank(MPI_COMM_WORLD, mype, MPIerr)
+    CALL MPI_Initialized(iniflag_mpi, MPIerr) 
+    IF (iniflag_mpi) THEN
+       CALL MPI_Comm_Rank(MPI_COMM_WORLD, mype, MPIerr)
+    ELSE
+       mype = 0
+    END IF
 
     string = '-' // TRIM(handle)
     modified = .FALSE.
