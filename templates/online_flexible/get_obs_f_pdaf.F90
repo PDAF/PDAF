@@ -30,7 +30,7 @@ SUBROUTINE get_obs_f_pdaf(step, dim_obs, observation)
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                 ! Current time step
   INTEGER, INTENT(in) :: dim_obs              ! Dimension of obs. vector
-  REAL, INTENT(out)   :: observation(dim_obs) ! Observation vector
+  REAL, INTENT(in)    :: observation(dim_obs) ! Observation vector
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_gen_obs   (as U_get_obs_f)
