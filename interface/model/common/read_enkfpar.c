@@ -145,7 +145,7 @@ void read_enkfpar(char *parname)
   }
 
   /* Check: `da_interval` must be 1 if `flexible_da_interval` is switched on.  */
-  /*        This way `PF:simtime` is direct input of `total_steps`
+  /*        This way `PF:simtime` is direct input of `total_steps` */
   /*        and `PF:starttime` is direct input of `tstartcycle`.  */
   if (flexible_da_interval == 1 && da_interval != 1){
     printf("flexible_da_interval=%d\n", flexible_da_interval);
