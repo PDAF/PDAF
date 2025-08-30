@@ -39,12 +39,13 @@ SUBROUTINE  PDAFlenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      U_init_obs_covar, U_prepoststep, U_localize, &
      screen, subtype, flag)
 
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_parallel, &
-       ONLY: mype, dim_ens_l
+       ONLY: mype, dim_ens_l, npes_filter, MPIerr, COMM_filter
   USE PDAF_lenkf, &
        ONLY: debug, forget, rank_ana_enkf
   USE PDAFobs, &
@@ -83,6 +84,7 @@ SUBROUTINE  PDAFlenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 ! *** local variables ***
   INTEGER :: i                    ! Counters
   INTEGER :: minusStep            ! Time step counter
+  INTEGER :: dim_obs              ! global dimension of observation vector
   INTEGER, SAVE :: allocflag = 0  ! Flag whether first time allocation is done
   LOGICAL :: do_init_dim_obs      ! Flag for initializing dim_obs_p in PDAFobs_init
   LOGICAL :: do_ensmean           ! Flag for computing ensemble mean state
@@ -236,11 +238,21 @@ SUBROUTINE  PDAFlenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           'Configuration: param_real(1) forget     ', forget
   END IF
 
-  haveobs: IF (dim_obs_p > 0) THEN
+  ! *** Get global dimension of observation vector ***
+  IF (npes_filter>1) THEN
+     CALL MPI_allreduce(dim_obs_p, dim_obs, 1, MPI_INTEGER, MPI_SUM, &
+          COMM_filter, MPIerr)
+  ELSE
+     ! This is a work around for working with nullmpi.F90
+     dim_obs = dim_obs_p
+  END IF
+
+  haveobs: IF (dim_obs > 0) THEN
 
      IF (subtype == 0) THEN
         ! *** analysis with representer method with 2m<n ***
-        CALL PDAF_lenkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
+        CALL PDAF_lenkf_ana_rsm(step, &
+             dim_p, dim_obs_p, dim_obs, dim_ens, rank_ana_enkf, &
              state_p, ens_p, HX_p, HXbar_p, obs_p, &
              U_add_obs_err, U_init_obs_covar, U_localize, &
              screen, debug, flag)
@@ -249,7 +261,7 @@ SUBROUTINE  PDAFlenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   ELSE haveobs
 
      IF (mype == 0) WRITE (*,'(/5x,a/)') &
-          '!!! PDAF WARNING: No observations present - no analysis update performed !!!'
+          '!!! PDAF Note: No observations present - no analysis update performed !!!'
 
   END IF haveobs
 

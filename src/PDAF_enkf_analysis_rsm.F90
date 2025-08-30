@@ -39,7 +39,8 @@
 MODULE PDAF_enkf_analysis_rsm
 
 CONTAINS
-SUBROUTINE PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
+SUBROUTINE PDAF_enkf_ana_rsm(step, &
+     dim_p, dim_obs_p, dim_obs, dim_ens, rank_ana, &
      state_p, ens_p, HX_p, HXbar_p, obs_p, &
      U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
@@ -47,13 +48,12 @@ SUBROUTINE PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_parallel, &
-       ONLY: mype, npes_filter, MPIerr, COMM_filter
+       ONLY: mype
   USE PDAFomi_obs_f, &
        ONLY: omi_n_obstypes => n_obstypes, PDAFomi_gather_obsdims
   USE PDAF_enkf, &
@@ -65,6 +65,7 @@ SUBROUTINE PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   INTEGER, INTENT(in) :: step          !< Current time step
   INTEGER, INTENT(in) :: dim_p         !< PE-local dimension of model state
   INTEGER, INTENT(in) :: dim_obs_p     !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_obs       !< Global dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens       !< Size of state ensemble
   INTEGER, INTENT(in) :: rank_ana      !< Rank to be considered for inversion of HPH
   REAL, INTENT(inout) :: state_p(dim_p)           !< PE-local ensemble mean state
@@ -83,7 +84,6 @@ SUBROUTINE PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
 ! *** local variables ***
   INTEGER :: i, j, member              ! counters
-  INTEGER :: dim_obs                   ! global dimension of observation vector
   REAL :: invdim_ens                   ! inverse of ensemble size
   REAL :: invdim_ensm1                 ! inverse of ensemble size minus 1
   INTEGER, SAVE :: allocflag = 0       ! Flag for first-time allocation
@@ -137,14 +137,14 @@ SUBROUTINE PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   invdim_ens = 1.0 / REAL(dim_ens)
   invdim_ensm1 = 1.0 / (REAL(dim_ens - 1))
 
-  ! *** Get global dimension of observation vector ***
-  IF (npes_filter>1) THEN
-     CALL MPI_allreduce(dim_obs_p, dim_obs, 1, MPI_INTEGER, MPI_SUM, &
-          COMM_filter, MPIerr)
-  ELSE
-     ! This is a work around for working with nullmpi.F90
-     dim_obs = dim_obs_p
-  END IF
+!   ! *** Get global dimension of observation vector ***
+!   IF (npes_filter>1) THEN
+!      CALL MPI_allreduce(dim_obs_p, dim_obs, 1, MPI_INTEGER, MPI_SUM, &
+!           COMM_filter, MPIerr)
+!   ELSE
+!      ! This is a work around for working with nullmpi.F90
+!      dim_obs = dim_obs_p
+!   END IF
 
 
 ! **********************************
