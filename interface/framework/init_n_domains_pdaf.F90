@@ -51,13 +51,9 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
   USE mod_assimilation, &
       ONLY: dim_state_p
   USE mod_tsmp, &
-      ONLY: init_n_domains_size
+      ONLY: init_n_domains_pfl
 #if defined CLMSA
-#if defined CLMFIVE
-  USE decompMod, ONLY: get_proc_bounds
-#else
-  USE decompMod, ONLY: get_proc_bounds_atm
-#endif
+  USE enkf_clm_mod, ONLY: init_n_domains_clm
 #endif
 
   IMPLICIT NONE
@@ -65,9 +61,6 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! !ARGUMENTS:
   INTEGER, INTENT(in)  :: step        ! Current time step
   INTEGER, INTENT(out) :: n_domains_p ! PE-local number of analysis domains
-#if defined CLMSA
-  INTEGER :: begg, endg   ! per-proc gridcell ending gridcell indices
-#endif
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lseik_update   (as U_init_n_domains)
@@ -78,27 +71,22 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! ************************************
 ! *** Initialize number of domains ***
 ! ************************************
-#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
-  if (model.eq.tag_model_parflow) then
-     ! Here simply the process-local state dimension
-     call init_n_domains_size(n_domains_p)
-  end if
+#if defined PARFLOW_STAND_ALONE
+  call init_n_domains_pfl(n_domains_p)
 #endif   
 
-#ifndef CLMSA
+#if defined COUP_OAS_PFL
+  if (model == tag_model_parflow) then
+     call init_n_domains_pfl(n_domains_p)
+  end if
   if (model == tag_model_clm) then
-     ! Here simply the process-local state dimension  
+     ! For CLM coupled with ParFlow, use the process-local state dimension
      n_domains_p = dim_state_p
-  end if   
-#else
-  ! beg and end gridcell for atm
-#if defined CLMFIVE
-  call get_proc_bounds(begg, endg)
-#else  
-  call get_proc_bounds_atm(begg, endg)
+  end if
 #endif
-  ! Here simply the process-local state dimension  
-  n_domains_p = endg - begg + 1
+
+#if defined CLMSA
+  call init_n_domains_clm(n_domains_p)
 #endif
 
 END SUBROUTINE init_n_domains_pdaf

@@ -2540,7 +2540,7 @@ void mask_overlandcells_river()
   }
 }
 
-void init_n_domains_size(int* n_domains_p)
+void init_n_domains_pfl(int* n_domains_p)
 {
   int nshift = 0;
   /* state updates */
@@ -2561,7 +2561,7 @@ void init_n_domains_size(int* n_domains_p)
   /* }  */
 }
 
-void init_parf_l_size(int* dim_l)
+void init_dim_l_pfl(int* dim_l)
 {
   int nshift = 0;
   /* state updates */

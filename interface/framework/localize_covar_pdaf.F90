@@ -38,7 +38,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
    USE shr_kind_mod , only : r8 => shr_kind_r8
    USE mod_read_obs, ONLY: clmobs_lon
    USE mod_read_obs, ONLY: clmobs_lat
-   USE enkf_clm_mod, ONLY: init_clm_l_size, clmupdate_T
+   USE enkf_clm_mod, ONLY: clmupdate_T
    USE enkf_clm_mod, ONLY: clm_begc
    USE enkf_clm_mod, ONLY: clm_endc
    USE enkf_clm_mod, ONLY: state_pdaf2clm_c_p
@@ -226,7 +226,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
          ! dx = abs(longxy_obs(j) - longxy(state_pdaf2clm_c_p(i)))
          ! dy = abs(latixy_obs(j) - latixy(state_pdaf2clm_c_p(i)))
 
-         ! Units: lat/lon
+         ! Units: lat/lon (degrees)
          dx = abs(clmobs_lon(obs_pdaf2nc(j)) - lon(mycgridcell(state_pdaf2clm_c_p(i))))
          dy = abs(clmobs_lat(obs_pdaf2nc(j)) - lat(mycgridcell(state_pdaf2clm_c_p(i))))
 
@@ -267,7 +267,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
          ! dx = abs(longxy_obs(j) - longxy_obs(i))
          ! dy = abs(latixy_obs(j) - latixy_obs(i))
 
-         ! Units: lat/lon
+         ! Units: lat/lon (degrees)
          dx = abs(clmobs_lon(obs_pdaf2nc(j)) - clmobs_lon(obs_pdaf2nc(i)))
          dy = abs(clmobs_lat(obs_pdaf2nc(j)) - clmobs_lat(obs_pdaf2nc(i)))
 

@@ -71,6 +71,18 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
        point_obs, model
 #endif
 
+#if defined CLMSA
+  USE enkf_clm_mod, ONLY: state_loc2clm_c_p
+  use shr_kind_mod, only: r8 => shr_kind_r8
+
+#ifdef CLMFIVE
+  USE GridcellType, ONLY: grc
+  USE ColumnType, ONLY : col
+#else
+  USE clmtype, ONLY : clm3
+#endif
+#endif
+
   USE, INTRINSIC :: iso_c_binding, ONLY: C_F_POINTER
 
   IMPLICIT NONE
@@ -95,10 +107,25 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   INTEGER  :: domain_p_coord   ! Current local analysis domain for coord arrays
 
   !kuw
-  integer :: dx,dy, max_var_id, ierror
+#if defined CLMSA
+  real :: dx,dy
+#else
+  integer :: dx,dy
+#endif
+  integer :: max_var_id, ierror
   integer :: obsind(dim_obs)
   real    :: obsdist(dim_obs)
   ! kuw end
+
+#if defined CLMSA
+  ! INTEGER :: dim_l
+  ! INTEGER :: ncellxy
+  ! INTEGER :: k
+  real(r8), pointer :: lon(:)
+  real(r8), pointer :: lat(:)
+  integer, pointer :: mycgridcell(:) !Pointer for CLM3.5/CLM5.0 col->gridcell index arrays
+  REAL :: yhalf
+#endif
 
   ! **********************************************
   ! *** Initialize local observation dimension ***
@@ -241,10 +268,44 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
      end if
   else 
      if(model == tag_model_clm) THEN
+
+#ifdef CLMSA
+    ! Lon/Lat information from CLM
+#ifdef CLMFIVE
+    ! Obtain CLM lon/lat information
+    lon   => grc%londeg
+    lat   => grc%latdeg
+    ! Obtain CLM column-gridcell information
+    mycgridcell => col%gridcell
+#else
+    lon   => clm3%g%londeg
+    lat   => clm3%g%latdeg
+    mycgridcell => clm3%g%l%c%gridcell
+#endif
+#endif
+
      do i = 1,dim_obs
+#ifdef CLMSA
+        ! Units: lat/lon (degrees)
+        ! More doc on following lines: See `localize_covar_pdaf`
+
+       ! Compared to LOCALIZE_COVAR_PDAF: No OBS_PDAF2NC. This is in
+       ! order to have OBS_INDEX_L return a NC-ordered array, not
+       ! PDAF-ordered array.
+        dx = abs(clmobs_lon(i) - lon(mycgridcell(state_loc2clm_c_p(domain_p))))
+        dy = abs(clmobs_lat(i) - lat(mycgridcell(state_loc2clm_c_p(domain_p))))
+        IF (dx > 180.0) THEN
+          dx = 360.0 - dx
+        END IF
+        yhalf = ( clmobs_lat(i) + lat(mycgridcell(state_loc2clm_c_p(domain_p))) ) / 2.0
+        dx = dx * cos(yhalf * 3.14159265358979323846 / 180.0)
+        dist = 111.19492664455873 * sqrt(real(dx)**2 + real(dy)**2)
+#else
+        ! Units: Index numbering
         dx = abs(longxy_obs(i) - longxy(domain_p))
         dy = abs(latixy_obs(i) - latixy(domain_p))
         dist = sqrt(real(dx)**2 + real(dy)**2)
+#endif
         obsdist(i) = dist
         if (dist <= real(cradius)) then
            dim_obs_l = dim_obs_l + 1

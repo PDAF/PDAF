@@ -517,8 +517,8 @@ contains
     !if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
     !if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
     !kuw: clean clm observations
-    IF (.NOT. filtertype == 8) THEN
-      ! For LEnKF lat/lon are used
+    IF (.NOT. filtertype == 5 .AND. .NOT. filtertype == 7 .AND. .NOT. filtertype == 8) THEN
+      ! For LETKF, LESTKF, LEnKF lat/lon are used
       if(allocated(clmobs_lon))deallocate(clmobs_lon)
       if(allocated(clmobs_lat))deallocate(clmobs_lat)
     END IF

@@ -74,6 +74,7 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
   observation_l(:) = 0.0
 
 !#ifndef CLMSA
+  ! Index array OBS_INDEX_L (returns nc-ordered index) set in subroutine INIT_DIM_OBS_L_PDAF
   do i=1,dim_obs_l
     observation_l(i) = obs(obs_index_l(i)) 
   end do

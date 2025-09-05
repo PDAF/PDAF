@@ -59,6 +59,7 @@ module enkf_clm_mod
   real(r8),allocatable :: clm_statevec(:)
   integer,allocatable :: state_pdaf2clm_c_p(:)
   integer,allocatable :: state_pdaf2clm_j_p(:)
+  integer,allocatable :: state_loc2clm_c_p(:)
   ! clm_paramarr: Contains LAI used in obs_op_pdaf for computing model
   ! LST in LST assimilation (clmupdate_T)
   real(r8),allocatable :: clm_paramarr(:)  !hcp CLM parameter vector (f.e. LAI)
@@ -886,11 +887,39 @@ module enkf_clm_mod
   end subroutine get_interp_idx
 
 #if defined CLMSA
-  subroutine init_clm_l_size(dim_l)
+  !> @author  Johannes Keller
+  !> @date    24.04.2025
+  !> @brief   Set number of local analysis domains N_DOMAINS_P
+  !> @details
+  !>    This routine sets N_DOMAINS_P, the number of local analysis domains.
+  subroutine init_n_domains_clm(n_domains_p)
+
+    use decompMod, only : get_proc_bounds_atm
+
+    implicit none
+
+    integer, intent(out) :: n_domains_p
+    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
+
+    call get_proc_bounds_atm(begg, endg)
+
+    ! Process-local number of gridcells
+    n_domains_p = endg - begg + 1
+
+  end subroutine init_n_domains_clm
+
+
+  !> @author  Wolfgang Kurtz, Johannes Keller
+  !> @date    20.11.2017
+  !> @brief   Set local state vector dimension DIM_L local PDAF filters
+  !> @details
+  !>    This routine sets DIM_L, the local state vector dimension.
+  subroutine init_dim_l_clm(domain_p, dim_l)
     use clm_varpar   , only : nlevsoi
 
     implicit none
 
+    INTEGER, INTENT(in) :: domain_p       ! Current local analysis domain
     integer, intent(out) :: dim_l
     integer              :: nshift
 
@@ -912,7 +941,83 @@ module enkf_clm_mod
       error stop "Not implemented: clmupdate_texture.eq.2"
     endif
 
-  end subroutine init_clm_l_size
+  end subroutine init_dim_l_clm
+
+  !> @author  Wolfgang Kurtz, Johannes Keller
+  !> @date    20.11.2017
+  !> @brief   Set local state vector STATE_L from global state vector STATE_P
+  !> @details
+  !>    This routine sets STATE_L, the local state vector.
+  !>
+  !>    Source is STATE_P, the global (PE-local) state vector.
+  subroutine g2l_state_clm(domain_p, dim_p, state_p, dim_l, state_l)
+
+    use decompMod, only : get_proc_bounds_atm
+    ! use ColumnType , only : col
+
+    implicit none
+
+    INTEGER, INTENT(in) :: domain_p       ! Current local analysis domain
+    INTEGER, INTENT(in) :: dim_p          ! PE-local full state dimension
+    INTEGER, INTENT(in) :: dim_l          ! Local state dimension
+    REAL, TARGET, INTENT(in)    :: state_p(dim_p) ! PE-local full state vector
+    REAL, TARGET, INTENT(out)   :: state_l(dim_l) ! State vector on local analysis d
+
+    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
+    integer :: begc, endc   ! per-proc beginning and ending column indices
+    integer              :: nshift_p
+
+    INTEGER :: i
+    INTEGER :: n_domain
+
+    ! beg and end gridcell for atm
+    call get_proc_bounds_atm(begg, endg)
+
+    n_domain = endg - begg + 1
+    DO i = 0, dim_l-1
+      nshift_p = domain_p + i * n_domain
+      state_l(i+1) = state_p(nshift_p)
+    ENDDO
+
+  end subroutine g2l_state_clm
+
+  !> @author  Wolfgang Kurtz, Johannes Keller
+  !> @date    20.11.2017
+  !> @brief   Update global state vector STATE_P from local state vector STATE_L
+  !> @details
+  !>    This routine updates STATE_P, the global (PE-local) state vector.
+  !>
+  !>    Source is STATE_L, the local vector.
+  subroutine l2g_state_clm(domain_p, dim_l, state_l, dim_p, state_p)
+
+    use decompMod, only : get_proc_bounds_atm
+    ! use ColumnType , only : col
+
+    implicit none
+
+    INTEGER, INTENT(in) :: domain_p       ! Current local analysis domain
+    INTEGER, INTENT(in) :: dim_l          ! Local state dimension
+    INTEGER, INTENT(in) :: dim_p          ! PE-local full state dimension
+    REAL, TARGET, INTENT(in)    :: state_l(dim_l) ! State vector on local analysis domain
+    REAL, TARGET, INTENT(inout) :: state_p(dim_p) ! PE-local full state vector
+
+    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
+    integer :: begc, endc   ! per-proc beginning and ending column indices
+    integer              :: nshift_p
+
+    INTEGER :: i
+    INTEGER :: n_domain
+
+    ! beg and end gridcell for atm
+    call get_proc_bounds_atm(begg, endg)
+
+    n_domain = endg - begg + 1
+    DO i = 0, dim_l-1
+      nshift_p = domain_p + i * n_domain
+      state_p(nshift_p) = state_l(i+1)
+    ENDDO
+
+  end subroutine l2g_state_clm
 #endif
 
 end module enkf_clm_mod
