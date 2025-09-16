@@ -298,7 +298,7 @@ CONTAINS
     END IF haveobs
     CALL PDAF_timeit(6, 'old')
 
-    IF (mype == 0 .AND. screen > 1) THEN
+    IF (mype == 0 .AND. screen > 1 .AND. do_init_dim) THEN
        WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
             'PDAF', '--- duration of observation preparation:', PDAF_time_temp(6), 's'
     END IF
