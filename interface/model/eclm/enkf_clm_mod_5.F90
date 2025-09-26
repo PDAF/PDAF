@@ -966,7 +966,9 @@ module enkf_clm_mod
    !print *,'begg, endg ', begg, endg
 
     ! allocate vector with size of elements in x directions * size of elements in y directions
+    if(allocated(longxy)) deallocate(longxy)
     allocate(longxy(ncells), stat=ier)
+    if(allocated(latixy)) deallocate(latixy)
     allocate(latixy(ncells), stat=ier)
 
     ! initialize vector with zero values
@@ -1000,7 +1002,9 @@ module enkf_clm_mod
     minlat = MINVAL(lat(:) + 90)
     maxlat = MAXVAL(lat(:) + 90)
 
+    if(allocated(longxy_obs)) deallocate(longxy_obs)
     allocate(longxy_obs(dim_obs), stat=ier)
+    if(allocated(latixy_obs)) deallocate(latixy_obs)
     allocate(latixy_obs(dim_obs), stat=ier)
 
     do i = 1, dim_obs
