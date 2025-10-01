@@ -48,7 +48,6 @@ CONTAINS
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-    USE mpi
     USE PDAF_timer, &
          ONLY: PDAF_timeit
     USE PDAF_memcounting, &
@@ -339,7 +338,6 @@ CONTAINS
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-    USE mpi
     USE PDAF_timer, &
          ONLY: PDAF_timeit
     USE PDAF_memcounting, &
