@@ -258,8 +258,8 @@ CONTAINS
        ELSE IF (type_winf == 1) THEN
           WRITE (*, '(a, 12x, a, f8.3)') 'PDAF', '--> inflate particle weights so that N_eff/N> ', limit_winf
        END IF
-       WRITE(*, '(a, 10x, a, l)') &
-            'PDAF', 'param_int(8) observe_ens'
+       WRITE(*, '(a, 10x, a, 1x, l)') &
+            'PDAF', 'param_int(8) observe_ens=', observe_ens
        IF (observe_ens) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
        ELSE

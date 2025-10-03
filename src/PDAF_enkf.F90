@@ -65,7 +65,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_core, &
-         ONLY: localfilter, dim_lag
+         ONLY: localfilter, covarloc, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -128,6 +128,9 @@ CONTAINS
 
     ! Define whether filter is a domain-local filter
     localfilter = 0
+
+    ! Define whether the filter uses covariance localization
+    covarloc = 1
 
     ! Initialize flag for fixed-basis filters
     fixedbasis = .FALSE.
@@ -231,8 +234,8 @@ CONTAINS
                'PDAF', '--->analysis with pseudo-inverse of HPH, rank=', rank_ana_enkf
        END IF
        WRITE (*, '(a, 10x, a, f5.2)') 'PDAF' ,'Use fixed forgetting factor:', forget
-       WRITE(*, '(a, 10x, a, l)') &
-            'PDAF', 'param_int(8) observe_ens'
+       WRITE(*, '(a, 10x, a, 1x, l)') &
+            'PDAF', 'param_int(8) observe_ens=', observe_ens
        IF (observe_ens) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
        ELSE

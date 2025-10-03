@@ -37,9 +37,6 @@ MODULE PDAF_ENSRF
 
   IMPLICIT NONE
 
-! *** Integer parameters ***
-  INTEGER :: rank_ana_ensrf=0 !< Rank to be considered for inversion of HPH in analysis of ENSRF
-
 ! *** Real parameters ***
   REAL    :: forget=1.0      !< Forgetting factor
 
@@ -224,8 +221,8 @@ CONTAINS
        IF (dim_lag > 0) &
             WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'Apply smoother up to lag:',dim_lag
        WRITE (*, '(a, 10x, a, f5.2)') 'PDAF' ,'Use fixed forgetting factor:', forget
-       WRITE(*, '(a, 10x, a, l)') &
-            'PDAF', 'param_int(8) observe_ens'
+       WRITE(*, '(a, 10x, a, 1x, l)') &
+            'PDAF', 'param_int(8) observe_ens=', observe_ens
        IF (observe_ens) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
        ELSE
@@ -298,7 +295,7 @@ CONTAINS
        type_obs_init = value    ! Initialize obs (0) before or (1) after prepoststep
        IF (type_obs_init<0 .OR. type_obs_init>1) THEN
           WRITE (*,'(/5x, a/)') &
-               'PDAF-ERROR(10): Invalid setting type_obs_init - param_int(9)!'
+               'PDAF-ERROR(8): Invalid setting type_obs_init - param_int(9)!'
           flag = 8
        END IF
     CASE DEFAULT
@@ -570,14 +567,15 @@ CONTAINS
        ! Generic part
        WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
        WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
-       WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') &
+       WRITE (*, '(a, 21x, a, F11.3, 1x, a)') &
             'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
           IF (subtype_filter<10) THEN
-             WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+             WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
-             WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
+             WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
           END IF
+          WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
           WRITE (*, '(a, 12x, a, 1x, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
           IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
                'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
@@ -585,30 +583,30 @@ CONTAINS
 
        IF (filterpe) THEN
           ! Filter-specific part
-          WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'EnSRF analysis (3):', pdaf_time_tot(3), 's'
-          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
-          WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute ensemble mean (9):', pdaf_time_tot(9), 's'
+          WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'EnSRF analysis (3):', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
+          WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'compute ensemble mean (9):', pdaf_time_tot(9), 's'
           IF (subtype_filter == 0 .OR. subtype_filter == 10) THEN
-             WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute HPH+R and HP (10):', pdaf_time_tot(10), 's'
-             WRITE (*, '(a, 14x, a, 5x, F11.3, 1x, a)') 'PDAF', 'Xpert, HXpert, HXbar (30):', pdaf_time_tot(30), 's'
-             WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'complete HP_p (31):', pdaf_time_tot(31), 's'
-             WRITE (*, '(a, 14x, a, 20x, F11.3, 1x, a)') 'PDAF', 'HXY_P (32):', pdaf_time_tot(32), 's'
-             WRITE (*, '(a, 14x, a, 22x, F11.3, 1x, a)') 'PDAF', 'HPH (34):', pdaf_time_tot(34), 's'
-             WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'Apply localization (45):', pdaf_time_tot(45), 's'
-             WRITE (*, '(a, 12x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (12):', pdaf_time_tot(12), 's'
+             WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R and HP (10):', pdaf_time_tot(10), 's'
+             WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Xpert, HXpert, HXbar (30):', pdaf_time_tot(30), 's'
+             WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete HP_p (31):', pdaf_time_tot(31), 's'
+             WRITE (*, '(a, 34x, a, F11.3, 1x, a)') 'PDAF', 'HXY_P (32):', pdaf_time_tot(32), 's'
+             WRITE (*, '(a, 36x, a, F11.3, 1x, a)') 'PDAF', 'HPH (34):', pdaf_time_tot(34), 's'
+             WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Apply localization (45):', pdaf_time_tot(45), 's'
+             WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'init innovation (12):', pdaf_time_tot(12), 's'
           ELSE
              WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'HXpert, var(hx), covars (10):', pdaf_time_tot(10), 's'
-             WRITE (*, '(a, 14x, a, 3x, F11.3, 1x, a)') 'PDAF', 'HXpert, HXbar, var(hx) (30):', pdaf_time_tot(30), 's'
+             WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'HXpert, HXbar, var(hx) (30):', pdaf_time_tot(30), 's'
              WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'covariances X(HX), HX(HX) (31):', pdaf_time_tot(31), 's'
-             WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'Apply localization (45):', pdaf_time_tot(45), 's'
+             WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Apply localization (45):', pdaf_time_tot(45), 's'
           END IF
-          WRITE (*, '(a, 12x, a, 2x, F11.3, 1x, a)') 'PDAF', 'transform obs. ensemble (13):', pdaf_time_tot(13), 's'
-          WRITE (*, '(a, 12x, a, 2x, F11.3, 1x, a)') 'PDAF', 'ensemble transformation (14):', pdaf_time_tot(14), 's'
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'transform obs. ensemble (13):', pdaf_time_tot(13), 's'
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'ensemble transformation (14):', pdaf_time_tot(14), 's'
           IF (dim_lag >0) &
-               WRITE (*, '(a, 12x, a, 8x, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+               WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
 
           ! Generic part
-          WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
        END IF
 
     ELSE IF (printtype == 10) THEN ptype

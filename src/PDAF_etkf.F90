@@ -240,8 +240,8 @@ CONTAINS
        ELSE IF (type_trans == 2) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
        END IF
-       WRITE(*, '(a, 10x, a, l)') &
-            'PDAF', 'param_int(8) observe_ens'
+       WRITE(*, '(a, 10x, a, 1x, l)') &
+            'PDAF', 'param_int(8) observe_ens=', observe_ens
        IF (observe_ens) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
        ELSE

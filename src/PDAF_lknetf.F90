@@ -277,8 +277,8 @@ CONTAINS
        ELSE IF (type_trans == 1) THEN
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
        END IF
-       WRITE(*, '(a, 10x, a, l)') &
-            'PDAF', 'param_int(8) observe_ens'
+       WRITE(*, '(a, 10x, a, 1x, l)') &
+            'PDAF', 'param_int(8) observe_ens=', observe_ens
        IF (observe_ens) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
        ELSE
@@ -705,35 +705,35 @@ write (*,*) 'TYPE_HYB', type_hyb
        ! Generic part
        WRITE (*, '(//a, 23x, a)') 'PDAF', 'PDAF Timing information'
        WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
-       WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
+       WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
           IF (subtype_filter<10) THEN
-             WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+             WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
           ELSE
-             WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
+             WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
           END IF
-          WRITE (*, '(a, 12x, a, 1x, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
           IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
                'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
        END IF
 
        IF (filterpe) THEN
           ! Filter-specific part
-          WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') 'PDAF', 'LKNETF analysis (3):', pdaf_time_tot(3), 's'
-          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
-          WRITE (*, '(a, 12x, a, 8x, F11.3, 1x, a)') 'PDAF', 'compute mean state (9):', pdaf_time_tot(9), 's'
-          WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'global preparations (7):', pdaf_time_tot(7), 's'
-          WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'local analysis loop (8):', pdaf_time_tot(8), 's'
-          WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'global to local (10):', pdaf_time_tot(10), 's'
-          WRITE (*, '(a, 14x, a, 4x, F11.3, 1x, a)') 'PDAF', 'localize observations (11):', pdaf_time_tot(11), 's'
-          WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'local analysis (12):', pdaf_time_tot(12), 's'
-          WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'local to global (14):', pdaf_time_tot(14), 's'
+          WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'LKNETF analysis (3):', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
+          WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'compute mean state (9):', pdaf_time_tot(9), 's'
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'global preparations (7):', pdaf_time_tot(7), 's'
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'local analysis loop (8):', pdaf_time_tot(8), 's'
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'global to local (10):', pdaf_time_tot(10), 's'
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'localize observations (11):', pdaf_time_tot(11), 's'
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'local analysis (12):', pdaf_time_tot(12), 's'
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'local to global (14):', pdaf_time_tot(14), 's'
           IF (dim_lag >0) &
-               WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+               WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
 
 
           ! Generic part B
-          WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
        END IF
 
     ELSE IF (printtype == 10) THEN ptype
