@@ -12,31 +12,31 @@
 !! ADAPTING THE TEMPLATE:
 !! When implementing a filter, the only required changes to this routine
 !! should be
-!! - replace 'GLOBALTEMPLATE' by the name of the new method
-!! - adapt the argument lists in PDAF\_assimilate\_GLOBALTEMPLATE
-!!   and PDAF\_put\_state\_GLOBALTEMPLATE
+!! - replace 'SERIALOBSTEMPLATE' by the name of the new method
+!! - adapt the argument lists in PDAF\_assimilate\_SERIALOBSTEMPLATE
+!!   and PDAF\_put\_state\_SERIALOBSTEMPLATE
 !!
 !! __Revision history:__
-!! * 2024-12 - Lars Nerger - Initial code for template based on ETKF
+!! * 2025-10 - Lars Nerger - Initial code for template based on ENSRF
 !! * Later revisions - see repository log
 !!
-MODULE PDAFassimilate_GLOBALTEMPLATE
+MODULE PDAFassimilate_SERIALOBSTEMPLATE
 
 CONTAINS
 
-!> Interface to PDAF analysis step for online coupling
+!> Interface to PDAF for SERIALOBSTEMPLATE for online coupling
 !!
 !! Interface routine called from the model at each time
 !! step during the forecast of each ensemble state. If
 !! the time of the next analysis step is reached the
 !! forecast state is transferred to PDAF and the analysis
-!! is computed by calling PDAF_put_state_GLOBALTEMPLATE.
+!! is computed by calling PDAF_put_state_SERIALOBSTEMPLATE.
 !! Subsequently, PDAF_get_state is called to initialize
 !! the next forecast phase. 
 !!
-  SUBROUTINE PDAF_assimilate_GLOBALTEMPLATE(U_collect_state, U_distribute_state, &
-       U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
-       U_init_obsvar, U_prepoststep, U_next_observation, outflag)
+  SUBROUTINE PDAF_assimilate_SERIALOBSTEMPLATE(U_collect_state, U_distribute_state, &
+       U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvars, &
+       U_localize_covar_serial, U_prepoststep, U_next_observation, outflag)
 
     USE PDAF_mod_core,   &                 ! Variables for framework functionality
          ONLY: cnt_steps, nsteps, assim_flag, reset_fcst_flag, use_PDAF_assim
@@ -46,8 +46,8 @@ CONTAINS
          ONLY: PDAF_fcst_operations
     USE PDAFget_state, &                   ! Get_state routine for ensemble integration
          ONLY: PDAF_get_state
-    USE PDAFput_state_GLOBALTEMPLATE, &    ! Put_state routine for this DA method
-         ONLY: PDAF_put_state_GLOBALTEMPLATE
+    USE PDAFput_state_SERIALOBSTEMPLATE, & ! Put_state routine for this DA method
+         ONLY: PDAF_put_state_SERIALOBSTEMPLATE
 
     IMPLICIT NONE
 
@@ -59,19 +59,19 @@ CONTAINS
 ! TEMPLATE: The external subroutines depends on the DA method and should be adapted
 
 ! *** External subroutines ***
-! (PDAF-internal names, real names are defined in the call to PDAF)
+!  (PDAF-internal names, real names are defined in the call to PDAF)
     ! Routines for ensemble framework - generic and always needed
-    EXTERNAL :: U_collect_state, & !< Write model fields into state vector
-         U_next_observation, &     !< Provide time step, time and dimension of next observation
-         U_distribute_state, &     !< Write state vector into model fields
-         U_prepoststep             !< User supplied pre/poststep routine
+    EXTERNAL :: U_collect_state, &  !< Write model fields into state vector
+         U_next_observation, &      !< Provide time step, time and dimension of next observation
+         U_distribute_state, &      !< Write state vector into model fields
+         U_prepoststep              !< User supplied pre/poststep routine
     ! Observation-related routines for analysis step - generic and always needed
-    EXTERNAL :: U_init_dim_obs, &  !< Initialize dimension of observation vector
-         U_obs_op, &               !< Observation operator
-         U_init_obs                !< Initialize observation vector
+    EXTERNAL :: U_init_dim_obs, &   !< Initialize dimension of observation vector
+         U_obs_op, &                !< Observation operator
+         U_init_obs                 !< Initialize observation vector
     ! Observation-related routines for analysis step - specific for the DA method
-    EXTERNAL :: U_init_obsvar, &   ! Initialize mean observation error variance
-         U_prodRinvA               !< Provide product R^-1 A
+    EXTERNAL :: U_init_obsvars, &   !< Initialize vector of observation error variances
+         U_localize_covar_serial    !< Apply localization for single-observation vectors
 
 ! TEMPLATE: The local variables are usually generic and don't need changes
 
@@ -105,7 +105,7 @@ CONTAINS
 ! ********************************
 
 ! TEMPLATE: Below the only non-generic part is the call to
-! PDAF_put_state_GLOBALTEMPLATE. Other lines should not be changed.
+! PDAF_put_state_SERIALOBSTEMPLATE. Other lines should not be changed.
 
     IF (cnt_steps == nsteps) THEN
 
@@ -116,8 +116,8 @@ CONTAINS
        ! *** Call analysis step ***
 
 ! TEMPLATE: Specific call for DA method
-       CALL PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_op, &
-            U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, outflag)
+       CALL PDAF_put_state_SERIALOBSTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_op, &
+            U_init_obs, U_init_obsvars, U_localize_covar_serial, U_prepoststep, outflag)
 
        ! *** Prepare start of next ensemble forecast ***
 
@@ -134,7 +134,7 @@ CONTAINS
        outflag = 0
     END IF
 
-  END SUBROUTINE PDAF_assimilate_GLOBALTEMPLATE
+  END SUBROUTINE PDAF_assimilate_SERIALOBSTEMPLATE
 
 
 !-------------------------------------------------------------------------------
@@ -150,22 +150,21 @@ CONTAINS
 !! are specified in the call to PDAF\_assim\_offline\_X
 !! are passed through to the update routine
 !!
-  SUBROUTINE PDAF_assim_offline_GLOBALTEMPLATE(U_init_dim_obs, U_obs_op, &
-       U_init_obs, U_prepoststep, U_prodRinvA, U_init_obsvar, outflag)
+SUBROUTINE PDAF_assim_offline_SERIALOBSTEMPLATE(U_init_dim_obs, U_obs_op,  &
+     U_init_obs, U_init_obsvars, U_localize_covar_serial, U_prepoststep, outflag)
 
     USE PDAF_mod_core,   &                 ! Variables for framework functionality
          ONLY: dim_p, dim_ens, assim_flag, step_obs, &
          subtype_filter, screen, flag, offline_mode, &
-         state, ens, Ainv, &
-         sens, dim_lag, cnt_maxlag
+         state, ens
     USE PDAF_mod_parallel, &               ! Variables for parallelization
          ONLY: mype_world, filterpe
     USE PDAF_utils_filters, &              ! Routine to print configuration
          ONLY: PDAF_configinfo_filters
     USE PDAFobs, &                         ! Variable for number of observations
          ONLY: dim_obs
-    USE PDAF_GLOBALTEMPLATE_update, &      ! Update routine for this DA method
-         ONLY: PDAFGLOBALTEMPLATE_update
+    USE PDAF_SERIALOBSTEMPLATE_update, &   ! Update routine for this DA method
+         ONLY: PDAFSERIALOBSTEMPLATE_update
 
     IMPLICIT NONE
   
@@ -181,8 +180,8 @@ CONTAINS
          U_obs_op, &                 !< Observation operator
          U_init_obs                  !< Initialize observation vector
     ! Observation-related routines for analysis step - specific for the DA method
-    EXTERNAL :: U_init_obsvar, &     ! Initialize mean observation error variance
-         U_prodRinvA                 !< Provide product R^-1 A
+    EXTERNAL :: U_init_obsvars, &    !< Initialize vector of observation error variances
+         U_localize_covar_serial     !< Apply localization for single-observation vectors
 
 ! *** local variables ***
     INTEGER :: i                     ! Counter
@@ -193,7 +192,7 @@ CONTAINS
 ! *********************************************
 
 ! TEMPLATE: Below the only non-generic part is the call to
-! PDAFGLOBALTEMPLATE_update. Other lines should not be changed.
+! PDAFSERIALOBSTEMPLATE_update. Other lines should not be changed.
 
     ! Set flag for assimilation
     assim_flag = 1
@@ -212,11 +211,10 @@ CONTAINS
     offline_mode = .true.
 
     OnFilterPE: IF (filterpe) THEN
-! TEMPLATE: Specific call for DA method
-       CALL PDAFGLOBALTEMPLATE_update(step_obs, dim_p, dim_obs, dim_ens, &
-            state, Ainv, ens, U_init_dim_obs, U_obs_op, &
-            U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, &
-            screen, subtype_filter, dim_lag, sens, cnt_maxlag, flag)
+       CALL  PDAFSERIALOBSTEMPLATE_update(step_obs, dim_p, dim_obs, dim_ens, state, &
+            ens, U_init_dim_obs, U_obs_op, U_init_obs, &
+            U_init_obsvars, U_localize_covar_serial, U_prepoststep, screen, &
+            subtype_filter, flag)
     END IF OnFilterPE
 
 
@@ -226,6 +224,6 @@ CONTAINS
 
     outflag = flag
 
-  END SUBROUTINE PDAF_assim_offline_GLOBALTEMPLATE
+  END SUBROUTINE PDAF_assim_offline_SERIALOBSTEMPLATE
 
-END MODULE PDAFassimilate_GLOBALTEMPLATE
+END MODULE PDAFassimilate_SERIALOBSTEMPLATE

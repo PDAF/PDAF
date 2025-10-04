@@ -39,14 +39,16 @@ CONTAINS
        U_init_dim_obs, U_obs_op, U_init_obs, &
        U_init_n_domains_p, U_init_dim_l, U_g2l_state, U_l2g_state, &
        U_init_dim_obs_l, U_g2l_obs, U_init_obs_l, U_prodRinvA_l, &
-       U_init_obsvar, U_init_obsvar_l, U_next_observation, U_prepoststep, outflag)
+       U_init_obsvar, U_init_obsvar_l, U_prepoststep, U_next_observation, outflag)
 
-    USE PDAF_mod_core, &              ! Variables for framework functionality
+    USE PDAF_mod_core, &                ! Variables for framework functionality
          ONLY: cnt_steps, nsteps, assim_flag, reset_fcst_flag, use_PDAF_assim
-    USE PDAF_mod_parallel, &          ! Variables for parallelization
+    USE PDAF_mod_parallel, &            ! Variables for parallelization
          ONLY: mype_world
-    USE PDAF_forecast, &              ! Routine for operations during forecast phase
+    USE PDAF_forecast, &                ! Routine for operations during forecast phase
          ONLY: PDAF_fcst_operations
+    USE PDAFget_state, &                ! Get_state routine for ensemble integration
+         ONLY: PDAF_get_state
     USE PDAFput_state_LOCALTEMPLATE, &  ! Put_state routine
          ONLY: PDAF_put_state_LOCALTEMPLATE
 
@@ -166,13 +168,6 @@ CONTAINS
 !! are specified in the call to PDAF\_assim\_offline\_X
 !! are passed through to the update routine
 !!
-!! !  This is a core routine of PDAF and
-!!    should not be changed by the user   !
-!!
-!! __Revision history:__
-!! * 2025-04 - Lars Nerger - Initial code based on put_state routine
-!! * Other revisions - see repository log
-!!
   SUBROUTINE PDAF_assim_offline_LOCALTEMPLATE(U_init_dim_obs, U_obs_op, &
        U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_init_n_domains_p, &
        U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
@@ -219,7 +214,7 @@ CONTAINS
          U_l2g_state                   !< Init full state from state on local analysis domain
 
 ! *** local variables ***
-    INTEGER :: i                     ! Counter
+    INTEGER :: i                       ! Counter
 
 
 ! *********************************************
@@ -243,7 +238,7 @@ CONTAINS
     ENDIF
 
     ! Set flag for offline mode
-    offline_mode = 1
+    offline_mode = .true.
 
     OnFilterPE: IF (filterpe) THEN
 ! TEMPLATE: Specific call for DA method

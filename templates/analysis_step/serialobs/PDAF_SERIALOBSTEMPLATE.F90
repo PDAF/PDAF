@@ -1,7 +1,7 @@
-!> Module for GLOBALTEMPLATE holding shared parameters and helper routines
+!> Module for SERIALOBSTEMPLATE holding shared parameters and some helper routines
 !!
 !! This module declares the parameters that are used in the
-!! DA method GLOBALTEMPLATE. 
+!! DA method SERIALOBSTEMPLATE. 
 !!
 !! Parameters that are specific for the DA method are declared while some
 !! other parameters are use-included from PDAF_mod_core. This allows
@@ -15,18 +15,18 @@
 !! available parameters and functionality.
 !!
 !! __Revision history:__
-!! * 2025-02 - Lars Nerger - Initial template code based on ETKF
+!! * 2025-10 - Lars Nerger - Initial template code based on ENSRF
 !! *  Other revisions - see repository log
 !!
-MODULE PDAF_GLOBALTEMPLATE
+MODULE PDAF_SERIALOBSTEMPLATE
 
   USE PDAF_mod_core, &            ! Variables for framework functionality
        ONLY: localfilter, covarloc, debug, dim_lag
 
   IMPLICIT NONE
 
-! +++ TEMPLATE:
-! +++ Declare here parameters or variables that are specific for the DA method.
+! TEMPLATE:
+! Declare here parameters or variables that are specific for the DA method.
 
 ! *** Integer parameters ***
 ! TEMPLATE: We use the name 'forget' for the inflation parameter for the 'forgetting factor'
@@ -34,9 +34,6 @@ MODULE PDAF_GLOBALTEMPLATE
   INTEGER :: type_forget=0 !< Type of forgetting factor
                            !< (0): fixed
   INTEGER :: type_trans=0  !< Type of ensemble transformation
-                           !< (0) use deterministic Omega
-                           !< (2) use product of (0) with random orthonomal matrix with
-                           !<     eigenvector (1,...,1)^T
 
 ! *** Real parameters ***
   REAL    :: forget=1.0    !< Forgetting factor
@@ -46,13 +43,13 @@ MODULE PDAF_GLOBALTEMPLATE
   
 CONTAINS
 
-!>  PDAF-internal initialization of GLOBALTEMPLATE
+!>  PDAF-internal initialization of SERIALOBSTEMPLATE
 !!
 !! Initialization of the DA method within PDAF. Performed are:
 !! * initialize filter-specific parameters
 !! * print screen information on filter configuration.
 !!
-  SUBROUTINE PDAF_GLOBALTEMPLATE_init(subtype, param_int, dim_pint, &
+  SUBROUTINE PDAF_SERIALOBSTEMPLATE_init(subtype, param_int, dim_pint, &
        param_real, dim_preal, ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAFobs, &
@@ -82,7 +79,7 @@ CONTAINS
 ! TEMPLATE: Adapt to include the name of the DA-method and perhaps a reference
     IF (verbose > 0) THEN
        WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                GLOBALTEMPLATE                   +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++              SERIALOBSTEMPLATE                  +++'
        WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
        WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
        WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
@@ -103,10 +100,10 @@ CONTAINS
     ! Parse provided parameters
 ! TEMPLATE: This loop has to start with 3 because dim_p and dim_ens are set in PDAF before 
     DO i=3, dim_pint
-       CALL PDAF_GLOBALTEMPLATE_set_iparam(i, param_int(i), outflag)
+       CALL PDAF_SERIALOBSTEMPLATE_set_iparam(i, param_int(i), outflag)
     END DO
     DO i=1, dim_preal
-       CALL PDAF_GLOBALTEMPLATE_set_rparam(i, param_real(i), outflag)
+       CALL PDAF_SERIALOBSTEMPLATE_set_rparam(i, param_real(i), outflag)
     END DO
 
 ! TEMPLATE: Here one can also add special conditions, for example
@@ -115,11 +112,13 @@ CONTAINS
     ! Define whether filter is mode-based or ensemble-based
     ensemblefilter = .TRUE.
 
-    ! Define whether filter is a domain-local filter
-    localfilter = 0  ! default=0
+    ! Define whether filter is a domain-local filter; this determines how observations are handled
+    ! (Filters with serial observatio processing are generally not domain-local, but we need the
+    ! OMI parallelization for domain-local filters.)
+    localfilter = 1  ! default=0
 
     ! Define whether the filter uses covariance localization
-    covarloc = 0     ! default=0
+    covarloc = 1     ! default=0
 
     ! Initialize flag for EnOI (fixed-basis filters)
     IF (subtype == 10 .OR. subtype == 11) THEN
@@ -139,13 +138,13 @@ CONTAINS
        outflag = 3
     END IF
 
-  END SUBROUTINE PDAF_GLOBALTEMPLATE_init
+  END SUBROUTINE PDAF_SERIALOBSTEMPLATE_init
 
 
 !-------------------------------------------------------------------------------
-!> Perform allocation of arrays for GLOBALTEMPLATE.
+!> Perform allocation of arrays for SERIALOBSTEMPLATE.
 !!
-  SUBROUTINE PDAF_GLOBALTEMPLATE_alloc(outflag)
+  SUBROUTINE PDAF_SERIALOBSTEMPLATE_alloc(outflag)
 
     USE PDAF_mod_core, &
          ONLY: dim_ens, dim_p
@@ -173,13 +172,13 @@ CONTAINS
 
     CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, do_alloc_statetask, outflag)
 
-  END SUBROUTINE PDAF_GLOBALTEMPLATE_alloc
+  END SUBROUTINE PDAF_SERIALOBSTEMPLATE_alloc
 
 
 !-------------------------------------------------------------------------------
-!>  Print information on configuration of GLOBALTEMPLATE
+!>  Print information on configuration of SERIALOBSTEMPLATE
 !!
-  SUBROUTINE PDAF_GLOBALTEMPLATE_config(subtype, verbose)
+  SUBROUTINE PDAF_SERIALOBSTEMPLATE_config(subtype, verbose)
 
     USE PDAF_mod_core, &
          ONLY: dim_ens, dim_lag
@@ -201,7 +200,7 @@ CONTAINS
 
     writeout: IF (verbose > 0) THEN
 
-       WRITE (*, '(/a, 4x, a)') 'PDAF', 'GLOBALTEMPLATE configuration'
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'SERIALOBSTEMPLATE configuration'
 ! TEMPLATE: Output on dim_ens should be generic
        WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
        WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
@@ -219,9 +218,9 @@ CONTAINS
 ! TEMPLATE: Adapt types of supported forgetting factors for inflation
        IF (type_forget == 0) THEN
           WRITE (*, '(a, 12x, a, f5.2)') 'PDAF' ,'--> Use fixed forgetting factor:', forget
-       ELSEIF (type_forget == 1) THEN
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
-       ENDIF
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(5) type_forget=', type_forget
 ! TEMPLATE: Adapt if ensemble transformation types are used
        WRITE(*, '(a, 10x, a, i3)') &
             'PDAF', 'param_int(6) type_trans=', type_trans
@@ -251,13 +250,13 @@ CONTAINS
 
     END IF writeout
 
-  END SUBROUTINE PDAF_GLOBALTEMPLATE_config
+  END SUBROUTINE PDAF_SERIALOBSTEMPLATE_config
 
 
 !-------------------------------------------------------------------------------
-!> Set integer parameter specific for GLOBALTEMPLATE
+!> Set integer parameter specific for SERIALOBSTEMPLATE
 !!
-  SUBROUTINE PDAF_GLOBALTEMPLATE_set_iparam(id, value, flag)
+  SUBROUTINE PDAF_SERIALOBSTEMPLATE_set_iparam(id, value, flag)
 
     USE PDAFobs, &
          ONLY: type_obs_init, observe_ens
@@ -306,7 +305,7 @@ CONTAINS
     CASE(5)
 ! TEAMPLATE: This can be removed if there are no choices of different inflation methods
        type_forget = value
-       IF (type_forget<0 .OR. type_forget>0) THEN
+       IF (type_forget<0 .OR. type_forget>2) THEN
           WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor - param_int(5)!'
           flag = 8
        END IF
@@ -342,13 +341,13 @@ CONTAINS
             'PDAF-WARNING: Invalid integer parameter index', id
     END SELECT
 
-  END SUBROUTINE PDAF_GLOBALTEMPLATE_set_iparam
+  END SUBROUTINE PDAF_SERIALOBSTEMPLATE_set_iparam
 
 
 !-------------------------------------------------------------------------------
-!> Set real parameter specific for GLOBALTEMPLATE
+!> Set floating point parameter specific for SERIALOBSTEMPLATE
 !!
-  SUBROUTINE PDAF_GLOBALTEMPLATE_set_rparam(id, value, flag)
+  SUBROUTINE PDAF_SERIALOBSTEMPLATE_set_rparam(id, value, flag)
 
     IMPLICIT NONE
 
@@ -383,15 +382,15 @@ CONTAINS
             'PDAF-WARNING: Invalid real parameter index', id
     END SELECT
 
-  END SUBROUTINE PDAF_GLOBALTEMPLATE_set_rparam
+  END SUBROUTINE PDAF_SERIALOBSTEMPLATE_set_rparam
 
 !-------------------------------------------------------------------------------
-!> Information output on options for GLOBALTEMPLATE
+!> Information output on options for SERIALOBSTEMPLATE
 !!
 !! Subroutine to perform information output on options
-!! available for the GLOBALTEMPLATE filter.
+!! available for the SERIALOBSTEMPLATE filter.
 !!
-  SUBROUTINE PDAF_GLOBALTEMPLATE_options()
+  SUBROUTINE PDAF_SERIALOBSTEMPLATE_options()
 
     IMPLICIT NONE
 
@@ -401,7 +400,7 @@ CONTAINS
 
 ! TEMPLATE: Adapt to include the name of the DA-method and perhaps a reference
     WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-    WRITE(*, '(a, 4x, a)')  'PDAF', '+++                GLOBALTEMPLATE                   +++'
+    WRITE(*, '(a, 4x, a)')  'PDAF', '+++              SERIALOBSTEMPLATE                  +++'
     WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
     WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
     WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
@@ -409,7 +408,7 @@ CONTAINS
 
 ! TEMPLATE: Adapt output according to features and options of the DA-method
 
-    WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for GLOBALTEMPLATE:'
+    WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for SERIALOBSTEMPLATE:'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: default sub-type'
@@ -428,16 +427,12 @@ CONTAINS
 !     WRITE(*, '(a, 12x, a)') 'PDAF', '0: no smoothing (default)'
 !     WRITE(*, '(a, 12x, a)') 'PDAF', '>0: apply smoother up to specified lag'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): not used'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5) type_forget'
-    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '0: fixed forgetting factor (default)'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '1: adaptive forgetting factor'
-! TEMPLATE: Adapt depending on whether ensemble transofrmation types are used
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(6) type_trans'
-    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble transformation matrix; optional'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '0: deterministic transformation (default)'
-    WRITE(*, '(a, 12x, a)') &
-         'PDAF', '2: use product of 0 with random orthonomal matrix with eigenvector (1,...,1)^T'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): not used'
+! TEMPLATE: Include this if the DA-method supports different inflation types
+!     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5) type_forget'
+!     WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
+!     WRITE(*, '(a, 12x, a)') 'PDAF', '0: fixed forgetting factor (default)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(6): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(7): not used'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(8): observe_ens'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
@@ -467,18 +462,18 @@ CONTAINS
     WRITE(*, '(a, 11x, a)') 'PDAF', '3: 2 plus debug output'
 
     WRITE(*, '(a, 5x, a)') &
-         'PDAF', '+++++++++ End of option overview for the GLOBALTEMPLATE ++++++++++'
+         'PDAF', '+++++++++ End of option overview for the SERIALOBSTEMPLATE ++++++++++'
 
-  END SUBROUTINE PDAF_GLOBALTEMPLATE_options
+  END SUBROUTINE PDAF_SERIALOBSTEMPLATE_options
 
 
 !-------------------------------------------------------------------------------
-!> Display timing and memory information for GLOBALTEMPLATE
+!> Display timing and memory information for SERIALOBSTEMPLATE
 !!
 !! This routine displays the PDAF-internal timing and
-!! memory information for the GLOBALTEMPLATE.
+!! memory information for the SERIALOBSTEMPLATE.
 !!
-  SUBROUTINE PDAF_GLOBALTEMPLATE_memtime(printtype)
+  SUBROUTINE PDAF_SERIALOBSTEMPLATE_memtime(printtype)
 
     USE PDAF_timer, &
          ONLY: PDAF_time_tot
@@ -520,19 +515,15 @@ CONTAINS
        WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
             'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<10) THEN
-             WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
-          ELSE
-             WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
-          END IF
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
        END IF
 
        IF (filterpe) THEN
           ! Filter-specific part
-          WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'GLOBALTEMPLATE analysis:', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'SERIALOBSTEMPLATE analysis:', pdaf_time_tot(3), 's'
 
-          ! Generic part B
-          WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep:', pdaf_time_tot(5), 's'
+          ! Generic part
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep:', pdaf_time_tot(5), 's'
        END IF
 
     ELSE IF (printtype == 2) THEN ptype
@@ -558,11 +549,7 @@ CONTAINS
        WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
        WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
        IF (.not.offline_mode) THEN
-          IF (subtype_filter<10) THEN
-             WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
-          ELSE
-             WRITE (*, '(a, 10x, a, 17x, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
-          END IF
+          WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
           WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF:', pdaf_time_tot(4), 's'
           WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'distribute_state_pdaf:', pdaf_time_tot(40), 's'
           WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'collect_state_pdaf:', pdaf_time_tot(41), 's'
@@ -573,38 +560,31 @@ CONTAINS
 ! TEMPLATE: This part likely need adaptions according to the filter
        IF (filterpe) THEN
           ! Filter-specific part
-          WRITE (*, '(a, 10x, a, 17x, F11.3, 1x, a)') 'PDAF', 'GLOBALTEMPLATE analysis:', pdaf_time_tot(3), 's'
-          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
+          WRITE (*, '(a, 10x, a, 18x, F11.3, 1x, a)') 'PDAF', 'SERIALOBSTEMPLATE analysis:', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
 
           IF(omi_was_used) THEN
              ! Output when using OMI
 
 ! TEMPLATE: time_omi collects the timings for OMI-internal operations (see out-commented lines below)
-             time_omi = pdaf_time_tot(50) + pdaf_time_tot(48)
-             IF (type_forget==1) &
-                  time_omi = time_omi + pdaf_time_tot(49) 
-             WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
+             time_omi = pdaf_time_tot(50) + pdaf_time_tot(49)
+             WRITE (*, '(a, 12x, a, 10x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
                   time_omi, 's'
              WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
-             WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
-             WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
+             WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
+             WRITE (*, '(a, 14x, a, 15x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
+             WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'localize_covar_serial_pdafomi:', pdaf_time_tot(45), 's'
 
 !            WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'Time in OMI-internal routines'
 !            WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs:', pdaf_time_tot(50), 's'
-!            IF (type_forget==1) THEN
-!               WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvar:', pdaf_time_tot(49), 's'
-!            END IF
-!            WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_prodRinvA:', pdaf_time_tot(48), 's'
+!            WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvars_f_cb (49):', pdaf_time_tot(49), 's'
           ELSE
              ! Output when NOT using OMI
-
-             WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
-             WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
-             WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_obs_pdaf:', pdaf_time_tot(50), 's'
-             IF (type_forget==1) THEN
-                WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_pdaf:', pdaf_time_tot(49), 's'
-             END IF
-             WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_pdaf:', pdaf_time_tot(48), 's'
+             WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
+             WRITE (*, '(a, 12x, a, 20x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
+             WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'init_obs_pdaf:', pdaf_time_tot(50), 's'
+             WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'init_obsvars_pdaf:', pdaf_time_tot(49), 's'
+             WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'localize_covar_serial_pdaf:', pdaf_time_tot(45), 's'
           END IF
 
           ! Generic part B
@@ -625,7 +605,7 @@ CONTAINS
        ! Generic part
        WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
        WRITE (*, '(a, 10x, 51a)') 'PDAF', ('-', i=1, 51)
-       WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
+       WRITE (*, '(a, 21x, a, 11x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
        IF (.not.offline_mode) THEN
           IF (subtype_filter<10) THEN
              WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
@@ -642,14 +622,17 @@ CONTAINS
 
        IF (filterpe) THEN
           ! Filter-specific part
-          WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'GLOBALTEMPLATE analysis (3):', pdaf_time_tot(3), 's'    ! Generic
-          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'             ! Generic (if mean state is used)
+          WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'SERIALOBSTEMPLATE analysis (3):', pdaf_time_tot(3), 's'    ! Generic
           WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'       ! Generic
-          WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'init innovation (10):', pdaf_time_tot(10), 's'          ! Used in many methods
-          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Ainv (11):', pdaf_time_tot(11), 's'             ! Specific for DA method
-          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'  ! Specific for DA method
-          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'compute ensemble weights (20):', pdaf_time_tot(20), 's' ! Specific for DA method
-          WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'update ensemble (21):', pdaf_time_tot(21), 's'          ! Specific for DA method
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'             ! Generic (if mean state is used)
+
+! TEMPLATE the following timers are specific to the DA method. Here we include this for the EAKF
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'HXpert, var(hx), covars (10):', pdaf_time_tot(10), 's'
+          WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'HXpert, HXbar, var(hx) (30):', pdaf_time_tot(30), 's'
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'covariances X(HX), HX(HX) (31):', pdaf_time_tot(31), 's'
+          WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Apply localization (45):', pdaf_time_tot(45), 's'
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'transform obs. ensemble (13):', pdaf_time_tot(13), 's'
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'ensemble transformation (14):', pdaf_time_tot(14), 's'
           IF (dim_lag >0) &
                WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'   ! If smoother is supported
 
@@ -708,6 +691,6 @@ CONTAINS
 
     END IF ptype
 
-  END SUBROUTINE PDAF_GLOBALTEMPLATE_memtime
+  END SUBROUTINE PDAF_SERIALOBSTEMPLATE_memtime
 
-END MODULE PDAF_GLOBALTEMPLATE
+END MODULE PDAF_SERIALOBSTEMPLATE

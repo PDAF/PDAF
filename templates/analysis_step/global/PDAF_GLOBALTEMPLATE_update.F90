@@ -8,11 +8,8 @@
 !! the resampling to allow the user to access the ensemble
 !! information.
 !!
-!! !  This is a core routine of PDAF and
-!!    should not be changed by the user   !
-!!
 !! __Revision history:__
-!! * 2009-07 - Lars Nerger - Initial code
+!! * 2025-02 - Lars Nerger - Initial template code based on ETKF
 !! * Later revisions - see repository log
 !!
 MODULE PDAF_GLOBALTEMPLATE_update

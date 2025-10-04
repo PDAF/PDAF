@@ -40,9 +40,9 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(in) :: step         !< Current time step
     INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
-    INTEGER, INTENT(in ) :: dim_obs_p   !< PE-local dimension of observation vector
+    INTEGER, INTENT(in) :: dim_obs_p    !< PE-local dimension of observation vector
     INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
-    REAL, INTENT(out)   :: state_p(dim_p)           !< on exit: PE-local forecast state
+    REAL, INTENT(inout) :: state_p(dim_p)           !< on exit: PE-local forecast state
     REAL, INTENT(out)   :: Ainv(dim_ens, dim_ens)   !< on exit: weight matrix for ensemble transformation
     REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
     REAL, INTENT(inout) :: HZ_p(dim_obs_p, dim_ens) !< PE-local observed ensemble

@@ -61,7 +61,7 @@ CONTAINS
          ONLY: PDAFLOCALTEMPLATE_update
 
     IMPLICIT NONE
-  
+
 ! TEMPLATE: 'outflag' is standard and should be kept
 
 ! *** Arguments ***
@@ -105,7 +105,7 @@ CONTAINS
 
 ! TEMPLATE: PDAF uses subtype_filter 10 and 11 for EnOI modes in which only the
 !   state is integrated, but not the full ensemble. This is generic as long as
-!   subtype_filter 10 and 11 aare used in this way/
+!   subtype_filter 10 and 11 are used in this way.
     doevol: IF (nsteps > 0 .OR. .NOT.offline_mode) THEN
 
        CALL PDAF_timeit(41, 'new')
