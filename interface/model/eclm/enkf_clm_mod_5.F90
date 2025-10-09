@@ -625,6 +625,18 @@ module enkf_clm_mod
                 end if
 
                 if (clmstatevec_colmean==1) then
+                  ! If there is no significant increment, do not
+                  ! implement any update / check.
+                  !
+                  ! Note: Computing the absolute difference here,
+                  ! because the whole state vector should be soil
+                  ! moistures. For variables with very small values in
+                  ! the state vector, this would have to be adapted
+                  ! (e.g. to relative difference).
+                  if( abs(clm_statevec(state_clm2pdaf_p(j,i)) - clm_statevec_orig(state_clm2pdaf_p(j,i))) <= 1.0e-7) then
+                    cycle
+                  end if
+
                   ! Update SWC column value with the increment-factor
                   ! of the state vector update (state vector updates
                   ! are means of cols in grc)
