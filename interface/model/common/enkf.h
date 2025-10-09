@@ -96,6 +96,7 @@ GLOBAL int clmstatevec_only_active;
 GLOBAL int clmstatevec_max_layer;
 GLOBAL int clmt_printensemble;
 GLOBAL int clmwatmin_switch;
+GLOBAL int clmswc_mask_snow;
 GLOBAL int dtmult_cosmo;
 GLOBAL int pf_olfmasking;
 GLOBAL int pf_olfmasking_param;

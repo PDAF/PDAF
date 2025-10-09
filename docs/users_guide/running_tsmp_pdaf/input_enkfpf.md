@@ -62,6 +62,7 @@ statevec_only_active =
 statevec_max_layer =
 t_printensemble =
 watmin_switch =
+swc_mask_snow =
 
 [COSMO]
 nprocs      =
@@ -584,6 +585,17 @@ are allowed.
 - `5`: CLM5.0 values: Check if SM in state vector is less than
   CLM5.0's `watmin` from `clm_varcon.F90` (current value `0.01`). If
   yes, set SM to `watmin`.
+
+### CLM:swc_mask_snow ###
+
+`CLM:swc_mask_snow`: (integer) Switch for masking columns with snow
+cover from SWC updates.
+
+Snow covers larger than 1mm are switched off for the update.
+
+Only takes effect if `CLM:update_swc``is switched on.
+
+Default setting is `0`: No masking of columns with snow cover.
 
 (enkfpf:cosmo)=
 ## [COSMO] ##

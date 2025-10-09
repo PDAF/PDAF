@@ -63,6 +63,7 @@ module enkf_clm_mod
   integer(c_int),bind(C,name="clmstatevec_max_layer")  :: clmstatevec_max_layer
   integer(c_int),bind(C,name="clmt_printensemble")       :: clmt_printensemble
   integer(c_int),bind(C,name="clmwatmin_switch")         :: clmwatmin_switch
+  integer(c_int),bind(C,name="clmswc_mask_snow")            :: clmswc_mask_snow
   real(c_double),bind(C,name="clmcrns_bd")      :: clmcrns_bd
 
   integer  :: nstep     ! time step index
@@ -502,6 +503,7 @@ module enkf_clm_mod
     real(r8), pointer :: dz(:,:)          ! layer thickness depth (m)
     real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
     real(r8), pointer :: h2osoi_ice(:,:)
+    real(r8), pointer :: snow_depth(:)
     real(r8)  :: rliq,rice
     real(r8)  :: watmin_check      ! minimum soil moisture for checking clm_statevec (mm)
     real(r8)  :: watmin_set        ! minimum soil moisture for setting swc (mm)
@@ -538,6 +540,8 @@ module enkf_clm_mod
     psand => soilstate_inst%cellsand_col
     pclay => soilstate_inst%cellclay_col
     porgm => soilstate_inst%cellorg_col
+
+    snow_depth => waterstate_inst%snow_depth_col ! snow height of snow covered area (m)
 
     dz            => col%dz
     h2osoi_liq    => waterstate_inst%h2osoi_liq_col
@@ -599,6 +603,8 @@ module enkf_clm_mod
           ! do j=clm_begg,clm_endg
             do j=clm_begc,clm_endc
 
+              ! If snow is masked, update only, when snow depth is less than 1mm
+              if( (.not. clmswc_mask_snow) .or. snow_depth(j) < 0.001 ) then
               ! Update only those SWCs that are not excluded by ispval
               if(state_clm2pdaf_p(j,i) /= ispval) then
 
@@ -662,6 +668,7 @@ module enkf_clm_mod
                   h2osoi_ice(j,i) = swc(j,i) * dz(j,i)*denice*rice
                 end if
 
+              end if
               end if
               ! cc = cc + 1
             end do
