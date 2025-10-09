@@ -37,22 +37,22 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 !
 ! The routine is called in PDAF\_lseik\_update
 ! before the loop over all local analysis domains
-! is entered. It has to provide the full observation 
-! vector according to current time step (where 'full' 
-! means 'all observations required for the localized 
-! analysis on the PE-local domain).  This routine 
-! is only used for LSEIK if a globally adaptive 
-! forgetting factor is requested, rather than an 
-! individual forgetting factor for each analysis 
-! domain. This routine has to be implemented 
-! consistently with the routines for the full 
-! observation dimension and the full observation 
-! operator. The forgetting factor will only be 
-! globally adaptive, if the full observation vector 
+! is entered. It has to provide the full observation
+! vector according to current time step (where 'full'
+! means 'all observations required for the localized
+! analysis on the PE-local domain).  This routine
+! is only used for LSEIK if a globally adaptive
+! forgetting factor is requested, rather than an
+! individual forgetting factor for each analysis
+! domain. This routine has to be implemented
+! consistently with the routines for the full
+! observation dimension and the full observation
+! operator. The forgetting factor will only be
+! globally adaptive, if the full observation vector
 ! is the global observation vector.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code 
+! 2013-02 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -76,7 +76,7 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 ! ******************************************
 ! *** Initialize full observation vector ***
 ! ******************************************
-  
+
   observation_f = obs
 
 END SUBROUTINE init_obs_f_pdaf

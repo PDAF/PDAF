@@ -35,8 +35,8 @@ SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 ! User-supplied routine for PDAF.
 ! Used in the filters: SEIK/EnKF/ETKF/ESTKF
 !
-! The routine is called during the analysis step. 
-! It has to provide the PE-local observation vector 
+! The routine is called during the analysis step.
+! It has to provide the PE-local observation vector
 ! for the current time step.
 !
 ! !REVISION HISTORY:
@@ -65,7 +65,7 @@ SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 ! ***************************************************************
 ! *** Initialize observation vector for PE-local model domain ***
 ! ***************************************************************
-  
+
   observation_p = obs_p
 
 END SUBROUTINE init_obs_pdaf

@@ -31,10 +31,10 @@ MODULE parser
 
 ! !DESCRIPTION:
 ! This module provides routine to parse command line
-! arguments of different types. This version is for 
+! arguments of different types. This version is for
 ! use with MPI parallelization.
-! By default, this routine uses the intrinsics 
-! 'get\_command\_count' and 'get\_command\_argument' 
+! By default, this routine uses the intrinsics
+! 'get\_command\_count' and 'get\_command\_argument'
 ! that are define by the Fortran 2003 standard.
 ! If a compiler does not support these functions, you
 ! can use '-DF77' as a definition for the preprocessor.
@@ -47,33 +47,33 @@ MODULE parser
 !
 ! Usage:                      \begin{verbatim}
 ! SUBROUTINE PARSE(char(len=32) handle, variable)
-!   The string 'handle' determines the name of    
-!   the parsed variable.                          
-!   Example: handle='iters' parses a variable     
-!            specified on the command line by     
+!   The string 'handle' determines the name of
+!   the parsed variable.
+!   Example: handle='iters' parses a variable
+!            specified on the command line by
 !            '-iters value'
-!                                                 
-!    Usage:                                       
-!    CALL PARSE(handle, int_variable)             
-!         Parses a variable of type integer       
-!         whose name is given by the string       
-!         handle.                                 
-!                                                 
-!    CALL PARSE(handle, real_variable)            
-!         Parses a variable of type real          
-!         whose name is given by the string       
-!         handle.                                 
-!                                                 
-!    CALL PARSE(handle, character_variable)       
-!         Parses a string variable of maxmimal    
-!         length of 100 characters whose name is  
-!         given by the string handle.             
-!                                                 
-!    CALL PARSE(handle, logical_variable)         
-!         Parses a variable of type logical       
-!         whose name is given by the string       
-!         handle. In the command line it has      
-!         to be specified as 'T' or 'F'.          
+!
+!    Usage:
+!    CALL PARSE(handle, int_variable)
+!         Parses a variable of type integer
+!         whose name is given by the string
+!         handle.
+!
+!    CALL PARSE(handle, real_variable)
+!         Parses a variable of type real
+!         whose name is given by the string
+!         handle.
+!
+!    CALL PARSE(handle, character_variable)
+!         Parses a string variable of maxmimal
+!         length of 100 characters whose name is
+!         given by the string handle.
+!
+!    CALL PARSE(handle, logical_variable)
+!         Parses a variable of type logical
+!         whose name is given by the string
+!         handle. In the command line it has
+!         to be specified as 'T' or 'F'.
 !                               \end{verbatim}
 !
 ! !REVISION HISTORY:
@@ -81,7 +81,7 @@ MODULE parser
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
+  USE mpi, ONLY: MPI_Comm_Rank, MPI_COMM_WORLD
   USE mod_parallel_pdaf, &
     ONLY: abort_parallel
   IMPLICIT NONE
@@ -93,8 +93,8 @@ MODULE parser
 !EOP
 
   PRIVATE
-  CHARACTER(len=100) :: str1, str2 
-  INTEGER :: i   
+  CHARACTER(len=100) :: str1, str2
+  INTEGER :: i
   INTEGER :: mype, MPIerr
 !   INTEGER,EXTERNAL :: iargc
 
@@ -113,7 +113,7 @@ CONTAINS
 ! *** Parse an integer value ***
 ! ******************************
 
-! *** subroutine arguments ***    
+! *** subroutine arguments ***
     CHARACTER(len=32), INTENT(in) :: handle
     INTEGER,INTENT(inout) :: intvalue
 
@@ -127,26 +127,32 @@ CONTAINS
 
     string = '-' // TRIM(handle)
     modified = .FALSE.
-    
+
 ! *** Parsing ***
 #ifdef F77
     write (*,*) 'PARSE for F77!!!!!!!!!!!!!!!'
-    IF (iargc() > 0) THEN 
-       DO i = 1, iargc() - 1 
-          CALL getarg(i, str1) 
-          CALL getarg(i + 1, str2) 
-#else
-    IF (command_argument_count() > 0) THEN 
-       DO i = 1, command_argument_count() - 1 
-          CALL get_command_argument(i, str1)
-          CALL get_command_argument(i+1, str2)
-#endif
+    IF (iargc() > 0) THEN
+       DO i = 1, iargc() - 1
+          CALL getarg(i, str1)
+          CALL getarg(i + 1, str2)
           IF (str1 == TRIM(string)) THEN
              READ(str2, *) parsed_int
              modified = .TRUE.
           END IF
        ENDDO
     ENDIF
+#else
+    IF (command_argument_count() > 0) THEN
+       DO i = 1, command_argument_count() - 1
+          CALL get_command_argument(i, str1)
+          CALL get_command_argument(i+1, str2)
+          IF (str1 == TRIM(string)) THEN
+             READ(str2, *) parsed_int
+             modified = .TRUE.
+          END IF
+       ENDDO
+    ENDIF
+#endif
 
 ! *** Finalize ***
     IF (modified) THEN
@@ -162,7 +168,7 @@ CONTAINS
 ! *** Parse a real value ***
 ! **************************
 
-! *** function arguments ***    
+! *** function arguments ***
     CHARACTER(len=32), INTENT(in) :: handle
     REAL, INTENT(inout) :: realvalue
 
@@ -179,22 +185,28 @@ CONTAINS
 
 ! *** Parsing ***
 #ifdef F77
-    IF (iargc() > 0) THEN 
-       DO i = 1, iargc() - 1 
-          CALL getarg(i, str1) 
-          CALL getarg(i + 1, str2) 
-#else
-    IF (command_argument_count() > 0) THEN 
-       DO i = 1, command_argument_count() - 1 
-          CALL get_command_argument(i, str1)
-          CALL get_command_argument(i+1, str2)
-#endif
+    IF (iargc() > 0) THEN
+       DO i = 1, iargc() - 1
+          CALL getarg(i, str1)
+          CALL getarg(i + 1, str2)
           IF (str1 == TRIM(string)) THEN
              READ(str2, *) parsed_real
              modified = .TRUE.
           END IF
        ENDDO
     ENDIF
+#else
+    IF (command_argument_count() > 0) THEN
+       DO i = 1, command_argument_count() - 1
+          CALL get_command_argument(i, str1)
+          CALL get_command_argument(i+1, str2)
+          IF (str1 == TRIM(string)) THEN
+             READ(str2, *) parsed_real
+             modified = .TRUE.
+          END IF
+       ENDDO
+    ENDIF
+#endif
 
 ! *** Finalize ***
     IF (modified) THEN
@@ -210,7 +222,7 @@ CONTAINS
 ! *** Parse a string ***
 ! **********************
 
-! *** function arguments ***    
+! *** function arguments ***
     CHARACTER(len=32), INTENT(in) :: handle
     CHARACTER(len=*), INTENT(inout) :: charvalue
 
@@ -226,16 +238,24 @@ CONTAINS
 
     string = '-' // TRIM(handle)
     modified = .FALSE.
-    
+
 ! *** Parsing ***
 #ifdef F77
-    IF (iargc() > 0) THEN 
-       DO i = 1, iargc() - 1 
-          CALL getarg(i, str1) 
-          CALL getarg(i + 1, str2) 
+    IF (iargc() > 0) THEN
+       DO i = 1, iargc() - 1
+          CALL getarg(i, str1)
+          CALL getarg(i + 1, str2)
+          IF (str1 == TRIM(string)) THEN
+             ! Format specifier is needed for reading paths.  Using
+             ! `*` as format specifier, reading stops at a `/`
+             READ(str2, '(a)') parsed_string
+             modified = .TRUE.
+          END IF
+       ENDDO
+    ENDIF
 #else
-    IF (command_argument_count() > 0) THEN 
-       DO i = 1, command_argument_count() - 1 
+    IF (command_argument_count() > 0) THEN
+       DO i = 1, command_argument_count() - 1
           CALL get_command_argument(i, str1)
           CALL get_command_argument(i+1, str2)
 
@@ -254,7 +274,6 @@ CONTAINS
           END IF
 
 
-#endif
           IF (str1 == TRIM(string)) THEN
              ! Format specifier is needed for reading paths.  Using
              ! `*` as format specifier, reading stops at a `/`
@@ -263,6 +282,7 @@ CONTAINS
           END IF
        ENDDO
     ENDIF
+#endif
 
 ! *** Finalize ***
     IF (modified) THEN
@@ -278,7 +298,7 @@ CONTAINS
 ! *** Parse an logical value ***
 ! ******************************
 
-! *** subroutine arguments ***    
+! *** subroutine arguments ***
     CHARACTER(len=32), INTENT(in) :: handle
     LOGICAL, INTENT(inout) :: logvalue
 
@@ -292,25 +312,31 @@ CONTAINS
 
     string = '-' // TRIM(handle)
     modified = .FALSE.
-    
+
 ! *** Parsing ***
 #ifdef F77
-    IF (iargc() > 0) THEN 
-       DO i = 1, iargc() - 1 
-          CALL getarg(i, str1) 
-          CALL getarg(i + 1, str2) 
-#else
-    IF (command_argument_count() > 0) THEN 
-       DO i = 1, command_argument_count() - 1 
-          CALL get_command_argument(i, str1)
-          CALL get_command_argument(i+1, str2)
-#endif
+    IF (iargc() > 0) THEN
+       DO i = 1, iargc() - 1
+          CALL getarg(i, str1)
+          CALL getarg(i + 1, str2)
           IF (str1 == TRIM(string)) THEN
              READ(str2, *) parsed_log
              modified = .TRUE.
           END IF
        ENDDO
     ENDIF
+#else
+    IF (command_argument_count() > 0) THEN
+       DO i = 1, command_argument_count() - 1
+          CALL get_command_argument(i, str1)
+          CALL get_command_argument(i+1, str2)
+          IF (str1 == TRIM(string)) THEN
+             READ(str2, *) parsed_log
+             modified = .TRUE.
+          END IF
+       ENDDO
+    ENDIF
+#endif
 
 ! *** Finalize ***
     IF (modified) THEN

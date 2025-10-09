@@ -61,12 +61,17 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
     ! Later revisions - see svn log
     !
     ! !USES:
+    USE mpi, ONLY: MPI_COMM_WORLD
+    USE mpi, ONLY: MPI_DOUBLE_PRECISION
+    USE mpi, ONLY: MPI_SUCCESS
+    USE mpi, ONLY: MPI_BARRIER
+    USE mpi, ONLY: MPI_GATHERV
+    USE mpi, ONLY: MPI_ABORT
     USE mod_assimilation, &
         ONLY: dim_state, dim_state_p_count
     USE mod_parallel_pdaf, &
-        ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
-        MPIerr, MPIstatus, filterpe, mype_model, npes_model, mype_world, &
-        MPI_COMM_WORLD, MPI_SUCCESS
+        ONLY: mype_filter, npes_filter, COMM_filter, &
+        MPIerr, MPIstatus, filterpe, mype_model, npes_model, mype_world
     use mod_tsmp, &
         only: tag_model_parflow, pf_statevecsize, nprocclm, model
 
@@ -119,7 +124,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
     ! **********************
     ! *** INITIALIZATION ***
     ! **********************
-    if (2 .eq. 1) then
+    if (2 == 1) then
     IF (mype_filter == 0) THEN
         IF (firsttime) THEN
             WRITE (*, '(8x, a)') 'Analize initial state ensemble'
@@ -195,7 +200,8 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
     end do
 #ifdef PDAF_DEBUG
     ! Debug output: summed until index local state dimension array
-    if (mype_model == 0 ) WRITE(*, '(a,x,a,i5,x,a,x,i9)') "TSMP-PDAF-debug", "mype(w)=", mype_world, "init_pdaf: dim_state_p_stride in modified:", dim_state_p_stride
+    if (mype_model == 0 ) WRITE(*, '(a,x,a,i5,x,a,x,i9)') "TSMP-PDAF-debug", "mype(w)=", mype_world, &
+      "init_pdaf: dim_state_p_stride in modified:", dim_state_p_stride
 #endif
 
     !!!!!!!!!!!!!!!!!!!!!!!! case below contains dummy CLM component  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -206,9 +212,9 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         !            0, comm_filter, MPIerr)
     call MPI_Gatherv(variance_p, dim_p, MPI_DOUBLE_PRECISION, variance, dim_state_p_count, &
         dim_state_p_stride, MPI_DOUBLE_PRECISION, 0, comm_filter, MPIerr);
-        if (MPIerr .ne. MPI_SUCCESS) then
+        if (MPIerr /= MPI_SUCCESS) then
             print *,"mpi gather failed"
-            call MPI_Abort(MPI_COMM_WORLD, MPIerr)
+            call MPI_Abort(MPI_COMM_WORLD, 1, MPIerr)
         end if
         print *, "prepoststep: gathering variance succeeded"
     end if

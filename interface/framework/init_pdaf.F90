@@ -43,7 +43,7 @@ SUBROUTINE init_pdaf()
 !
 ! !TSMP-PDAF-DESCRIPTION:
 ! This routine initializes a pointer to the state vector that is set
-! by component-model-specific routines in `initialize_tsmp`. 
+! by component-model-specific routines in `initialize_tsmp`.
 !
 ! This routine sets the local and global state vector dimension.
 !
@@ -57,13 +57,19 @@ SUBROUTINE init_pdaf()
 ! !USES:
 !   USE mod_model, &             ! Model variables
 !        ONLY: nx, ny, nx_p
-  
+
+  ! USE mpi, ONLY: MPI_Success
+  USE mpi, ONLY: MPI_COMM_WORLD
+  USE mpi, ONLY: MPI_INTEGER
+  USE mpi, ONLY: MPI_Gather
+  USE mpi, ONLY: MPI_BCAST
+  USE mpi, ONLY: MPI_Barrier
   USE mod_parallel_pdaf, &     ! Parallelization variables for
     ! assimilation
         ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, &
         abort_parallel, &
         mype_world, COMM_model, npes_model, &
-        mpi_success, mpi_comm_world, mpi_integer, mype_model
+        mype_model
   USE mod_assimilation, &      ! Variables for assimilation
         ONLY: dim_state_p, dim_state, screen, filtertype, subtype, toffset,&
         dim_ens, rms_obs, model_error, model_err_amp, incremental, &
@@ -79,7 +85,7 @@ SUBROUTINE init_pdaf()
         idx_map_subvec2state, idx_map_subvec2state_fortran, model
 #if defined CLMSA
   ! kuw: get access to clm variables
-#ifndef CLMFIVE    
+#ifndef CLMFIVE
   USE shr_kind_mod , only : r8 => shr_kind_r8
   USE clm_atmlnd   , only : clm_l2a, atm_l2a, clm_mapl2a
   USE clmtype      , only : clm3, nameg
@@ -94,7 +100,7 @@ SUBROUTINE init_pdaf()
 #endif
   ! kuw end
 
-  use, intrinsic :: iso_c_binding
+  use, intrinsic :: iso_c_binding, only: C_F_POINTER
 
   IMPLICIT NONE
 
@@ -211,8 +217,10 @@ SUBROUTINE init_pdaf()
 
 #ifdef PDAF_DEBUG
   ! Debug output: global state dimension
-  WRITE(*, '(a,x,a,i5,x,a,x,i9)') "TSMP-PDAF-debug", "mype(w)=", mype_world, "init_pdaf: my local state vector dimension dim_state_p:", dim_state_p
-  WRITE(*, '(a,x,a,i5,x,a,2x,i9)') "TSMP-PDAF-debug", "mype(w)=", mype_world, "init_pdaf: my global state vector dimension dim_state:", dim_state
+  WRITE(*, '(a,x,a,i5,x,a,x,i9)') "TSMP-PDAF-debug", "mype(w)=", mype_world, &
+    "init_pdaf: my local state vector dimension dim_state_p:", dim_state_p
+  WRITE(*, '(a,x,a,i5,x,a,2x,i9)') "TSMP-PDAF-debug", "mype(w)=", mype_world, &
+    "init_pdaf: my global state vector dimension dim_state:", dim_state
 #endif
 
   call MPI_Barrier(MPI_COMM_WORLD, ierror)
@@ -293,7 +301,7 @@ SUBROUTINE init_pdaf()
   ! hcp
   toffset = 0      ! offset of time steps shifting all analysis/assimilation steps
   ! hcp end
-  
+
 ! ***********************************
 ! *** Some optional functionality ***
 ! ***********************************

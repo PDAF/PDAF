@@ -33,7 +33,7 @@ PROGRAM pdaf_terrsysmp
     USE mpi, &
       ONLY: MPI_INIT, MPI_FINALIZE, MPI_BARRIER, MPI_COMM_WORLD, &
       MPI_SUCCESS
-  
+
     USE mod_parallel_pdaf, &
         ONLY : mype_world, MPIerr
 
@@ -77,7 +77,7 @@ PROGRAM pdaf_terrsysmp
 
         ! barrier before model integration starts
         CALL MPI_BARRIER(MPI_COMM_WORLD, MPIerr)
-        IF (MPIerr .NE. MPI_SUCCESS) THEN
+        IF (MPIerr /= MPI_SUCCESS) THEN
             PRINT *, "barrier before model integration failed"
         END IF
 

@@ -34,17 +34,17 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! User-supplied routine for PDAF.
 ! Used in the filters: LSEIK/LETKF/LESTKF
 !
-! This routine will only be called, if the 
-! local adaptive forgetting factor feature 
-! is used. Please note that this is an 
+! This routine will only be called, if the
+! local adaptive forgetting factor feature
+! is used. Please note that this is an
 ! experimental feature.
 !
 ! The routine is called in the loop over all
 ! local analysis domains during each analysis
-! by the routine PDAF\_set\_forget\_local that 
+! by the routine PDAF\_set\_forget\_local that
 ! estimates a local adaptive forgetting factor.
-! The routine has to initialize the mean observation 
-! error variance for the current local analysis 
+! The routine has to initialize the mean observation
+! error variance for the current local analysis
 ! domain.  (See init_obsvar() for a global variant.)
 !
 ! !REVISION HISTORY:
@@ -88,15 +88,15 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 !!$     do i = 1, dim_obs_p
 !!$        if(pressure_obserr_p(i) /= 0) then
 !!$           sum_p = sum_p + pressure_obserr_p(i)
-!!$           count = count + 1 
-!!$        endif   
+!!$           count = count + 1
+!!$        endif
 !!$     enddo
 !!$     ! averaging the sum of observation errors with total no of non-zero observations
 !!$     meanvar_p = sum_p/count
 !!$     ! summing the average of observation errors and communicating it back to each rank
 !!$     call MPI_Allreduce(meanvar_p, meanvar, 1, MPI_REAL8, MPI_SUM, COMM_filter, MPIerr)
 !!$     ! to get the mean dividing the mean observation error by size of processors
-!!$     meanvar = meanvar/npes_filter 
+!!$     meanvar = meanvar/npes_filter
 !!$  end if
 !!$#endif
 !!$
@@ -108,15 +108,15 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 !!$     do i = 1, dim_obs_p
 !!$        if(clm_obserr_p(i) /= 0) then
 !!$           sum_p = sum_p + clm_obserr_p(i)
-!!$           count = count + 1 
-!!$        endif   
+!!$           count = count + 1
+!!$        endif
 !!$     enddo
 !!$     ! averaging the sum of observation errors with total no of non-zero observations
 !!$     meanvar_p = sum_p/count
 !!$     ! summing the average of observation errors and communicating it back to each rank
 !!$     call MPI_Allreduce(meanvar_p, meanvar, 1, MPI_REAL8, MPI_SUM, COMM_filter, MPIerr)
 !!$     ! to get the mean dividing the mean observation error by size of processors
-!!$     meanvar = meanvar/npes_filter    
+!!$     meanvar = meanvar/npes_filter
 !!$  end if
 !!$#endif
 

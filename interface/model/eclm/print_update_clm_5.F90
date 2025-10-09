@@ -24,19 +24,29 @@
 
 #if defined CLMSA
 subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
-    
-    use iso_c_binding   
+
+    use iso_c_binding, only : c_int
     use shr_kind_mod , only : r8 => shr_kind_r8
     use subgridavemod, only : p2g, c2g
-    use domainMod    , only : ldomain 
+    use domainMod    , only : ldomain
     use clm_varpar   , only : nlevsoi
-    use clm_varcon   , only : nameg 
+    use clm_varcon   , only : nameg
     use decompmod    , only : get_proc_global, get_proc_bounds, ldecomp
     use spmdgathscatmod , only : gather_data_to_master
     use spmdmod      , only : masterproc
-    use clm_time_manager        , only : get_nstep    
+    use clm_time_manager        , only : get_nstep
     use clm_instMod, only : soilstate_inst, waterstate_inst
-    use netcdf
+    use netcdf, only : nf90_create
+    use netcdf, only : NF90_CLOBBER
+    use netcdf, only : nf90_def_dim
+    use netcdf, only : nf90_def_var
+    use netcdf, only : NF90_DOUBLE
+    use netcdf, only : nf90_enddef
+    use netcdf, only : nf90_open
+    use netcdf, only : NF90_WRITE
+    use netcdf, only : nf90_inq_varid
+    use netcdf, only : nf90_put_var
+    use netcdf, only : nf90_close
     use enkf_clm_mod, only : clmupdate_swc,clmupdate_texture,clmprint_swc
 
     implicit none
@@ -52,7 +62,7 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
     integer :: begl,endl      ! local beg/end landunits
     integer :: begc,endc      ! local beg/end columns
     integer :: begp,endp      ! local beg/end pfts
-    
+
     integer ::   isec, info, jn, jj, ji, g1, jx    ! temporary integer
     real(r8), pointer :: swc(:,:)
     real(r8), pointer :: psand(:,:)
@@ -83,24 +93,24 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
 
     if(masterproc) then
       call get_update_filename(update_filename)
-      if(ts.eq.1) then
+      if(ts==1) then
         status =  nf90_create(update_filename, NF90_CLOBBER, il_file_id)
         status =  nf90_def_dim(il_file_id, "x", ndlon, dimids(1))
         status =  nf90_def_dim(il_file_id, "y", ndlat, dimids(2))
         status =  nf90_def_dim(il_file_id, "z", nlevsoi, dimids(3))
         status =  nf90_def_dim(il_file_id, "t", ttot, dimids(4))
 
-        if(clmprint_swc.eq.1) then
+        if(clmprint_swc==1) then
           status =  nf90_def_var(il_file_id, "swc", NF90_DOUBLE, dimids, ncvarid(1))
         endif
- 
-        if(clmupdate_texture.eq.1) then 
+
+        if(clmupdate_texture==1) then
           status =  nf90_def_var(il_file_id, "sand", NF90_DOUBLE, dimids, ncvarid(2))
           status =  nf90_def_var(il_file_id, "clay", NF90_DOUBLE, dimids, ncvarid(3))
         endif
 
         ! write updates to sand, clay and organic matter
-        if(clmupdate_texture.eq.2) then
+        if(clmupdate_texture==2) then
           status =  nf90_def_var(il_file_id, "sand", NF90_DOUBLE, dimids, ncvarid(2))
           status =  nf90_def_var(il_file_id, "clay", NF90_DOUBLE, dimids, ncvarid(3))
           status =  nf90_def_var(il_file_id, "orgm", NF90_DOUBLE, dimids, ncvarid(4))
@@ -110,9 +120,9 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
         status = nf90_open(update_filename,NF90_WRITE,il_file_id)
       endif
     endif
-  
-    
-    if(clmprint_swc.eq.1) then
+
+
+    if(clmprint_swc==1) then
       swc  => waterstate_inst%h2osoi_vol_col
       ! swc
 !      clmstate_tmp_local = pack(swc,.true.)
@@ -129,12 +139,12 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
         end do
         status = nf90_inq_varid(il_file_id, "swc" , ncvarid(1))
         status = nf90_put_var( il_file_id, ncvarid(1), clmstate_out(:,:,:), &
-                 start = (/ 1, 1, 1, ts/), count = (/ ndlon, ndlat, nlevsoi, 1/) )
+                 start = [ 1, 1, 1, ts], count = [ ndlon, ndlat, nlevsoi, 1] )
         !status = nf90_close(il_file_id)
       end if
     end if
-    
-    if((clmupdate_texture.eq.1) .or. (clmupdate_texture.eq.2)) then
+
+    if((clmupdate_texture==1) .or. (clmupdate_texture==2)) then
       psand => soilstate_inst%cellsand_col
       pclay => soilstate_inst%cellclay_col
 
@@ -152,7 +162,7 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
         end do
         status = nf90_inq_varid(il_file_id, "sand" , ncvarid(2))
         status = nf90_put_var( il_file_id, ncvarid(2), clmstate_out(:,:,:), &
-                 start = (/ 1, 1, 1, ts/), count = (/ ndlon, ndlat, nlevsoi, 1/) )
+                 start = [ 1, 1, 1, ts], count = [ ndlon, ndlat, nlevsoi, 1] )
         !status = nf90_close(il_file_id)
       end if
 
@@ -171,12 +181,12 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
         end do
         status = nf90_inq_varid(il_file_id, "clay" , ncvarid(3))
         status = nf90_put_var( il_file_id, ncvarid(3), clmstate_out(:,:,:), &
-                 start = (/ 1, 1, 1, ts/), count = (/ ndlon, ndlat, nlevsoi, 1/) )
+                 start = [ 1, 1, 1, ts], count = [ ndlon, ndlat, nlevsoi, 1] )
         !status = nf90_close(il_file_id)
       end if
-      
+
       ! organic matter
-      if(clmupdate_texture.eq.2) then
+      if(clmupdate_texture==2) then
         porgm => soilstate_inst%cellorg_col
 
         !clmstate_tmp_local = pack(porgm,.true.)
@@ -193,13 +203,13 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
           end do
           status = nf90_inq_varid(il_file_id, "orgm" , ncvarid(4))
           status = nf90_put_var( il_file_id, ncvarid(4), clmstate_out(:,:,:), &
-                   start = (/ 1, 1, 1, ts/), count = (/ ndlon, ndlat, nlevsoi, 1/) )
+                   start = [ 1, 1, 1, ts], count = [ ndlon, ndlat, nlevsoi, 1] )
           !status = nf90_close(il_file_id)
         end if
       endif
 
-    end if 
-    
+    end if
+
     if(masterproc) then
       status = nf90_close(il_file_id)
       deallocate(clmstate_out)
@@ -226,7 +236,7 @@ subroutine get_update_filename (iofile)
     !-----------------------------------------------------------------------
 
     call get_prev_date (yr, mon, day, sec)
-    write(cdate,'(i4.4,"-",i2.2)') yr,mon 
+    write(cdate,'(i4.4,"-",i2.2)') yr,mon
     call get_curr_date (yr, mon, day, sec)
     !write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
     write(cdate,'(i4.4)') yr

@@ -35,13 +35,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! User-supplied routine for PDAF.
   ! Used in the filters: LSEIK/LETKF/LESTKF
   !
-  ! The routine is called in PDAF\_lseik\_update 
-  ! at the beginning of the analysis step before 
-  ! the loop through all local analysis domains. 
-  ! It has to determine the dimension of the 
-  ! observation vector according to the current 
-  ! time step for all observations required for 
-  ! the analyses in the loop over all local 
+  ! The routine is called in PDAF\_lseik\_update
+  ! at the beginning of the analysis step before
+  ! the loop through all local analysis domains.
+  ! It has to determine the dimension of the
+  ! observation vector according to the current
+  ! time step for all observations required for
+  ! the analyses in the loop over all local
   ! analysis domains on the PE-local state domain.
   !
   ! !REVISION HISTORY:
@@ -55,9 +55,14 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !   USE mod_parallel_pdaf, &
   !        ONLY: mype_filter, npes_filter, COMM_filter, MPI_INTEGER, &
   !        MPIerr, MPIstatus
+  USE mpi, ONLY: MPI_INTEGER
+  USE mpi, ONLY: MPI_DOUBLE_PRECISION
+  USE mpi, ONLY: MPI_BCAST
+  USE mpi, ONLY: MPI_ALLREDUCE
+  USE mpi, ONLY: MPI_SUM
+  USE mpi, ONLY: MPI_IN_PLACE
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, comm_filter, npes_filter, abort_parallel, &
-       mpi_integer, mpi_double_precision, mpi_in_place, mpi_sum, &
        mype_world
   USE mod_assimilation, &
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, &
@@ -69,22 +74,28 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        local_dims_obs, &
        local_disp_obs, &
        dim_obs_p, &
-       obs_id_p, &
+       obs_id_p
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
-!hcp 
-!CLMSA needs the physical  coordinates of the elements of state vector 
-!and observation array.        
+!hcp
+!CLMSA needs the physical  coordinates of the elements of state vector
+!and observation array.
+  USE mod_assimilation, &
+       ONLY: &
        longxy, latixy, longxy_obs, latixy_obs, &
-       longxy_obs_floor, latixy_obs_floor, &
+       longxy_obs_floor, latixy_obs_floor
 !hcp end
 #endif
 #endif
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
-       sc_p, idx_obs_nc_p, &
+  USE mod_assimilation, &
+       ONLY: &
+       sc_p, idx_obs_nc_p
 #endif
 #endif
+  USE mod_assimilation, &
+       ONLY: &
        var_id_obs, maxlon, minlon, maxlat, &
        minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
        screen
@@ -124,9 +135,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   use enkf_clm_mod, only: state_clm2pdaf_p
   use enkf_clm_mod, only: clmstatevec_only_active
   use enkf_clm_mod, only: clmstatevec_max_layer
-#else  
+#else
   USE clmtype,                  ONLY : clm3
-#endif  
+#endif
   use decompMod , only : get_proc_bounds, get_proc_global
   !kuw end
   !hcp
@@ -138,8 +149,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !hcp end
 #endif
 #endif
-
-  USE, INTRINSIC :: iso_c_binding
 
   IMPLICIT NONE
   ! !ARGUMENTS:
@@ -213,7 +222,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
       write(current_observation_filename, '(a, i5.5)') trim(obs_filename)
   end if
 
-  if (mype_filter .eq. 0) then
+  if (mype_filter == 0) then
       ! Read current NetCDF observation file
       call read_obs_nc(current_observation_filename)
   end if
@@ -227,7 +236,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !! broadcast crns_flag
   !call mpi_bcast(crns_flag, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast dim_ny and dim_nx
-  if(point_obs.eq.0) then
+  if(point_obs==0) then
      call mpi_bcast(dim_nx, 1, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(dim_ny, 1, MPI_INTEGER, 0, comm_filter, ierror)
   endif
@@ -236,9 +245,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   call mpi_bcast(is_dampfac_param_time_dependent, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
   ! broadcast dampfac_state_time_dependent_in
-  if(is_dampfac_state_time_dependent.eq.1) then
+  if(is_dampfac_state_time_dependent==1) then
 
-     if (mype_filter .ne. 0) then ! for all non-master proc
+     if (mype_filter /= 0) then ! for all non-master proc
        if(allocated(dampfac_state_time_dependent_in)) deallocate(dampfac_state_time_dependent_in)
        allocate(dampfac_state_time_dependent_in(1))
      end if
@@ -249,22 +258,24 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
      call mpi_bcast(dampfac_state_time_dependent_in, 1, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if (screen > 2) then
-       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dampfac_state_time_dependent_in=", dampfac_state_time_dependent_in
+       print *, "TSMP-PDAF mype(w)=", mype_world, &
+         ": init_dim_obs_pdaf: dampfac_state_time_dependent_in=", dampfac_state_time_dependent_in
      end if
 
      ! Set C-version of dampfac_state_time_dependent with value read from obsfile
      dampfac_state_time_dependent = dampfac_state_time_dependent_in(1)
 
      if (screen > 2) then
-       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dampfac_state_time_dependent=", dampfac_state_time_dependent
+       print *, "TSMP-PDAF mype(w)=", mype_world, &
+         ": init_dim_obs_pdaf: dampfac_state_time_dependent=", dampfac_state_time_dependent
      end if
 
   end if
 
   ! broadcast dampfac_param_time_dependent_in
-  if(is_dampfac_param_time_dependent.eq.1) then
+  if(is_dampfac_param_time_dependent==1) then
 
-     if (mype_filter .ne. 0) then ! for all non-master proc
+     if (mype_filter /= 0) then ! for all non-master proc
        if(allocated(dampfac_param_time_dependent_in)) deallocate(dampfac_param_time_dependent_in)
        allocate(dampfac_param_time_dependent_in(1))
      end if
@@ -275,28 +286,30 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
      call mpi_bcast(dampfac_param_time_dependent_in, 1, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if (screen > 2) then
-       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dampfac_param_time_dependent_in=", dampfac_param_time_dependent_in
+       print *, "TSMP-PDAF mype(w)=", mype_world, &
+         ": init_dim_obs_pdaf: dampfac_param_time_dependent_in=", dampfac_param_time_dependent_in
      end if
 
      ! Set C-version of dampfac_param_time_dependent with value read from obsfile
      dampfac_param_time_dependent = dampfac_param_time_dependent_in(1)
 
      if (screen > 2) then
-       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dampfac_param_time_dependent=", dampfac_param_time_dependent
+       print *, "TSMP-PDAF mype(w)=", mype_world, &
+         ": init_dim_obs_pdaf: dampfac_param_time_dependent=", dampfac_param_time_dependent
      end if
 
   end if
-  
+
   ! Allocate observation arrays for non-root procs
   ! ----------------------------------------------
-  if (mype_filter .ne. 0) then ! for all non-master proc
+  if (mype_filter /= 0) then ! for all non-master proc
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
       ! if exist ParFlow-type obs
      !if(model == tag_model_parflow) then
         if(allocated(pressure_obs)) deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
-        if (multierr.eq.1) then
+        if (multierr==1) then
              if (allocated(pressure_obserr)) deallocate(pressure_obserr)
              allocate(pressure_obserr(dim_obs))
         endif
@@ -308,13 +321,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         allocate(y_idx_obs_nc(dim_obs))
         if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
         allocate(z_idx_obs_nc(dim_obs))
-        if(obs_interp_switch .eq. 1) then
+        if(obs_interp_switch == 1) then
             if(allocated(x_idx_interp_d_obs_nc))deallocate(x_idx_interp_d_obs_nc)
             allocate(x_idx_interp_d_obs_nc(dim_obs))
             if(allocated(y_idx_interp_d_obs_nc))deallocate(y_idx_interp_d_obs_nc)
             allocate(y_idx_interp_d_obs_nc(dim_obs))
         end if
-        if(point_obs.eq.0) then
+        if(point_obs==0) then
            if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
            allocate(var_id_obs_nc(dim_ny, dim_nx))
         endif
@@ -336,11 +349,11 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         allocate(clmobs_dr(2))
         if(allocated(clmobs_layer)) deallocate(clmobs_layer)
         allocate(clmobs_layer(dim_obs))
-        if(point_obs.eq.0) then
+        if(point_obs==0) then
             if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)
             allocate(var_id_obs_nc(dim_ny, dim_nx))
         endif
-        if(multierr.eq.1) then 
+        if(multierr==1) then
             if(allocated(clm_obserr)) deallocate(clm_obserr)
             allocate(clm_obserr(dim_obs))
         end if
@@ -356,14 +369,14 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !if(model == tag_model_parflow) then
       ! if exist ParFlow-type obs
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
-     if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
+     if(multierr==1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      ! broadcast xyz indices
      call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(y_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
-     if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
-     if(obs_interp_switch .eq. 1) then
+     if(point_obs==0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     if(obs_interp_switch == 1) then
          call mpi_bcast(x_idx_interp_d_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
          call mpi_bcast(y_idx_interp_d_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      end if
@@ -376,12 +389,12 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !if(model == tag_model_clm) then
       ! if exist CLM-type obs
      call mpi_bcast(clm_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
-     if(multierr.eq.1) call mpi_bcast(clm_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
+     if(multierr==1) call mpi_bcast(clm_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_lon, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_lat, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_dr,  2, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_layer, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
-     if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     if(point_obs==0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
   !end if
 #endif
 #endif
@@ -397,13 +410,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
      ! if exist CLM-type obs
-  if(model .eq. tag_model_clm) then
+  if(model == tag_model_clm) then
       ! Generate CLM index arrays from lon/lat values
       call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
 
       ! Interpolation of measured states: Save the indices of the
       ! nearest grid points
-      if (obs_interp_switch .eq. 1) then
+      if (obs_interp_switch == 1) then
          ! Get the floored values for latitudes and longitudes
          call get_interp_idx(clmobs_lon, clmobs_lat, dim_obs, longxy_obs_floor, latixy_obs_floor)
       end if
@@ -414,7 +427,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
       lat   => grc%latdeg
       ! Obtain CLM column-gridcell information
       mycgridcell => col%gridcell
-#else      
+#else
       lon   => clm3%g%londeg
       lat   => clm3%g%latdeg
       mycgridcell => clm3%g%l%c%gridcell
@@ -436,7 +449,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
-  if (model .eq. tag_model_parflow) then
+  if (model == tag_model_parflow) then
 
      if(allocated(obs_id_p)) deallocate(obs_id_p)
      allocate(obs_id_p(enkf_subvecsize))
@@ -444,7 +457,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
      do i = 1, dim_obs
         do j = 1, enkf_subvecsize
-           if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
+           if (idx_obs_nc(i) == idx_map_subvec2state_fortran(j)) then
               dim_obs_p = dim_obs_p + 1
               obs_id_p(j) = i
            end if
@@ -460,8 +473,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! True: Use snapping distance between long/lat on CLM grid
   ! False: Use index arrays from `domain_def_clm`
   is_use_dr = .true.
-  
-  if(model .eq. tag_model_clm) then
+
+  if(model == tag_model_clm) then
 
      if(allocated(obs_id_p)) deallocate(obs_id_p)
      allocate(obs_id_p(endg-begg+1))
@@ -480,7 +493,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
             end if
             ! Assigning observations to grid cells according to
             ! snapping distance or index arrays
-            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(cnt)) .and. (latixy_obs(i) == latixy(cnt)))) then
+            if(((is_use_dr).and.(deltax<=clmobs_dr(1)).and.(deltay<=clmobs_dr(2))).or. &
+              ((.not. is_use_dr).and.(longxy_obs(i) == longxy(cnt)) .and. (latixy_obs(i) == latixy(cnt)))) then
                 dim_obs_p = dim_obs_p + 1
                 obs_id_p(cnt) = i
 
@@ -519,7 +533,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
   ! add and broadcast size of PE-local observation dimensions using mpi_allreduce
   call mpi_allreduce(dim_obs_p, sum_dim_obs_p, 1, MPI_INTEGER, MPI_SUM, &
-       comm_filter, ierror) 
+       comm_filter, ierror)
 
   ! Set dimension of full observation vector
   dim_obs_f = sum_dim_obs_p
@@ -581,7 +595,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! i = 2
   ! cnt = 1
   ! mype_filter = 0
-  ! 
+  !
   ! obs_pdaf2nc(local_disp_obs(mype_filter+1)+cnt) = i
   !-> obs_pdaf2nc(local_disp_obs(1)+1) = 2
   !-> obs_pdaf2nc(1) = 2
@@ -595,13 +609,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
-  if (model .eq. tag_model_parflow) then
-  if (point_obs.eq.1) then
+  if (model == tag_model_parflow) then
+  if (point_obs==1) then
 
     cnt = 1
     do i = 1, dim_obs
       do j = 1, enkf_subvecsize
-        if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
+        if (idx_obs_nc(i) == idx_map_subvec2state_fortran(j)) then
           obs_pdaf2nc(local_disp_obs(mype_filter+1)+cnt) = i
           obs_nc2pdaf(i) = local_disp_obs(mype_filter+1)+cnt
           cnt = cnt + 1
@@ -616,8 +630,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
-  if(model .eq. tag_model_clm) then
-  if (point_obs.eq.1) then
+  if(model == tag_model_clm) then
+  if (point_obs==1) then
 
     cnt = 1
     do i = 1, dim_obs
@@ -625,7 +639,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         newgridcell = .true.
         do c = begc,endc
           cg =   mycgridcell(c)
-          if(cg .eq. g) then
+          if(cg == g) then
             if(newgridcell) then
 
               if(is_use_dr) then
@@ -636,7 +650,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
                 deltay = abs(lat(g)-clmobs_lat(i))
               end if
 
-              if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1)))) then
+              if(((is_use_dr).and.(deltax<=clmobs_dr(1)).and.(deltay<=clmobs_dr(2))).or. &
+                ((.not. is_use_dr).and.(longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1)))) then
                 obs_pdaf2nc(local_disp_obs(mype_filter+1)+cnt) = i
                 obs_nc2pdaf(i) = local_disp_obs(mype_filter+1)+cnt
                 cnt = cnt + 1
@@ -675,31 +690,31 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ALLOCATE(obs_p(dim_obs_p))
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
   ALLOCATE(obs_index_p(dim_obs_p))
-  if(obs_interp_switch .eq. 1) then
+  if(obs_interp_switch == 1) then
       ! Array for storing indices from states that are interpolated to observation locations
       IF (ALLOCATED(obs_interp_indices_p)) DEALLOCATE(obs_interp_indices_p)
       ALLOCATE(obs_interp_indices_p(dim_obs_p, 4)) ! Later 8 for 3D / ParFlow
       IF (ALLOCATED(obs_interp_weights_p)) DEALLOCATE(obs_interp_weights_p)
       ALLOCATE(obs_interp_weights_p(dim_obs_p, 4)) ! Later 8 for 3D / ParFlow
   end if
-  if(point_obs.eq.0) then
+  if(point_obs==0) then
       IF (ALLOCATED(var_id_obs)) DEALLOCATE(var_id_obs)
       ALLOCATE(var_id_obs(dim_obs_p))
   end if
 
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
-  if (model .eq. tag_model_parflow) then
-     ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
+  if (model == tag_model_parflow) then
+     ! allocate pressure_obserr_p observation error for parflow run at PE-local domain
 !     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
      !hcp pressure_obserr_p must be reallocated because the numbers of obs are
      !not necessary the same for all observation files.
-     if(multierr.eq.1) then 
+     if(multierr==1) then
         if (allocated(pressure_obserr_p)) deallocate(pressure_obserr_p)
         allocate(pressure_obserr_p(dim_obs_p))
      endif
 
-     if(crns_flag.eq.1) then 
+     if(crns_flag==1) then
         if (allocated(sc_p)) deallocate(sc_p)
         allocate(sc_p(nz_glob, dim_obs_p))
         if (allocated(idx_obs_nc_p)) deallocate(idx_obs_nc_p)
@@ -707,10 +722,10 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      endif
      !hcp fin
 
-  if (point_obs.eq.0) then
+  if (point_obs==0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
 
-     if(allocated(ix_var_id)) deallocate(ix_var_id) 
+     if(allocated(ix_var_id)) deallocate(ix_var_id)
      allocate(ix_var_id(max_var_id))
      if(allocated(iy_var_id)) deallocate(iy_var_id)
      allocate(iy_var_id(max_var_id))
@@ -723,7 +738,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      allocate(maxiy(max_var_id))
      if(allocated(miniy)) deallocate(miniy)
      allocate(miniy(max_var_id))
-     
+
      ix_var_id(:) = 0
      iy_var_id(:) = 0
      maxix = -999
@@ -732,9 +747,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      miniy = 9999999
      do j = 1, max_var_id
         do m = 1, dim_nx
-           do k = 1, dim_ny 
-              i = (m-1)* dim_ny + k  
-              if (var_id_obs_nc(k,m) == j) then      
+           do k = 1, dim_ny
+              i = (m-1)* dim_ny + k
+              if (var_id_obs_nc(k,m) == j) then
                  maxix(j) = MAX(x_idx_obs_nc(i),maxix(j))
                  minix(j) = MIN(x_idx_obs_nc(i),minix(j))
                  maxiy(j) = MAX(y_idx_obs_nc(i),maxiy(j))
@@ -749,59 +764,59 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      cnt = 1
      do m = 1, dim_nx
         do k = 1, dim_ny
-           i = (m-1)* dim_ny + k    
-           obs(i) = pressure_obs(i)  
+           i = (m-1)* dim_ny + k
+           obs(i) = pressure_obs(i)
            ! coords_obs(1, i) = idx_obs_nc(i)
            do j = 1, enkf_subvecsize
-              if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
+              if (idx_obs_nc(i) == idx_map_subvec2state_fortran(j)) then
                  obs_index_p(cnt) = j
                  obs_p(cnt) = pressure_obs(i)
                  var_id_obs(cnt) = var_id_obs_nc(k,m)
-                 if(multierr.eq.1) pressure_obserr_p(cnt) = pressure_obserr(i)
+                 if(multierr==1) pressure_obserr_p(cnt) = pressure_obserr(i)
                  cnt = cnt + 1
               end if
            end do
         end do
      end do
-  else if (point_obs.eq.1) then
+  else if (point_obs==1) then
 
      !hcp
-     if(crns_flag.eq.1) then
+     if(crns_flag==1) then
          idx_obs_nc(:)=nx_glob*(y_idx_obs_nc(:)-1)+x_idx_obs_nc(:)
      endif
      !hcp fin
      cnt = 1
      do i = 1, dim_obs
-        obs(i) = pressure_obs(i)  
+        obs(i) = pressure_obs(i)
         ! coords_obs(1, i) = idx_obs_nc(i)
         do j = 1, enkf_subvecsize
-           if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
+           if (idx_obs_nc(i) == idx_map_subvec2state_fortran(j)) then
               !print *, j
               !obs_index(cnt) = j
               !obs(cnt) = pressure_obs(i)
               obs_index_p(cnt) = j
               obs_p(cnt) = pressure_obs(i)
-              if(multierr.eq.1) pressure_obserr_p(cnt) = pressure_obserr(i)
-              if(crns_flag.eq.1) then
+              if(multierr==1) pressure_obserr_p(cnt) = pressure_obserr(i)
+              if(crns_flag==1) then
                   idx_obs_nc_p(cnt)=idx_obs_nc(i)
-                  !Allocate(sc_p(cnt)%scol_obs_in(nz_glob))       
+                  !Allocate(sc_p(cnt)%scol_obs_in(nz_glob))
               endif
               cnt = cnt + 1
            end if
         end do
      end do
      do i = 1, dim_obs_p
-      if(crns_flag.eq.1) then 
+      if(crns_flag==1) then
         do k = 1, nz_glob
           k_cnt=idx_obs_nc_p(i)+(k-1)*nx_glob*ny_glob
           do j = 1, enkf_subvecsize
-             if (k_cnt .eq. idx_map_subvec2state_fortran(j)) sc_p(nz_glob-k+1,i)=j
+             if (k_cnt == idx_map_subvec2state_fortran(j)) sc_p(nz_glob-k+1,i)=j
           enddo
         enddo
       endif
      enddo
 
-     if(obs_interp_switch.eq.1) then
+     if(obs_interp_switch==1) then
          ! loop over all obs and save the indices of the nearest grid
          ! points to array obs_interp_indices_p and save the distance
          ! weights to array obs_interp_weights_p (later normalized)
@@ -810,27 +825,31 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
              cnt_interp = 0
              do j = 1, enkf_subvecsize
                  ! First: ix and iy smaller than observation location
-                 if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
+                 if (idx_obs_nc(i) == idx_map_subvec2state_fortran(j)) then
                      obs_interp_indices_p(cnt, 1) = j
-                     obs_interp_weights_p(cnt, 1) = sqrt(abs(x_idx_interp_d_obs_nc(i)) * abs(x_idx_interp_d_obs_nc(i)) + abs(y_idx_interp_d_obs_nc(i)) * abs(y_idx_interp_d_obs_nc(i)))
+                     obs_interp_weights_p(cnt, 1) = sqrt(abs(x_idx_interp_d_obs_nc(i)) * abs(x_idx_interp_d_obs_nc(i)) + &
+                       abs(y_idx_interp_d_obs_nc(i)) * abs(y_idx_interp_d_obs_nc(i)))
                      cnt_interp = cnt_interp + 1
                  end if
                  ! Second: ix larger than observation location, iy smaller
-                 if (idx_obs_nc(i) + 1 .eq. idx_map_subvec2state_fortran(j)) then
+                 if (idx_obs_nc(i) + 1 == idx_map_subvec2state_fortran(j)) then
                      obs_interp_indices_p(cnt, 2) = j
-                     obs_interp_weights_p(cnt, 2) = sqrt(abs(1.0-x_idx_interp_d_obs_nc(i)) * abs(1.0-x_idx_interp_d_obs_nc(i)) + abs(y_idx_interp_d_obs_nc(i)) * abs(y_idx_interp_d_obs_nc(i)))
+                     obs_interp_weights_p(cnt, 2) = sqrt(abs(1.0-x_idx_interp_d_obs_nc(i)) * abs(1.0-x_idx_interp_d_obs_nc(i)) + &
+                       abs(y_idx_interp_d_obs_nc(i)) * abs(y_idx_interp_d_obs_nc(i)))
                      cnt_interp = cnt_interp + 1
                  end if
                  ! Third: ix smaller than observation location, iy larger
-                 if (idx_obs_nc(i) + nx_glob .eq. idx_map_subvec2state_fortran(j)) then
+                 if (idx_obs_nc(i) + nx_glob == idx_map_subvec2state_fortran(j)) then
                      obs_interp_indices_p(cnt, 3) = j
-                     obs_interp_weights_p(cnt, 3) = sqrt(abs(x_idx_interp_d_obs_nc(i)) * abs(x_idx_interp_d_obs_nc(i)) + abs(1.0-y_idx_interp_d_obs_nc(i)) * abs(1.0-y_idx_interp_d_obs_nc(i)))
+                     obs_interp_weights_p(cnt, 3) = sqrt(abs(x_idx_interp_d_obs_nc(i)) * abs(x_idx_interp_d_obs_nc(i)) + &
+                       abs(1.0-y_idx_interp_d_obs_nc(i)) * abs(1.0-y_idx_interp_d_obs_nc(i)))
                      cnt_interp = cnt_interp + 1
                  end if
                  ! Fourth: ix and iy larger than observation location
-                 if (idx_obs_nc(i) + nx_glob + 1 .eq. idx_map_subvec2state_fortran(j)) then
+                 if (idx_obs_nc(i) + nx_glob + 1 == idx_map_subvec2state_fortran(j)) then
                      obs_interp_indices_p(cnt, 4) = j
-                     obs_interp_weights_p(cnt, 4) = sqrt(abs(1.0-x_idx_interp_d_obs_nc(i)) * abs(1.0-x_idx_interp_d_obs_nc(i)) + abs(1.0-y_idx_interp_d_obs_nc(i)) * abs(1.0-y_idx_interp_d_obs_nc(i)))
+                     obs_interp_weights_p(cnt, 4) = sqrt(abs(1.0-x_idx_interp_d_obs_nc(i)) * abs(1.0-x_idx_interp_d_obs_nc(i)) + &
+                       abs(1.0-y_idx_interp_d_obs_nc(i)) * abs(1.0-y_idx_interp_d_obs_nc(i)))
                      cnt_interp = cnt_interp + 1
                  end if
                  ! Check if all four corners are found
@@ -861,14 +880,14 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
-  if(model .eq. tag_model_clm) then
+  if(model == tag_model_clm) then
      ! allocate clm_obserr_p observation error for clm run at PE-local domain
 !     if((multierr.eq.1) .and. (.not.allocated(clm_obserr_p))) allocate(clm_obserr_p(dim_obs_p))
-     if(multierr.eq.1) then
+     if(multierr==1) then
          if (allocated(clm_obserr_p)) deallocate(clm_obserr_p)
          allocate(clm_obserr_p(dim_obs_p))
      endif
-  if(point_obs.eq.0) then
+  if(point_obs==0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
      if(allocated(lon_var_id)) deallocate(lon_var_id)
      allocate(lon_var_id(max_var_id))
@@ -892,15 +911,15 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      do j = 1, max_var_id
         do m = 1, dim_nx
            do k = 1, dim_ny
-              i = (m-1)* dim_ny + k    
-              if (var_id_obs_nc(k,m) == j) then      
+              i = (m-1)* dim_ny + k
+              if (var_id_obs_nc(k,m) == j) then
                  maxlon(j) = MAX(longxy_obs(i),maxlon(j))
                  minlon(j) = MIN(longxy_obs(i),minlon(j))
                  maxlat(j) = MAX(latixy_obs(i),maxlat(j))
                  minlat(j) = MIN(latixy_obs(i),minlat(j))
               end if
            end do
-           lon_var_id(j) = (maxlon(j) + minlon(j))/2.0 
+           lon_var_id(j) = (maxlon(j) + minlon(j))/2.0
            lat_var_id(j) = (maxlat(j) + minlat(j))/2.0
            !print *, 'j  lon_var_id  lat_var_id ', j, lon_var_id(j), lat_var_id(j)
         enddo  ! allocate clm_obserr_p observation error for clm run at PE-local domain
@@ -909,20 +928,20 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      cnt = 1
      do m = 1, dim_nx
         do l = 1, dim_ny
-           i = (m-1)* dim_ny + l        
-           obs(i) = clm_obs(i) 
+           i = (m-1)* dim_ny + l
+           obs(i) = clm_obs(i)
            do g = begg,endg
               if((longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1))) then
                  obs_index_p(cnt) = g-begg+1
                  obs_p(cnt) = clm_obs(i)
                  var_id_obs(cnt) = var_id_obs_nc(l,m)
-                 if(multierr.eq.1) clm_obserr_p(cnt) = clm_obserr(i)
+                 if(multierr==1) clm_obserr_p(cnt) = clm_obserr(i)
                  cnt = cnt + 1
               endif
            end do
         end do
      end do
-  else if(point_obs.eq.1) then
+  else if(point_obs==1) then
 
      cnt = 1
 
@@ -936,7 +955,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
            cg =   mycgridcell(c)
 
-           if(cg .eq. g) then
+           if(cg == g) then
 
              if(newgridcell) then
 
@@ -948,14 +967,15 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
                  deltay = abs(lat(g)-clmobs_lat(i))
                end if
 
-               if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1)))) then
+               if(((is_use_dr).and.(deltax<=clmobs_dr(1)).and.(deltay<=clmobs_dr(2))).or. &
+                 ((.not. is_use_dr).and.(longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1)))) then
 
                  ! Different settings of observation-location-index in
                  ! state vector depending on the method of state
                  ! vector assembling.
-                 if(clmstatevec_allcol.eq.1) then
+                 if(clmstatevec_allcol==1) then
 #ifdef CLMFIVE
-                   if(clmstatevec_only_active.eq.1) then
+                   if(clmstatevec_only_active==1) then
 
                      ! Error if observation deeper than clmstatevec_max_layer
                      if(clmobs_layer(i) > min(clmstatevec_max_layer, col%nbedrock(c))) then
@@ -969,27 +989,26 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
                      end if
                      obs_index_p(cnt) = state_clm2pdaf_p(c,clmobs_layer(i))
                    else
-#endif
                      obs_index_p(cnt) = c-begc+1 + ((endc-begc+1) * (clmobs_layer(i)-1))
-#ifdef CLMFIVE
                    end if
+#else
+                   obs_index_p(cnt) = c-begc+1 + ((endc-begc+1) * (clmobs_layer(i)-1))
 #endif
                  else
 #ifdef CLMFIVE
-                   if(clmstatevec_only_active.eq.1) then
+                   if(clmstatevec_only_active==1) then
                      obs_index_p(cnt) = state_clm2pdaf_p(c,clmobs_layer(i))
                    else
-
-#endif
                      obs_index_p(cnt) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
-#ifdef CLMFIVE
                    end if
+#else
+                   obs_index_p(cnt) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
 #endif
                  end if
 
                  !write(*,*) 'obs_index_p(',cnt,') is',obs_index_p(cnt)
                  obs_p(cnt) = clm_obs(i)
-                 if(multierr.eq.1) clm_obserr_p(cnt) = clm_obserr(i)
+                 if(multierr==1) clm_obserr_p(cnt) = clm_obserr(i)
                  cnt = cnt + 1
                end if
 
@@ -1003,7 +1022,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        end do
      end do
 
-     if(obs_interp_switch.eq.1) then
+     if(obs_interp_switch==1) then
          ! loop over all obs and save the indices of the nearest grid
          ! points to array obs_interp_indices_p and save the distance
          ! weights to array obs_interp_weights_p (later normalized)
@@ -1015,25 +1034,29 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
                  if((longxy_obs_floor(i) == longxy(g-begg+1)) .and. (latixy_obs_floor(i) == latixy(g-begg+1))) then
 
                      obs_interp_indices_p(cnt, 1) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
-                     obs_interp_weights_p(cnt, 1) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
+                     obs_interp_weights_p(cnt, 1) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + &
+                       abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
                      cnt_interp = cnt_interp + 1
                  end if
                  ! Second: latitude larger than observation location, longitude smaller than observation location
                  if((longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs_floor(i) == latixy(g-begg+1))) then
                      obs_interp_indices_p(cnt, 2) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
-                     obs_interp_weights_p(cnt, 2) =sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
+                     obs_interp_weights_p(cnt, 2) =sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + &
+                       abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
                      cnt_interp = cnt_interp + 1
                  end if
                  ! Third: latitude smaller than observation location, longitude larger than observation location
                  if((longxy_obs_floor(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1))) then
                      obs_interp_indices_p(cnt, 3) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
-                     obs_interp_weights_p(cnt, 3) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
+                     obs_interp_weights_p(cnt, 3) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + &
+                       abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
                      cnt_interp = cnt_interp + 1
                  end if
                  ! Fourth: latitude and longitude larger than observation location
                  if((longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1))) then
                      obs_interp_indices_p(cnt, 4) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
-                     obs_interp_weights_p(cnt, 4) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
+                     obs_interp_weights_p(cnt, 4) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + &
+                       abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
                      cnt_interp = cnt_interp + 1
                  end if
                  ! Check if all four corners are found

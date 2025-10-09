@@ -49,14 +49,14 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 !
 ! !USES:
    USE mod_assimilation, &
-        ONLY: obs_index_p, obs_p, &
+        ONLY: obs_index_p, obs_p
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
-        sc_p, &
+   USE mod_assimilation, ONLY: sc_p
 #endif
 #endif
-        obs_interp_indices_p, &
-        obs_interp_weights_p
+   USE mod_assimilation, ONLY: obs_interp_indices_p
+   USE mod_assimilation, ONLY: obs_interp_weights_p
    use mod_tsmp, &
        only: obs_interp_switch, &
        soilay, &
@@ -66,10 +66,10 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
        crns_flag
 !      tcycle
 
-   USE, INTRINSIC :: iso_c_binding
+   USE, INTRINSIC :: iso_c_binding, ONLY: C_F_POINTER
 
 #if defined CLMSA
-   USE enkf_clm_mod, & 
+   USE enkf_clm_mod, &
         ONLY : clm_varsize, clm_paramarr, clmupdate_swc, clmupdate_T, clmcrns_bd
 #ifdef CLMFIVE
    USE clm_instMod, &
@@ -95,14 +95,14 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 ! *** local variables ***
 
 ! hcp test with hardcoding variable declaration
-real(8), dimension(:), allocatable :: soide !soil depth
+real, dimension(:), allocatable :: soide !soil depth
 !real(8), dimension(0:12), parameter :: &
 ! soide=(/0.d0,  0.02d0,  0.05d0,  0.1d0,  0.17d0, 0.3d0,  0.5d0, &
 !                0.8d0,   1.3d0,   2.d0,  3.d0, 5.d0,  12.d0/) !soil depth
 
-real(8) :: tot, avesm, avesm_temp, Dp
+real :: tot, avesm, avesm_temp, Dp
 integer :: nsc
-! end of hcp 
+! end of hcp
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
@@ -111,9 +111,9 @@ REAL :: weights_r1(920), weights_r2(920), weights_r3(920)
 Real :: weights_layer(8)
 Integer :: nweights(8)
 Real  :: d86_r1, d86_r2, d86_r3
-REAL :: r1 = 1.0
-REAL :: r2 = 20.0
-REAL :: r3 = 85.0
+REAL, PARAMETER :: r1 = 1.0
+REAL, PARAMETER :: r2 = 20.0
+REAL, PARAMETER :: r3 = 85.0
 REAL :: bd, y
 REAL :: sum_r1, sum_r2, sum_r3, totw
 #endif
@@ -129,7 +129,7 @@ REAL :: sum_r1, sum_r2, sum_r3, totw
 lpointobs = .true.
 
 #if defined CLMSA
-if (clmupdate_T.EQ.1) then
+if (clmupdate_T==1) then
 
   lpointobs = .false.
 
@@ -142,7 +142,7 @@ if (clmupdate_T.EQ.1) then
     ! clumping parameter `Omega=1`; radiometer view angle `phi=0`
      m_state_p(i) &
     = (exp(-0.5*clm_paramarr(obs_index_p(i))) &
-                     *state_p(obs_index_p(i))**4 & 
+                     *state_p(obs_index_p(i))**4 &
        +(1.-exp(-0.5*clm_paramarr(obs_index_p(i)))) &
                      *state_p(clm_varsize+obs_index_p(i))**4)**0.25
   END DO
@@ -157,14 +157,14 @@ endif
 
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
- if (crns_flag.EQ.1) then
+ if (crns_flag==1) then
     !Schroen et al HESS 2017 modelled CRNS averaging
     lpointobs = .false.
      call C_F_POINTER(soilay,soilay_fortran,[nz_glob])
      Allocate(soide(0:nz_glob))
      soide(0)=0.d0
      do i=1,nz_glob
-       soide(i)=soide(i-1)+soilay_fortran(nz_glob-i+1) 
+       soide(i)=soide(i-1)+soilay_fortran(nz_glob-i+1)
      enddo
      do i = 1, dim_obs_p
 
@@ -176,7 +176,7 @@ endif
        avesm_temp=0.d0
 
        !iteration
-       do while (abs(avesm-avesm_temp)/avesm .GE. da_crns_depth_tol)
+       do while (abs(avesm-avesm_temp)/avesm >= da_crns_depth_tol)
           !Averaging, conventional profile, Schroen et al HESS 2017 Eq. (3)
           avesm_temp=avesm
           Dp=0.058d0/(avesm+0.0829d0)
@@ -184,7 +184,7 @@ endif
           !Sum weight*soil_moisture
           avesm=0.d0; nsc=nz_glob
           do j=1,nz_glob
-             if ((soide(j-1).LT.Dp).AND.(Dp.LE.soide(j))) then
+             if ((soide(j-1)<Dp).AND.(Dp<=soide(j))) then
                nsc=j
              endif
           enddo
@@ -216,7 +216,7 @@ endif
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
 #ifdef CLMFIVE
- if (crns_flag.EQ.2) then
+ if (crns_flag==2) then
    lpointobs = .false.
    ! CRNS implementation based on Schrön et al. 2017 using
    ! d86 for 3 different radius values
@@ -290,7 +290,7 @@ endif
      avesm = 0.0
      DO j = 1, 8
        avesm = avesm + weights_layer(j) * state_p(obs_index_p(i) + (j-1))
-       ! This assumes that obs_index_p(i) for obs i is the index of 
+       ! This assumes that obs_index_p(i) for obs i is the index of
        ! the first layer of the gridcell where obs i is
      END DO
      ! Assign new average as the state variable
@@ -323,7 +323,7 @@ endif
   DO i = 1, dim_obs_p
      m_state_p(i) = state_p(obs_index_p(i))
   END DO
-      
+
   end if
 
 END SUBROUTINE obs_op_pdaf

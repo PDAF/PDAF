@@ -269,6 +269,6 @@ SUBROUTINE init_pdaf_info()
      ELSE
         WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
      END IF
-  END IF     
+  END IF
 
 END SUBROUTINE init_pdaf_info

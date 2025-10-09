@@ -37,12 +37,11 @@ jobs:
       - name: Install pip packages
         run:  pip install fortitude-lint
 
-  #TODO: Linter errors should be fixed one error code at a time
-  #(e.g. one error code per PR)
-  #
   #TODO: Checking only the interface, could also be interesting to use
   #for src/ and PR into main PDAF
+  #
+  # Ignored errors were unclear / needed for PDAF
       - name: Check Fortran coding style
-        continue-on-error: true
-        run: fortitude check --statistics interface
+        continue-on-error: false
+        run: fortitude check --statistics --ignore=C003,C072,C091,C092 --line-length=132 interface/framework interface/model/eclm
 

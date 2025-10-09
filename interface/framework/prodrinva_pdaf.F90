@@ -36,7 +36,7 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank_dim_ens, obs_p, A_p, C_p)
 ! Used in the filters: SEIK/ETKF/ESTKF
 !
 ! The routine is called during the analysis step.
-! It has to compute the product of the inverse of 
+! It has to compute the product of the inverse of
 ! the observation error covariance matrix with
 ! the observed ensemble perturbations (SEIK/ETKF/ESTKF).
 !
@@ -55,10 +55,10 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank_dim_ens, obs_p, A_p, C_p)
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                ! Current time step
   INTEGER, INTENT(in) :: dim_obs_p           ! PE-local dimension of obs. vector
-  INTEGER, INTENT(in) :: rank_dim_ens        ! Ensemble size in case of ETKF filter else 
+  INTEGER, INTENT(in) :: rank_dim_ens        ! Ensemble size in case of ETKF filter else
                                              ! rank of initial covariance matrix for ESTKF and SEIK filter
   REAL, INTENT(in)    :: obs_p(dim_obs_p)    ! PE-local vector of observations
-  ! The second dimension of input and ouput matrix is dim_ens for ETKF, 
+  ! The second dimension of input and ouput matrix is dim_ens for ETKF,
   ! while it is rank for the ESTKF and SEIK filter
   REAL, INTENT(in)    :: A_p(dim_obs_p,rank_dim_ens) ! Input matrix from SEIK_ANALYSIS
   REAL, INTENT(out)   :: C_p(dim_obs_p,rank_dim_ens) ! Output matrix

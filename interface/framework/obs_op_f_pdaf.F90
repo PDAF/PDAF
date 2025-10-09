@@ -37,18 +37,18 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
   !
   ! The routine is called in PDAF\_X\_update
   ! before the loop over all local analysis domains
-  ! is entered.  The routine has to perform the 
-  ! operation of the observation operator acting on 
-  ! a state vector.  The full vector of all 
+  ! is entered.  The routine has to perform the
+  ! operation of the observation operator acting on
+  ! a state vector.  The full vector of all
   ! observations required for the localized analysis
   ! on the PE-local domain has to be initialized.
-  ! This is usually data on the PE-local domain plus 
-  ! some region surrounding the PE-local domain. 
-  ! This data is gathered by MPI operations. The 
-  ! gathering has to be done here, since in the loop 
+  ! This is usually data on the PE-local domain plus
+  ! some region surrounding the PE-local domain.
+  ! This data is gathered by MPI operations. The
+  ! gathering has to be done here, since in the loop
   ! through all local analysis domains, no global
-  ! MPI operations can be performed, because the 
-  ! number of local analysis domains can vary from 
+  ! MPI operations can be performed, because the
+  ! number of local analysis domains can vary from
   ! PE to PE.
   !
   ! !REVISION HISTORY:
@@ -56,16 +56,21 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
   ! Later revisions - see svn log
   !
   ! !USES:
+  USE mpi, ONLY: MPI_DOUBLE
+  USE mpi, ONLY: MPI_DOUBLE_PRECISION
+  USE mpi, ONLY: MPI_INT
+  USE mpi, ONLY: MPI_SUM
+  USE mpi, ONLY: MPI_ALLGATHERV
   USE mod_assimilation, &
        ONLY: obs_index_p, local_dims_obs, local_disp_obs, obs_id_p, obs_nc2pdaf_deprecated, &
        var_id_obs, dim_obs_p
   USE mod_assimilation, ONLY: obs_pdaf2nc
   USE mod_assimilation, ONLY: obs_nc2pdaf
   USE mod_parallel_pdaf, &
-       ONLY: mype_world, mype_filter, npes_filter, comm_filter, MPI_DOUBLE, &
-       MPI_DOUBLE_PRECISION, MPI_INT, MPI_SUM, abort_parallel
-  !USE mod_read_obs, & 
-  !     ONLY: var_id_obs_nc 
+       ONLY: mype_world, mype_filter, npes_filter, comm_filter, &
+       abort_parallel
+  !USE mod_read_obs, &
+  !     ONLY: var_id_obs_nc
 
   IMPLICIT NONE
 
@@ -116,7 +121,7 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
      m_state_tmp(i) = state_p(obs_index_p(i))
      obs_nc2pdaf_deprecated_p_tmp(i)  = obs_id_p(obs_index_p(i))
   END DO
-  
+
   !print *,'local_dims_obs(mype_filter+1) ', local_dims_obs(mype_filter+1)
   !print *,'dim_obs_p ', dim_obs_p
 
@@ -129,13 +134,13 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 
   ! gather obs_nc2pdaf_deprecated_p
   CALL mpi_allgatherv(obs_nc2pdaf_deprecated_p_tmp, dim_obs_p, &
-       MPI_INT, obs_nc2pdaf_deprecated, local_dims_obs, local_disp_obs, &  
+       MPI_INT, obs_nc2pdaf_deprecated, local_dims_obs, local_disp_obs, &
        MPI_INT, comm_filter, ierror)
 
   ! At this point OBS_NC2PDAF_DEPRECATED should be the same as OBS_PDAF2NC from
   ! INIT_DIM_OBS_PDAF / INIT_DIM_OBS_F_PDAF
   do i = 1, dim_obs_f
-    if(.not. obs_nc2pdaf_deprecated(i) .eq. obs_pdaf2nc(i)) then
+    if(.not. obs_nc2pdaf_deprecated(i) == obs_pdaf2nc(i)) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR in observation index arrays"
       print *, "i=", i
       print *, "obs_nc2pdaf_deprecated(i)=", obs_nc2pdaf_deprecated(i)
@@ -158,7 +163,7 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
   ! At this point OBS_NC2PDAF_DEPRECATED should be the same as OBS_NC2PDAF from
   ! INIT_DIM_OBS_PDAF / INIT_DIM_OBS_F_PDAF
   do i = 1, dim_obs_f
-    if(.not. obs_nc2pdaf_deprecated(i) .eq. obs_nc2pdaf(i)) then
+    if(.not. obs_nc2pdaf_deprecated(i) == obs_nc2pdaf(i)) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR in observation index arrays"
       print *, "i=", i
       print *, "obs_nc2pdaf_deprecated(i)=", obs_nc2pdaf_deprecated(i)

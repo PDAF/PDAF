@@ -36,11 +36,11 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs, C_p)
 ! Used in the filters: EnKF
 !
 ! The routine is called during the analysis step
-! by PDAF\_enkf\_analysis_X (X=rlm or rsm).  It 
-! has to add the observation error covariance 
-! matrix to the provided matrix C_p for the 
+! by PDAF\_enkf\_analysis_X (X=rlm or rsm).  It
+! has to add the observation error covariance
+! matrix to the provided matrix C_p for the
 ! PE-local domain .
-! 
+!
 ! Implementation for TSMP-PDAF.
 !
 ! !REVISION HISTORY:
@@ -89,17 +89,17 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs, C_p)
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-  if(multierr.ne.1) then
+  if(multierr/=1) then
     DO i = 1, dim_obs
        C_p(i, i) = C_p(i, i) + variance_obs
     ENDDO
   endif
 
- 
-  if(multierr.eq.1) then
+
+  if(multierr==1) then
 
     ! Check that point observations are used
-    if (.not. point_obs .eq. 1) then
+    if (.not. point_obs == 1) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR(3) `point_obs.eq.1` needed for using obs_pdaf2nc."
       call abort_parallel()
     end if

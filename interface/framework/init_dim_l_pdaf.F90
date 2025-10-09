@@ -37,7 +37,7 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 !
 ! The routine is called during analysis step
 ! in the loop over all local analysis domain.
-! It has to set the dimension of local model 
+! It has to set the dimension of local model
 ! state on the current analysis domain.
 !
 ! !REVISION HISTORY:
@@ -75,20 +75,20 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
 #if defined COUP_OAS_PFL
   if (model == tag_model_parflow) then
-     ! Set the size of the local analysis domain 
+     ! Set the size of the local analysis domain
      call init_dim_l_pfl(dim_l)
   end if
   if (model == tag_model_clm) then
-     ! Set the size of the local analysis domain   
-     dim_l = 1     
-  end if   
+     ! Set the size of the local analysis domain
+     dim_l = 1
+  end if
 #endif
 
 #if defined CLMSA
-  ! Set the size of the local analysis domain  
+  ! Set the size of the local analysis domain
   ! for clm stand alone mode only
 
   call init_dim_l_clm(domain_p, dim_l)
 #endif
- 
+
 END SUBROUTINE init_dim_l_pdaf

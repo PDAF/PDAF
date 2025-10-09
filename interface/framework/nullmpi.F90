@@ -35,7 +35,7 @@ SUBROUTINE mpi_init(i)
 ! This routine simulates MPI functionality for
 ! a program running on a single processor. Its
 ! purpose is to avoid the need of a real MPI
-! library when running serial jobs. 
+! library when running serial jobs.
 !
 ! !REVISION HISTORY:
 ! 2004-10 - Lars Nerger - Initial code
@@ -44,8 +44,8 @@ SUBROUTINE mpi_init(i)
 
   IMPLICIT NONE
 
-  INTEGER :: i
-  
+  INTEGER, INTENT(out) :: i
+
   i = 0
 
 END SUBROUTINE mpi_init
@@ -55,8 +55,8 @@ SUBROUTINE mpi_finalize(i)
 
   IMPLICIT NONE
 
-  INTEGER :: i
-  
+  INTEGER, INTENT(out) :: i
+
   i=0
 
 END SUBROUTINE mpi_finalize
@@ -66,9 +66,9 @@ SUBROUTINE MPI_Comm_Size(comm, npes_world, i)
 
   IMPLICIT NONE
 
-  INTEGER :: comm
-  INTEGER :: npes_world
-  INTEGER :: i
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: npes_world
+  INTEGER, INTENT(out) :: i
 
   npes_world = 1
   i = 0
@@ -80,9 +80,9 @@ SUBROUTINE MPI_Comm_Rank(comm, mype_world, i)
 
   IMPLICIT NONE
 
-  INTEGER :: comm
-  INTEGER :: mype_world
-  INTEGER :: i
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: mype_world
+  INTEGER, INTENT(out) :: i
 
   mype_world = 0
   i = 0
@@ -94,11 +94,11 @@ SUBROUTINE MPI_Comm_split(comm_a, my_comm, mype_a, comm_b, mpierr)
 
   IMPLICIT NONE
 
-  INTEGER :: comm_a
-  INTEGER :: my_comm
-  INTEGER :: mype_a
-  INTEGER :: comm_b
-  INTEGER :: MPIerr
+  INTEGER, INTENT(in)  :: comm_a
+  INTEGER, INTENT(out) :: my_comm
+  INTEGER, INTENT(out) :: mype_a
+  INTEGER, INTENT(out) :: comm_b
+  INTEGER, INTENT(out) :: MPIerr
 
   comm_b = 1
   my_comm = 1
@@ -112,8 +112,8 @@ SUBROUTINE MPI_Barrier(comm, mpierr)
 
   IMPLICIT NONE
 
-  INTEGER :: comm
-  INTEGER :: mpierr
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: mpierr
 
   mpierr = 0
 
@@ -125,13 +125,13 @@ SUBROUTINE MPI_Send(field, dim, datatype, pe_source, pe_target, &
 
   IMPLICIT NONE
 
-  INTEGER :: dim
-  INTEGER :: field(dim)
-  INTEGER :: datatype
-  INTEGER :: pe_source
-  INTEGER :: pe_target
-  INTEGER :: comm
-  INTEGER :: mpierr
+  INTEGER, INTENT(in)  :: dim
+  INTEGER, INTENT(in)  :: field(dim)
+  INTEGER, INTENT(in)  :: datatype
+  INTEGER, INTENT(in)  :: pe_source
+  INTEGER, INTENT(in)  :: pe_target
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: mpierr
 
   mpierr = 0
 
@@ -143,14 +143,14 @@ SUBROUTINE MPI_Recv(field, dim, datatype, pe_source, pe_target, &
 
   IMPLICIT NONE
 
-  INTEGER :: dim
-  INTEGER :: field(dim)
-  INTEGER :: datatype
-  INTEGER :: pe_source
-  INTEGER :: pe_target
-  INTEGER :: comm
-  INTEGER :: flag
-  INTEGER :: mpierr
+  INTEGER, INTENT(in)  :: dim
+  INTEGER, INTENT(in)  :: field(dim)
+  INTEGER, INTENT(in)  :: datatype
+  INTEGER, INTENT(in)  :: pe_source
+  INTEGER, INTENT(in)  :: pe_target
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(in)  :: flag
+  INTEGER, INTENT(out) :: mpierr
 
   mpierr = 0
 
@@ -161,12 +161,12 @@ SUBROUTINE MPI_BCast(field, dim, datatype, pe_source, comm, mpierr)
 
   IMPLICIT NONE
 
-  INTEGER :: dim
-  INTEGER :: field(dim)
-  INTEGER :: datatype
-  INTEGER :: pe_source
-  INTEGER :: comm
-  INTEGER :: mpierr
+  INTEGER, INTENT(in)  :: dim
+  INTEGER, INTENT(in)  :: field(dim)
+  INTEGER, INTENT(in)  :: datatype
+  INTEGER, INTENT(in)  :: pe_source
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: mpierr
 
   mpierr = 0
 
@@ -178,13 +178,13 @@ SUBROUTINE MPI_Allreduce(field_in, field_out, dim, fieldtype, operation, &
 
   IMPLICIT NONE
 
-  INTEGER :: dim
-  REAL    :: field_in(dim)
-  REAL    :: field_out(dim)
-  INTEGER :: fieldtype
-  INTEGER :: operation
-  INTEGER :: comm
-  INTEGER :: mpierr
+  INTEGER, INTENT(in)  :: dim
+  REAL, INTENT(in)     :: field_in(dim)
+  REAL, INTENT(out)    :: field_out(dim)
+  INTEGER, INTENT(in)  :: fieldtype
+  INTEGER, INTENT(in)  :: operation
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: mpierr
 
   field_out = field_in
   mpierr = 0
@@ -197,14 +197,14 @@ SUBROUTINE MPI_Reduce(field_in, field_out, dim, fieldtype, operation, &
 
   IMPLICIT NONE
 
-  INTEGER :: dim
-  REAL    :: field_in(dim)
-  REAL    :: field_out(dim)
-  INTEGER :: fieldtype
-  INTEGER :: operation
-  INTEGER :: pe_root
-  INTEGER :: comm
-  INTEGER :: mpierr
+  INTEGER, INTENT(in)  :: dim
+  REAL, INTENT(in)     :: field_in(dim)
+  REAL, INTENT(out)    :: field_out(dim)
+  INTEGER, INTENT(in)  :: fieldtype
+  INTEGER, INTENT(in)  :: operation
+  INTEGER, INTENT(in)  :: pe_root
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: mpierr
 
   field_out = field_in
   mpierr = 0
@@ -217,15 +217,15 @@ SUBROUTINE MPI_Allgather(field_in, dim_in, type_in, field_out, dim_out, &
 
   IMPLICIT NONE
 
-  INTEGER :: dim_in
-  REAL    :: field_in(dim_in)
-  INTEGER :: type_in
-  INTEGER :: dim_out
-  REAL    :: field_out(dim_out)
-  INTEGER :: dis
-  INTEGER :: type_out
-  INTEGER :: comm
-  INTEGER :: mpierr
+  INTEGER, INTENT(in)  :: dim_in
+  REAL, INTENT(in)     :: field_in(dim_in)
+  INTEGER, INTENT(in)  :: type_in
+  INTEGER, INTENT(in)  :: dim_out
+  REAL, INTENT(out)    :: field_out(dim_out)
+  INTEGER, INTENT(in)  :: dis
+  INTEGER, INTENT(in)  :: type_out
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: mpierr
 
   field_out = field_in
   mpierr = 0
@@ -238,15 +238,15 @@ SUBROUTINE MPI_AllGatherV(field_in, dim_in, type_in, field_out, dim_out, &
 
   IMPLICIT NONE
 
-  INTEGER :: dim_in
-  REAL    :: field_in(dim_in)
-  INTEGER :: type_in
-  INTEGER :: dim_out
-  REAL    :: field_out(dim_out)
-  INTEGER :: dis
-  INTEGER :: type_out
-  INTEGER :: comm
-  INTEGER :: mpierr
+  INTEGER, INTENT(in)  :: dim_in
+  REAL, INTENT(in)     :: field_in(dim_in)
+  INTEGER, INTENT(in)  :: type_in
+  INTEGER, INTENT(in)  :: dim_out
+  REAL, INTENT(out)    :: field_out(dim_out)
+  INTEGER, INTENT(in)  :: dis
+  INTEGER, INTENT(in)  :: type_out
+  INTEGER, INTENT(in)  :: comm
+  INTEGER, INTENT(out) :: mpierr
 
   field_out = field_in
   mpierr = 0

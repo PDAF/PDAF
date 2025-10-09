@@ -23,7 +23,11 @@
 !-------------------------------------------------------------------------------------------
 
 module mod_clm_statistics
-  use iso_c_binding
+  ! use iso_c_binding
+
+  implicit none
+
+  public
 
 contains
   subroutine write_clm_statistics(ts,ttot) bind(C,name="write_clm_statistics")
@@ -37,5 +41,5 @@ contains
     write(*,*) "dummy func"
     get_statistic_filename = "test"
   end function get_statistic_filename
- 
+
 end module mod_clm_statistics

@@ -35,10 +35,10 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! User-supplied routine for PDAF.
 ! Used in the filters: LSEIK/LETKF/LESTKF
 !
-! The routine is called in PDAF\_X\_update 
-! at the beginning of the analysis step before 
-! the loop through all local analysis domains. 
-! It has to set the number of local analysis 
+! The routine is called in PDAF\_X\_update
+! at the beginning of the analysis step before
+! the loop through all local analysis domains.
+! It has to set the number of local analysis
 ! domains for the PE-local domain.
 !
 ! !REVISION HISTORY:
@@ -73,7 +73,7 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! ************************************
 #if defined PARFLOW_STAND_ALONE
   call init_n_domains_pfl(n_domains_p)
-#endif   
+#endif
 
 #if defined COUP_OAS_PFL
   if (model == tag_model_parflow) then

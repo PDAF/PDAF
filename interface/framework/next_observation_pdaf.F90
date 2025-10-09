@@ -36,15 +36,15 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 ! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
 ! The subroutine is called before each forecast phase
-! by PDAF\_get\_state. It has to initialize the number 
-! of time steps until the next available observation 
-! (nsteps) and the current model time (time). In 
+! by PDAF\_get\_state. It has to initialize the number
+! of time steps until the next available observation
+! (nsteps) and the current model time (time). In
 ! addition the exit flag (exit) has to be initialized.
-! It indicates if the data assimilation process is 
-! completed such that the ensemble loop in the model 
+! It indicates if the data assimilation process is
+! completed such that the ensemble loop in the model
 ! routine can be exited.
 !
-! The routine is called by all processes. 
+! The routine is called by all processes.
 !
 ! !REVISION HISTORY:
 ! 2013-09 - Lars Nerger - Initial code
@@ -79,12 +79,13 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
   !kuw: local variables
   integer :: counter
-  integer :: no_obs=0
+  integer :: no_obs
   character (len = 110) :: fn
   !kuw end
 
   REAL :: da_interval_new
-  
+
+  no_obs = 0
   time = 0.0    ! Not used in fully-parallel implementation variant
   doexit = 0
 
@@ -95,8 +96,8 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   !kuw end
 
   !kuw: check, for observation file with at least 1 observation
-!  counter = stepnow 
-  counter = stepnow 
+!  counter = stepnow
+  counter = stepnow
   !nsteps  = 0
 
   if (mype_world==0 .and. screen > 2) then
@@ -104,7 +105,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   end if
 
   do
-    !nsteps  = nsteps  + delt_obs 
+    !nsteps  = nsteps  + delt_obs
     counter = counter + delt_obs
 
     ! Exit if past last observation file
@@ -128,7 +129,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   nsteps = counter - stepnow
 
   ! flexible_da_interval should be input (0/1)
-  if(flexible_da_interval.eq.1) then
+  if(flexible_da_interval==1) then
 
 #ifdef PDAF_DEBUG
     ! Error Check: delt_obs must be one for flexible time stepping

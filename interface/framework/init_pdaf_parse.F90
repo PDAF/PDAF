@@ -35,7 +35,7 @@ SUBROUTINE init_pdaf_parse()
 ! This routine calls the command line parser to initialize
 ! variables for the data assimilation with PDAF.
 ! Using the parser is optional and shows one possibility
-! to modify the variables of the compiled program. An 
+! to modify the variables of the compiled program. An
 ! alternative to this might be Fortran namelist files.
 !
 ! !REVISION HISTORY:
@@ -78,7 +78,7 @@ SUBROUTINE init_pdaf_parse()
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
   CALL parse(handle, delt_obs)
-  handle = 'toffset'                ! Offset in time steps 
+  handle = 'toffset'                ! Offset in time steps
   CALL parse(handle, toffset)
   handle = 'rms_obs'                 ! Assumed uniform RMS error of the observations
   CALL parse(handle, rms_obs)

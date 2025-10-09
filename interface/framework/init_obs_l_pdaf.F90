@@ -36,18 +36,18 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! Used in the filters: LSEIK/LETKF/LESTKF
 !
 ! The routine is called during the analysis step
-! on each local analysis domain in 
-! PDAF\_lseik\_analysis.  It has to initialize 
-! the local vector of observations for the 
+! on each local analysis domain in
+! PDAF\_lseik\_analysis.  It has to initialize
+! the local vector of observations for the
 ! current local analysis domain.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code 
+! 2013-02 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
   USE mod_assimilation, &
-        ONLY: obs, obs_index_l 
+        ONLY: obs, obs_index_l
 
   IMPLICIT NONE
 
@@ -69,14 +69,14 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! *******************************************
 ! *** Initialize local observation vector ***
 ! *******************************************
-  
+
   ! Intialize local obseravtion vector
   observation_l(:) = 0.0
 
 !#ifndef CLMSA
   ! Index array OBS_INDEX_L (returns nc-ordered index) set in subroutine INIT_DIM_OBS_L_PDAF
   do i=1,dim_obs_l
-    observation_l(i) = obs(obs_index_l(i)) 
+    observation_l(i) = obs(obs_index_l(i))
   end do
 
 END SUBROUTINE init_obs_l_pdaf

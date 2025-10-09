@@ -37,9 +37,9 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 !
 ! The routine is called during the loop over all
 ! local analysis domains in PDAF\_lseik\_update
-! before the analysis on a single local analysis 
-! domain.  It has to project the full PE-local 
-! model state onto the current local analysis 
+! before the analysis on a single local analysis
+! domain.  It has to project the full PE-local
+! model state onto the current local analysis
 ! domain.
 !
 ! !REVISION HISTORY:
@@ -64,7 +64,7 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
   INTEGER, INTENT(in) :: domain_p       ! Current local analysis domain
   INTEGER, INTENT(in) :: dim_p          ! PE-local full state dimension
   INTEGER, INTENT(in) :: dim_l          ! Local state dimension
-  REAL, TARGET, INTENT(in)    :: state_p(dim_p) ! PE-local full state vector 
+  REAL, TARGET, INTENT(in)    :: state_p(dim_p) ! PE-local full state vector
   REAL, TARGET, INTENT(out)   :: state_l(dim_l) ! State vector on local analysis domain
 
   INTEGER :: i, n_domain, nshift_p
@@ -92,5 +92,5 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 #else
   call g2l_state_clm(domain_p, dim_p, state_p, dim_l, state_l)
 #endif
-  
+
 END SUBROUTINE g2l_state_pdaf

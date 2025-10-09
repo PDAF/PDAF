@@ -48,8 +48,8 @@ SUBROUTINE finalize_pdaf()
   USE mod_parallel_pdaf, &
        ONLY: local_npes_model, mype_world
 
-  IMPLICIT NONE    
-  
+  IMPLICIT NONE
+
 ! !CALLING SEQUENCE:
 ! Called by: main program
 !EOP

@@ -38,11 +38,11 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 !
 ! During the forecast phase of the filter this
 ! subroutine is called from PDAF\_get\_state
-! supplying a model state which has to be evolved. 
-! The routine has to initialize the fields of the 
-! model (typically available through a module) from 
-! the state vector of PDAF. With parallelization, 
-! MPI communication might be required to 
+! supplying a model state which has to be evolved.
+! The routine has to initialize the fields of the
+! model (typically available through a module) from
+! the state vector of PDAF. With parallelization,
+! MPI communication might be required to
 ! initialize all subdomains on the model PEs.
 !
 ! The routine is executed by each process that is
@@ -71,16 +71,16 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   !kuw: get access to clm variables
 #if defined CLMFIVE
   use GridcellType, only : gridcell_type
-#else    
+#else
   USE clmtype      , only : clm3
-#endif    
+#endif
   USE clm_varpar   , only : nlevsoi
   use shr_kind_mod, only: r8 => shr_kind_r8
   use enkf_clm_mod, only: clm_statevec
   !kuw end
 #endif
   IMPLICIT NONE
-  
+
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_p           ! PE-local state dimension
   REAL, INTENT(inout) :: state_p(dim_p)  ! PE-local state vector
@@ -102,7 +102,8 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 #ifdef PDAF_DEBUG
   ! Debug output: Distributed state array
   DO i = 1, MIN(dim_p,6)
-    WRITE(*, '(a,x,a,i5,x,a,i1,a,x,f12.8)') "TSMP-PDAF-debug", "mype(w)=", mype_world, "distribute_state_pdaf: state_p(", i, "):", state_p(i)
+    WRITE(*, '(a,x,a,i5,x,a,i1,a,x,f12.8)') "TSMP-PDAF-debug", "mype(w)=", mype_world, &
+      "distribute_state_pdaf: state_p(", i, "):", state_p(i)
   END DO
 #endif
 

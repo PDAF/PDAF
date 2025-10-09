@@ -19,11 +19,15 @@
 !
 !
 !-------------------------------------------------------------------------------------------
-!enkf_clm_5.F90: Wrapper functions for CLM 5 
+!enkf_clm_5.F90: Wrapper functions for CLM 5
 !-------------------------------------------------------------------------------------------
 module enkf_clm_5
 
-#include <mpif.h>
+  ! use mpi
+
+  implicit none
+
+  public
 
   contains
 
@@ -63,8 +67,11 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   ! use cime_comp_mod, only : cime_final
 !!<< TSMP PDAF comment out end
 !!>> TSMP PDAF addition beginning
-  use iso_C_binding
-  use enkf_clm_mod
+  use iso_C_binding, only: c_char, c_int
+  use enkf_clm_mod, only: COMM_model_clm
+#if defined CLMSA
+  use enkf_clm_mod, only: define_clm_statevec
+#endif
 !!<< TSMP PDAF addition end
 
   implicit none
@@ -73,7 +80,7 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   !--------------------------------------------------------------------------
   ! PDAF variables
   !--------------------------------------------------------------------------
-  character(kind=c_char,len=1),dimension(100),intent(in) :: finname 
+  character(kind=c_char,len=1),dimension(100),intent(in) :: finname
   integer(c_int), intent(in) :: pdaf_id
   integer(c_int), intent(in) :: pdaf_max
   integer(c_int), intent(in) :: mype
@@ -179,7 +186,7 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
 
 #if defined CLMSA
   call define_clm_statevec(mype)
-#endif 
+#endif
 
 
 end subroutine clm_init
@@ -194,8 +201,8 @@ end subroutine clm_init
 !--------------------------------------------------------------------------
 subroutine clm_advance(ntstep, tstartcycle, mype) bind(C,name="clm_advance")
   use cime_comp_mod, only : cime_run
-  use enkf_clm_mod, only : set_clm_statevec 
-  use iso_C_binding
+  use enkf_clm_mod, only : set_clm_statevec
+  use iso_C_binding, only : c_int
 
   implicit none
   !--------------------------------------------------------------------------
@@ -220,7 +227,7 @@ end subroutine clm_advance
 ! Therefor, it can cause conflicts if mpi_finalize() is called elsewhere.
 !--------------------------------------------------------------------------
 subroutine clm_finalize() bind(C,name="clm_finalize")
-  use iso_C_binding
+  ! use iso_C_binding
 
   ! use ESMF,          only : ESMF_Initialize, ESMF_Finalize
   use cime_comp_mod, only : cime_final

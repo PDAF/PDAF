@@ -38,12 +38,12 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 !
 ! The routine is called during the analysis step
 ! on each of the local analysis domains.
-! It has to restrict the full vector of all 
-! observations required for the loop of localized 
-! analyses on the PE-local domain to the current 
+! It has to restrict the full vector of all
+! observations required for the loop of localized
+! analyses on the PE-local domain to the current
 ! local analysis domain.
 !
-! Generic implementation using index vector 
+! Generic implementation using index vector
 ! ID_LOBS_IN_FOBS
 !
 ! This routine is called by all filter processes.
@@ -78,7 +78,7 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 
 
 ! *******************************************************
-! *** Perform localization of some observation vector *** 
+! *** Perform localization of some observation vector ***
 ! *** to the current local analysis domain.           ***
 ! *******************************************************
 
@@ -89,7 +89,7 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
   ! Index array OBS_NC2PDAF_DEPRECATED set in subroutine OBS_OP_F_PDAF
   ! Index array OBS_INDEX_L (returns nc-ordered index) set in subroutine INIT_DIM_OBS_L_PDAF
   do i=1,dim_obs_l
-    !mstate_l(i) = mstate_f(obs_index_l(i)) 
+    !mstate_l(i) = mstate_f(obs_index_l(i))
     mstate_l(i) = mstate_f(obs_nc2pdaf_deprecated(obs_index_l(i)))
   end do
 

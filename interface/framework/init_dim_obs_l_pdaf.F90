@@ -36,8 +36,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   ! Used in the filters: LSEIK/LETKF/LESTKF
   !
   ! The routine is called during the loop over
-  ! all local analysis domains. It has to set 
-  ! the dimension of the local observation vector 
+  ! all local analysis domains. It has to set
+  ! the dimension of the local observation vector
   ! for the current local analysis domain.
   !
   ! !REVISION HISTORY:
@@ -58,12 +58,13 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
        ONLY: lon_var_id, ix_var_id, lat_var_id, iy_var_id
   USE mod_read_obs, &
        ONLY: x_idx_obs_nc, y_idx_obs_nc, z_idx_obs_nc, idx_obs_nc, clmobs_lon, &
-       clmobs_lat, var_id_obs_nc, dim_nx, dim_ny 
-  USE mod_tsmp, &
+       clmobs_lat, var_id_obs_nc, dim_nx, dim_ny
 #if defined CLMSA
+  USE mod_tsmp, &
   ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
        tag_model_clm, point_obs, model
 #else
+  USE mod_tsmp, &
   ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
        tag_model_clm, nx_glob, ny_glob, nz_glob, &
        xcoord, ycoord, zcoord, &
@@ -162,14 +163,14 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   obsind    = 0
   obsdist   = 0.0
   dim_obs_l = 0
-  if(point_obs.eq.0) then
+  if(point_obs==0) then
      if(model == tag_model_parflow) THEN
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
      allocate(log_var_id(max_var_id))
      log_var_id(:) = .TRUE.
 
      do m = 1, dim_nx
-        do k = 1, dim_ny   
+        do k = 1, dim_ny
            i = (m-1)* dim_ny + k
            do j = 1, max_var_id
               if(log_var_id(j) .and. var_id_obs_nc(k,m) == j) then
@@ -188,14 +189,14 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
                     dim_obs_l = dim_obs_l + 1
                     obsind(i) = 1
                     log_var_id(j) = .FALSE.
-                    obsdist(i) = dist  
+                    obsdist(i) = dist
                  end if
               end if
            end do
         end do
      end do
      end if
-  else   
+  else
      if(model == tag_model_parflow) THEN
         do i = 1,dim_obs
            dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p_coord))-1)
@@ -217,14 +218,14 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   obsind    = 0
   obsdist   = 0.0
   dim_obs_l = 0
-  if(point_obs.eq.0) then
+  if(point_obs==0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
      allocate(log_var_id(max_var_id))
      log_var_id(:) = .TRUE.
 
      if(model == tag_model_clm) THEN
      do m = 1, dim_nx
-        do k = 1, dim_ny   
+        do k = 1, dim_ny
            i = (m-1)* dim_ny + k
            do j = 1, max_var_id
               if(log_var_id(j) .and. var_id_obs_nc(k,m) == j) then
@@ -245,7 +246,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
      enddo
 
      do m = 1, dim_nx
-        do k = 1, dim_ny   
+        do k = 1, dim_ny
            i = (m-1)* dim_ny + k
            do j = 1, max_var_id
               if(log_var_id(j) .and. var_id_obs_nc(k,m) == j) then
@@ -266,7 +267,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
         enddo
      enddo
      end if
-  else 
+  else
      if(model == tag_model_clm) THEN
 
 #ifdef CLMSA
@@ -312,10 +313,10 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
            obsind(i) = 1
         end if
      end do
-     end if 
+     end if
   end if
 #endif
-#endif  
+#endif
 !------------------------------------------------------------------------
 
   ! kuw: allocate and determine local observation index and distance
@@ -329,14 +330,14 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
   cnt = 1
   do i = 1,dim_obs
-     if(obsind(i).eq.1) then
+     if(obsind(i)==1) then
         obs_index_l(cnt) = i
         distance(cnt)    = obsdist(i)
-        !print *,'mype_filter distance(cnt)  ', mype_filter, distance(cnt) 
+        !print *,'mype_filter distance(cnt)  ', mype_filter, distance(cnt)
         cnt = cnt + 1
      end if
   end do
-  
+
   ! if allocated than deallocate logical variable ID log_var_id for setting location
   ! observation vector using remote sensing data
   IF (ALLOCATED(log_var_id)) DEALLOCATE(log_var_id)

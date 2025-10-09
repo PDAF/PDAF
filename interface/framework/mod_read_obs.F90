@@ -23,9 +23,12 @@
 !-------------------------------------------------------------------------------------------
 
 module mod_read_obs
-  use iso_C_binding
+  use iso_C_binding, only: c_int, c_ptr, c_loc
 
   implicit none
+
+  public
+
   integer, allocatable :: idx_obs_nc(:)
   integer, allocatable :: x_idx_obs_nc(:)
   integer, allocatable :: y_idx_obs_nc(:)
@@ -83,7 +86,16 @@ contains
     use mod_tsmp, &
         only: point_obs, obs_interp_switch, is_dampfac_state_time_dependent, &
         is_dampfac_param_time_dependent, crns_flag
-    use netcdf
+    use netcdf, only: nf90_max_name
+    use netcdf, only: nf90_open
+    use netcdf, only: nf90_nowrite
+    use netcdf, only: nf90_inq_dimid
+    use netcdf, only: nf90_inquire_dimension
+    use netcdf, only: nf90_inq_varid
+    use netcdf, only: nf90_get_var
+    use netcdf, only: nf90_noerr
+    use netcdf, only: nf90_strerror
+    use netcdf, only: nf90_close
     implicit none
     integer :: ncid
     character (len = *), parameter :: dim_name = "dim_obs"
@@ -122,7 +134,7 @@ contains
     character (len = *), parameter :: y_idx_interp_d_name = "iy_interp_d"
     integer :: has_obs_pf
     integer :: has_depth
-#endif    
+#endif
 #endif
 
     ! CLM
@@ -159,7 +171,7 @@ contains
     ! Multi-scale data assimilation
     ! ----------------------------
     ! Not point observations, see TSMP-PDAF manual entry for input `point_obs`
-    if(point_obs .eq. 0) then
+    if(point_obs == 0) then
         call check(nf90_inq_dimid(ncid, dim_nx_name, dimid))
         call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_nx))
         if (screen > 2) then
@@ -247,7 +259,7 @@ contains
         end if
 
         !check, if observation errors are present in observation file
-        haserr = nf90_inq_varid(ncid, presserr_name, presserr_varid) 
+        haserr = nf90_inq_varid(ncid, presserr_name, presserr_varid)
         if(haserr == nf90_noerr) then
             multierr = 1
             !hcp pressure_obserr must be reallocated because dim_obs is not necessary
@@ -293,13 +305,13 @@ contains
 
         call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
         call check( nf90_get_var(ncid, z_idx_varid, z_idx_obs_nc) )
-        !hcp     
-        if  (crns_flag .EQ. 1) then
+        !hcp
+        if  (crns_flag == 1) then
             z_idx_obs_nc(:)=1
             !if ((maxval(z_idx_obs_nc).NE.1) .OR. (minval(z_idx_obs_nc).NE.1)) then
             !   write(*,*) 'For crns average mode parflow obs layer iz must be 1'
             !   stop
-            !endif 
+            !endif
         endif
         !end hcp
         if (screen > 2) then
@@ -307,7 +319,7 @@ contains
         end if
 
         ! Read observation distances to input observation grid point
-        if (obs_interp_switch .eq. 1) then
+        if (obs_interp_switch == 1) then
             if(allocated(x_idx_interp_d_obs_nc)) deallocate(x_idx_interp_d_obs_nc)
             allocate(x_idx_interp_d_obs_nc(dim_obs))
 
@@ -347,7 +359,7 @@ contains
         end if
 
         !check, if observation errors are present in observation file
-        haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
+        haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid)
         if(haserr == nf90_noerr) then
             multierr = 1
             if(allocated(clm_obserr)) deallocate(clm_obserr)
@@ -440,7 +452,14 @@ contains
   subroutine get_obsindex_currentobsfile(no_obs) bind(c,name='get_obsindex_currentobsfile')
     USE mod_tsmp, ONLY: tcycle
     USE mod_assimilation, only: obs_filename
-    use netcdf
+    use netcdf, only: nf90_max_name
+    use netcdf, only: nf90_open
+    use netcdf, only: nf90_nowrite
+    use netcdf, only: nf90_inq_dimid
+    use netcdf, only: nf90_inquire_dimension
+    use netcdf, only: nf90_inq_varid
+    use netcdf, only: nf90_get_var
+    use netcdf, only: nf90_close
 
     implicit none
     integer, intent(out) :: no_obs
@@ -552,7 +571,7 @@ contains
   !> @param[in] fn Filename of the observation file
   !> @param[out] nn number of observations in `fn`
   !> @details
-  !>     Reads the content of the variable (!) named `no_obs` from 
+  !>     Reads the content of the variable (!) named `no_obs` from
   !>     NetCDF file `fn`.
   !>
   !>     Uses  subroutines from the NetCDF module.
@@ -635,7 +654,8 @@ contains
   !> an error message if necessary.
   subroutine check(status)
 
-    use netcdf
+    use netcdf, only: nf90_noerr
+    use netcdf, only: nf90_strerror
     integer, intent ( in) :: status
 
     if(status /= nf90_noerr) then

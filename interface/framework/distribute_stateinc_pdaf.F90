@@ -35,17 +35,17 @@ SUBROUTINE distribute_stateinc_pdaf(dim_p, state_inc_p, new_forecast, steps)
 ! User-supplied routine for PDAF.
 ! Used in the filters: EnKF/SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
-! This subroutine is called during the forecast 
+! This subroutine is called during the forecast
 ! phase of the filter from PDAF\_incremental
 ! supplying the analysis state increment.
-! The routine has to compute the fraction of 
-! the increment to be added to the model state 
-! at each time step. Further, it has to transform 
-! the increment vector into increments of the 
-! fields of the model (typically available 
+! The routine has to compute the fraction of
+! the increment to be added to the model state
+! at each time step. Further, it has to transform
+! the increment vector into increments of the
+! fields of the model (typically available
 ! trough a module).
 !
-! The routine is executed by each process that 
+! The routine is executed by each process that
 ! is participating in the model integrations.
 !
 ! !REVISION HISTORY:
@@ -54,7 +54,7 @@ SUBROUTINE distribute_stateinc_pdaf(dim_p, state_inc_p, new_forecast, steps)
 !
 ! !USES:
   IMPLICIT NONE
-  
+
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_p           ! Dimension of PE-local state
   REAL, INTENT(in) :: state_inc_p(dim_p) ! PE-local state vector
@@ -63,7 +63,7 @@ SUBROUTINE distribute_stateinc_pdaf(dim_p, state_inc_p, new_forecast, steps)
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_incremental   (as U_dist_stateinc)
-!EOP  
+!EOP
 
 
 ! *******************************

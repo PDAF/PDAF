@@ -36,13 +36,13 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! Used in the filters: LSEIK/LETKF/LESTKF
 !
 ! The routine is called during the analysis step
-! on each local analysis domain. It has to 
+! on each local analysis domain. It has to
 ! compute the product of the inverse of the local
 ! observation error covariance matrix with
-! the matrix of locally observed ensemble 
+! the matrix of locally observed ensemble
 ! perturbations.
-! Next to computing the product,  a localizing 
-! weighting (similar to covariance localization 
+! Next to computing the product,  a localizing
+! weighting (similar to covariance localization
 ! often used in EnKF) can be applied to matrix A.
 !
 ! !REVISION HISTORY:
@@ -129,7 +129,7 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
         END IF
      END IF
   ENDIF
-  
+
   ! *** initialize numbers (this is for constant observation errors)
   ! Set observation variance and inverse here
   ivariance_obs = 1.0 / rms_obs**2
@@ -178,7 +178,7 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
      END IF
 
      IF (locweight /= 4) THEN
-        ! All localizations except regulated weight based on variance at 
+        ! All localizations except regulated weight based on variance at
         ! single observation point
         CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance(i), &
              dim_obs_l, rank, A_l, var_obs, weight(i), verbose_w)
@@ -223,5 +223,5 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
 ! *** Clean up ***
   DEALLOCATE(weight)
-  
+
 END SUBROUTINE prodRinvA_l_pdaf
