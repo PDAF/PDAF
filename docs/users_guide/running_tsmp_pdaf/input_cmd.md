@@ -40,6 +40,12 @@ algorithms please refer to PDAF wiki link
 
 <http://pdaf.awi.de/trac/wiki/AvailableOptionsforInitPDAF>
 
+### Which filter to use?
+
+Recommended by PDAF: LESTKF, ESTKF.
+
+Details: <https://pdaf.awi.de/trac/wiki/WhichFiltertouse>
+
 ## subtype ##
 
 `subtype` (integer) Parameter subtype, different options for each
