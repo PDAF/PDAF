@@ -73,8 +73,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        obs_pdaf2nc, &
        local_dims_obs, &
        local_disp_obs, &
-       dim_obs_p, &
-       obs_id_p
+       dim_obs_p
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
 !hcp
@@ -443,23 +442,16 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
   ! Number of observations in process-local domain
   ! ----------------------------------------------
-  ! Additionally `obs_id_p` is set (the NetCDF index of the
-  ! observation corresponding to the state index in the local domain)
   dim_obs_p = 0
 
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
   if (model == tag_model_parflow) then
 
-     if(allocated(obs_id_p)) deallocate(obs_id_p)
-     allocate(obs_id_p(enkf_subvecsize))
-     obs_id_p(:) = 0
-
      do i = 1, dim_obs
         do j = 1, enkf_subvecsize
            if (idx_obs_nc(i) == idx_map_subvec2state_fortran(j)) then
               dim_obs_p = dim_obs_p + 1
-              obs_id_p(j) = i
            end if
         end do
      end do
@@ -475,10 +467,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   is_use_dr = .true.
 
   if(model == tag_model_clm) then
-
-     if(allocated(obs_id_p)) deallocate(obs_id_p)
-     allocate(obs_id_p(endg-begg+1))
-     obs_id_p(:) = 0
 
      do i = 1, dim_obs
         cnt = 1
@@ -496,7 +484,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
             if(((is_use_dr).and.(deltax<=clmobs_dr(1)).and.(deltay<=clmobs_dr(2))).or. &
               ((.not. is_use_dr).and.(longxy_obs(i) == longxy(cnt)) .and. (latixy_obs(i) == latixy(cnt)))) then
                 dim_obs_p = dim_obs_p + 1
-                obs_id_p(cnt) = i
 
                 ! if (is_use_dr) then
                 !   call GetGlobalWrite(g,nameg)
