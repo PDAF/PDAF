@@ -690,7 +690,7 @@ module enkf_clm_mod
             do j=clm_begc,clm_endc
 
               ! If snow is masked, update only, when snow depth is less than 1mm
-              if( (.not. clmswc_mask_snow) .or. snow_depth(j) < 0.001 ) then
+              if( (clmswc_mask_snow == 0) .or. snow_depth(j) < 0.001 ) then
               ! Update only those SWCs that are not excluded by ispval
               if(state_clm2pdaf_p(j,i) /= ispval) then
 
