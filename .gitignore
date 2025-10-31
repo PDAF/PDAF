@@ -1,0 +1,8 @@
+include/*.mod
+interface/framework/*.mod
+interface/framework/*.o
+interface/model/*.mod
+interface/model/*.o
+lib/lib*
+src/*.mod
+src/*.o
