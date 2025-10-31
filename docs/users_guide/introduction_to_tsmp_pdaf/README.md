@@ -31,16 +31,7 @@ Please cite the following when using TSMP-PDAF in a publication
 
 ## Contributors
 
-In alphabetic order (to be extended):
-
-* Yorck Ewerdwalbesloh
-* Guowei He
-* Johannes Keller
-* Wolfgang Kurtz
-* Stefan Poll
-* Mukund Pondkule
-* Prabhakar Shrestha
-* Lukas Strebel
+In alphabetic order (to be extended): See CONTRIBUTORS.txt
 
 ## About this documentation
 
