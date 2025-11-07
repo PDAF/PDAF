@@ -169,7 +169,7 @@ contains
     ! assign indecies to the array that we are sorting
     if (sum(idx_a) .eq. 0) then
        do i = 1,na
-          idx_a(i) = 1
+          idx_a(i) = i
        end do
     end if
 
@@ -239,7 +239,7 @@ contains
   end subroutine quicksort_idx_d
 
 
-!> subroutine to sort using the insertionsort algorithm and return indecies
+!> subroutine to sort using the insertionsort algorithm and return indicies
 !! @param[in,out] a, an array of doubles to be sorted
 !! @param[in,out] idx_a, an array of integers of sorted indecies
 !! @param[in] na, dimension of the array a 
@@ -252,11 +252,13 @@ contains
  
     ! LOCAL VARIABLES
     real :: temp
+    integer :: idx_temp
     integer :: i, j
  
     do i = 2, nA
        j = i - 1
        temp = A(i)
+       idx_temp = idx_a(i)
        do
           if (j == 0) exit
           if (a(j) <= temp) exit
@@ -265,7 +267,7 @@ contains
           j = j - 1
        end do
        a(j+1) = temp
-       idx_a(j+1) = i
+       idx_a(j+1) = idx_temp !i
     end do
 
   end subroutine InsertionSort_idx_d
