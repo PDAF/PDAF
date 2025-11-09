@@ -1501,6 +1501,9 @@ CONTAINS
 !! grid point indices do not contain information on 
 !! coordinates in this case.
 !!
+!! This routine is coded for geographic coordinates in radian
+!! with longitude running from -pi to pi.
+!!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
@@ -1525,6 +1528,12 @@ CONTAINS
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, &
             'PDAFomi_get_domain_limits_unstr -- START'
+    END IF
+
+    ! Check for valid coordinate ranges
+    IF (MAXVAL(coords_p(1,:))>3.2 .OR. MINVAL(coords_p(1,:))<-3.2 .OR. &
+         MAXVAL(coords_p(2,:))>3.2 .OR. MINVAL(coords_p(2,:))<-3.2) THEN
+       WRITE (*,'(a)') 'PDAFomi - ERROR: get_domain_limits_unstr requires coordinates in radian !!!'
     END IF
 
     ! Initialize limiting values
