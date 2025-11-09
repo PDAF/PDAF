@@ -402,7 +402,7 @@ CONTAINS
     ALLOCATE(HXpert_i(dim_ens))
     ALLOCATE(HXinc_i(dim_ens))
     ALLOCATE(cov_xy_p(dim_p))
-    ALLOCATE(cov_hxy_p(dim_p))
+    ALLOCATE(cov_hxy_p(dim_obs_p))
     IF (allocflag == 0) &
          CALL PDAF_memcount(3, 'r', 2*dim_p + 2*dim_ens)
 
@@ -436,20 +436,20 @@ CONTAINS
        END DO
        var_hx = var_hx * invdim_ensm1
 
-       ! Compute ration of variance
+       ! Compute ratio of variances
        var_ratio = var_obs_p(iobs) / (var_hx + var_obs_p(iobs))
 
        CALL PDAF_timeit(30, 'old')
        CALL PDAF_timeit(31, 'new')
 
-       ! Compute covariances between state ensemble and observation
+       ! Compute covariances between state ensemble and single observation
        cov_xy_p = 0.0
        DO member = 1, dim_ens
           cov_xy_p(:) = cov_xy_p(:) + ens_p(:, member) * HXpert_i(member)
        END DO
        cov_xy_p = cov_xy_p * invdim_ensm1
 
-       ! Compute covariances between observed state ensemble and observation
+       ! Compute covariances between observed state ensemble and single observation
        cov_hxy_p = 0.0
        DO member = 1, dim_ens
           cov_hxy_p(:) = cov_hxy_p(:) + HX_p(:, member) * HXpert_i(member)
@@ -509,6 +509,7 @@ CONTAINS
 
        ! ****************************************************
        ! *** Update observed ensemble and its mean        ***
+       ! *** This step is required for parallelization    ***
        ! ****************************************************
 
        CALL PDAF_timeit(13, 'new')
