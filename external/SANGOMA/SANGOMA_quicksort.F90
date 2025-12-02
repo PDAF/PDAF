@@ -272,4 +272,133 @@ contains
 
   end subroutine InsertionSort_idx_d
 
+!---------------------------------------------------------------------------
+!> Quicksort for a rank-2 real array and related index array vector. The row
+!! to be sorted is set by 'row'.     
+!!
+  recursive subroutine quicksort_idx_d2(a,row,idx_a,na)
+
+    implicit none 
+
+    ! DUMMY ARGUMENTS
+    integer, intent(in) :: na                      !< nr or items to sort
+    integer, intent(in) :: row                     !< which row of 'a' to sort
+    real, dimension(:, :), intent(inout) :: a     !< vector to be sorted
+    integer, dimension(nA), intent(inout) :: idx_a !< sorted indecies of a
+ 
+    ! LOCAL VARIABLES
+    integer :: left, right, mid
+    real :: pivot, temp
+    integer :: marker, idx_temp
+    integer :: i ! counter
+
+
+    ! If this is the original call of the quicksort_d function 
+    ! assign indecies to the array that we are sorting
+    if (sum(idx_a) .eq. 0) then
+       do i = 1,na
+          idx_a(i) = i
+       end do
+    end if
+
+    if (nA > 1) then
+       ! insertion sort limit of 47 seems best for sorting 10 million
+       ! integers on Intel i7-980X CPU.  Derived data types that use
+       ! more memory are optimized with smaller values - around 20 for a 16
+       ! -byte type.
+       if (nA > 47) then
+          ! Do quicksort for large groups
+          ! Get median of 1st, mid, & last points for pivot (helps reduce
+          ! long execution time on some data sets, such as already
+          ! sorted data, over simple 1st point pivot)
+          mid = (nA+1)/2
+          if (a(row, mid) >= a(row, 1)) then
+             if (a(row, mid) <= a(row, nA)) then
+                pivot = a(row,mid)
+             else if (a(row, nA) > a(row, 1)) then
+                pivot = a(row, nA)
+             else
+                pivot = a(row, 1)
+             end if
+          else if (a(row, 1) <= a(row, nA)) then
+             pivot = a(row, 1)
+          else if (a(row, nA) > a(row, mid)) then
+             pivot = a(row, nA)
+          else
+             pivot = a(row, mid)
+          end if
+
+          left = 0
+          right = nA + 1
+ 
+          do while (left < right)
+             right = right - 1
+             do while (A(row, right) > pivot)
+                right = right - 1
+             end do
+             left = left + 1
+             do while (A(row, left) < pivot)
+                left = left + 1
+             end do
+             if (left < right) then
+                temp = A(row, left)
+                idx_temp = idx_a(left)
+                A(row, left) = A(row, right)
+                idx_a(left) = idx_a(right)
+                A(row, right) = temp
+                idx_a(right) = idx_temp
+             end if
+          end do
+ 
+          if (left == right) then
+             marker = left + 1
+          else
+             marker = left
+          end if
+ 
+          call quicksort_idx_d2(A(:, :marker-1), row, idx_A(:marker-1), marker-1)
+          call quicksort_idx_d2(A(:, marker:), row, idx_A(marker:), nA-marker+1)
+ 
+       else
+          call InsertionSort_idx_d2(A, row, idx_a, nA)    ! Insertion sort for small groups is faster than Quicksort
+       end if
+    end if
+ 
+  end subroutine quicksort_idx_d2
+
+
+!> subroutine to sort using the insertionsort algorithm and return indicies
+!! @param[in,out] a, a rank-2 array of doubles whose row 'row' is to be sorted
+!! @param[in,out] idx_a, an array of integers of sorted indecies
+!! @param[in] na, dimension of the array a 
+  subroutine InsertionSort_idx_d2(a, row, idx_a, na)
+ 
+     ! DUMMY ARGUMENTS
+    integer, intent(in) :: na                      !< nr or items to sort
+    integer, intent(in) :: row                     !< which row of 'a' to sort
+    real, dimension(:,:), intent(inout) :: a       !< vector to be sorted
+    integer, dimension(nA), intent(inout) :: idx_a !< sorted indecies of a
+ 
+    ! LOCAL VARIABLES
+    real :: temp
+    integer :: idx_temp
+    integer :: i, j
+ 
+    do i = 2, nA
+       j = i - 1
+       temp = A(row, i)
+       idx_temp = idx_a(i)
+       do
+          if (j == 0) exit
+          if (a(row, j) <= temp) exit
+          A(row, j+1) = A(row, j)
+          idx_a(j+1) = idx_a(j)
+          j = j - 1
+       end do
+       a(row, j+1) = temp
+       idx_a(j+1) = idx_temp
+    end do
+
+  end subroutine InsertionSort_idx_d2
+
 end module SANGOMA_quicksort

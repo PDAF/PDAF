@@ -19,7 +19,8 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   USE PDAF, &                  ! Routine to provide local indices to PDAF
        ONLY: PDAFlocal_set_indices
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: coords_l, ny, local_dims
+       ONLY: coords_l, ny, local_dims, &
+       type_coords, coords_origin, coords_scale, deg2rad
   USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: mype_filter
 
@@ -56,6 +57,12 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   END DO
   coords_l(1) = REAL(CEILING(REAL(domain_p+off_p)/REAL(ny)))
   coords_l(2) = REAL(domain_p+off_p) - (coords_l(1)-1)*REAL(ny)
+
+  IF (type_coords>1) THEN
+     ! Geographic coordinates - scale and shift to origin
+     coords_l(1) = deg2rad * (coords_origin(1) + coords_scale * (coords_l(1)-1.0))
+     coords_l(2) = deg2rad * (coords_origin(2) + coords_scale * (coords_l(2)-1.0))
+  END IF
 
 
 ! ******************************************************

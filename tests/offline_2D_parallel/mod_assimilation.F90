@@ -32,6 +32,16 @@ MODULE mod_assimilation
   REAL :: coords_l(2)                   !< Coordinates of local analysis domain
   REAL, ALLOCATABLE :: coords_p(:,:)    !< Coordinates of process-local state vector entries
                                         !< needed to intiialize localization for LEnKF/ENSRF
+  INTEGER :: type_coords=0              !< Type of coordinates: 0/1: Cartesian, 2/3: geographic
+  REAL :: coords_origin(2)=0.0          !< For type_coords=2/3: coordinates of south-western edge
+  REAL :: coords_scale=1.0              !< Scaling factor for geographic coordinates
+  REAL :: deg2rad = 3.14159/180.0       !< Conversion degree to radian
+  INTEGER :: loc_noniso=0               !< Whether to apply non-isotropic localization
+  
+! *** Variables for OMI configuration ***
+
+  INTEGER :: omi_search_type=2          !< Type of OMI's local observation search (for parsing)
+  INTEGER :: omi_sort_dir=2             !< Direction in which OMI sorts observations (for parsing)
 
 ! *** Variables to handle multiple fields in the state vector ***
 

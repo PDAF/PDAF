@@ -89,6 +89,8 @@
 !!        Set thisobs%domainsize
 !! * PDAFomi_set_name \n
 !!        Set thisobs%name
+!! * PDAFomi_set_searchtype \n
+!!        Set search_type and sort_dir
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -113,7 +115,9 @@ MODULE PDAFomi_obs_f
 
   REAL, ALLOCATABLE :: domain_limits(:)   !< Limiting coordinates (NSWE) for process domain
   REAL, PARAMETER :: r_earth=6.3675e6     !< Earth radius in meters
+  REAL, PARAMETER :: r2_earth=r_earth**2  !< Squared Earth radius in meters^2
   REAL, PARAMETER :: pi=3.141592653589793 !< Pi
+  REAL, PARAMETER :: twopi=2.0*pi           !< 2 Pi
 
 ! *** Data type to define the full observations by internally shared variables of the module
   TYPE obs_f
@@ -153,6 +157,7 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: ocoord_f(:,:)   !< Coordinates of full observation vector
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
+     INTEGER, ALLOCATABLE :: idx_sort(:)  !< Re-sorted indices for search_type>0
 
      ! ----  The following variables are used internally for observation diagnostics ---
      REAL, ALLOCATABLE :: obs_diag_p(:)        !< Full observed field
@@ -203,6 +208,16 @@ MODULE PDAFomi_obs_f
   ! ostats_omit(6): Maximum count of excluded observations over all domains
   ! ostats_omit(7): Maximum count of used observations over all domains
 
+  INTEGER :: search_type = 2   !< Select type of search algorithm
+                               !< 0: Search routine of PDAF 3.0
+                               !< 1: Re-organized search code
+                               !< 2: Re-organized and optimized search code with ony one search loop
+                               !< 11: Search type using sorted observations
+                               !< 12: Search type using sorted observations with ony one search loop
+                               !< (2 and 12 need more memory arrays allocated with size dim_obs_f)
+  INTEGER :: sort_dir = 2      !< index of coordinate to be sorted
+                               !< For geographic coordinates, 2 is generally recommended as 1 (longitude) is periodic
+  REAL, ALLOCATABLE :: rtmp(:) !< temporary array for re-sorting
 
   TYPE obs_arr_f
      TYPE(obs_f), POINTER :: ptr
@@ -245,7 +260,8 @@ CONTAINS
 
     USE PDAF_get, ONLY: PDAF_get_localfilter
     USE PDAF_memcounting, ONLY: PDAF_memcount
-    USE PDAF_mod_core, ONLY: filterstr, screen, dim_ens, dim_p
+    USE PDAF_mod_core, ONLY: filterstr, screen, dim_ens, dim_p, covarloc
+    USE SANGOMA_quicksort, ONLY: quicksort_idx_d2
 
     IMPLICIT NONE
 
@@ -260,7 +276,7 @@ CONTAINS
     INTEGER, INTENT(out) :: dim_obs_f       !< Full number of observations
 
 ! *** Local variables ***
-    INTEGER :: i                            ! Counter
+    INTEGER :: i, n                         ! Counter
     REAL, ALLOCATABLE :: obs_g(:)           ! Global full observation vector (used in case of limited obs.)
     REAL, ALLOCATABLE :: ivar_obs_g(:)      ! Global full inverse variances (used in case of limited obs.)
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
@@ -499,6 +515,66 @@ CONTAINS
 
        END IF fullobs
 
+       IF (mype == 0 .AND. screen >0 .AND. localfilter==1 .AND. covarloc==0) THEN
+          WRITE (*, '(a, 5x, a, 1x)') 'PDAFomi', '--- Search type for local observations:'
+          IF (search_type == 0) THEN
+             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- 0: search function of PDAF 3.0'
+          ELSEIF (search_type == 1) THEN
+             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- 1: optimized search function, double loop'
+          ELSEIF (search_type == 2) THEN
+             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- 2: optimized search function, single loop'
+          ELSEIF (search_type == 11) THEN
+             sort_dir = MIN(sort_dir, thisobs%ncoord)
+             WRITE (*, '(a, 8x, a, 1x, i2, 1x, a)') 'PDAFomi', &
+                  '--- 11: use sorted observations along coordinate direction', sort_dir, 'with double loop'
+          ELSEIF (search_type == 12) THEN
+             sort_dir = MIN(sort_dir, thisobs%ncoord)
+             WRITE (*, '(a, 8x, a, 1x, i2, 1x, a)') 'PDAFomi', &
+                  '--- 12: use sorted observations along coordinate direction', sort_dir, 'with single loop'
+          ELSE
+             WRITE (*,'(a)') 'PDAFomi - ERROR: no valid value of search_type !!!'
+             error = 16
+          END IF
+       END IF
+
+       ! *** Possibly sort observations along one coordinate direction ***
+
+       sort_obs: IF (search_type>10 .AND. localfilter==1 .AND. covarloc==0) THEN
+
+          ! Sort coordinates along axis SORT_DIR; also sort index vector
+
+          ALLOCATE(thisobs%idx_sort(dim_obs_f))
+          DO i = 1, dim_obs_f
+             thisobs%idx_sort(i) = i
+          END DO
+
+          CALL quicksort_idx_d2(thisobs%ocoord_f, sort_dir, thisobs%idx_sort, dim_obs_f)
+
+          ! re-order coordinate in other directions, observations, and observation errors
+
+          ALLOCATE(rtmp(dim_obs_f))
+
+          DO n = 1, thisobs%ncoord
+             IF (n /= sort_dir) THEN
+                rtmp(:) = thisobs%ocoord_f(n,:)
+                DO i = 1, dim_obs_f
+                   thisobs%ocoord_f(n, i) = rtmp(thisobs%idx_sort(i))
+                END DO
+             END IF
+          END DO
+
+          rtmp(:) = thisobs%obs_f(:)
+          DO i = 1, dim_obs_f
+             thisobs%obs_f(i) = rtmp(thisobs%idx_sort(i))
+          END DO
+
+          rtmp(:) = thisobs%ivar_obs_f(:)
+          DO i = 1, dim_obs_f
+             thisobs%ivar_obs_f(i) = rtmp(thisobs%idx_sort(i))
+          END DO
+
+       END IF sort_obs
+
     ELSE lfilter
 
        ! *** For global filters use process-local observations without gathering ***
@@ -646,7 +722,7 @@ CONTAINS
   SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
 
     USE PDAF_get, ONLY: PDAF_get_localfilter, PDAF_get_obsmemberid
-    USE PDAF_mod_core, ONLY: obs_member
+    USE PDAF_mod_core, ONLY: obs_member, covarloc
 
     IMPLICIT NONE
 
@@ -656,6 +732,7 @@ CONTAINS
     REAL, INTENT(inout) :: obsstate_f(:)   !< Full observed vector for all types
 
 ! *** Local variables ***
+    INTEGER :: i                           ! Counter
     INTEGER :: status                      ! Status flag for PDAF gather operation
     INTEGER :: localfilter                 ! Whether the filter is domain-localized
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
@@ -734,6 +811,18 @@ CONTAINS
             = obsstate_p(1:thisobs%dim_obs_p)
 
     END IF lfilter
+
+
+    ! *** Reorder observed state vector  ***
+
+    IF (search_type>10 .AND. localfilter==1 .AND. covarloc==0) THEN
+
+       rtmp(:) = obsstate_f(:)
+       DO i = 1, thisobs%dim_obs_f
+          obsstate_f(i) = rtmp(thisobs%idx_sort(i))
+       END DO
+
+    END IF
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, &
@@ -1267,11 +1356,11 @@ CONTAINS
 
        pe = 1
        id_start(1) = 1
-       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + SUM(obsdims(1, 1:thisobs%obsid-1))
        id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
        DO pe = 2, npes
           id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
-          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + SUM(obsdims(pe,1:thisobs%obsid-1))
           id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
        END DO
 
@@ -1356,11 +1445,11 @@ CONTAINS
        ! Initialize indices
        pe = 1
        id_start(1) = 1
-       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + SUM(obsdims(1, 1:thisobs%obsid-1))
        id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
        DO pe = 2, npes
           id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
-          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + SUM(obsdims(pe,1:thisobs%obsid-1))
           id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
        END DO
 
@@ -1534,6 +1623,7 @@ CONTAINS
     IF (MAXVAL(coords_p(1,:))>3.2 .OR. MINVAL(coords_p(1,:))<-3.2 .OR. &
          MAXVAL(coords_p(2,:))>3.2 .OR. MINVAL(coords_p(2,:))<-3.2) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: get_domain_limits_unstr requires coordinates in radian !!!'
+       error = 8
     END IF
 
     ! Initialize limiting values
@@ -2222,9 +2312,9 @@ CONTAINS
        ALLOCATE(all_dim_obs_p2(npes_filter))
 
        ! Init array of local dimensions
-       do i = 1, npes_filter
+       DO i = 1, npes_filter
           all_dim_obs_p2(i) = nrows * all_dim_obs_p(i)
-       end do
+       END DO
 
        ! Init array of displacements for observation vector
        all_dis_obs_p2(1) = 0
@@ -2322,7 +2412,7 @@ CONTAINS
              END IF
           ENDDO
 
-          IF (debug>0 .and. cnt>0) THEN
+          IF (debug>0 .AND. cnt>0) THEN
              WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'count of excluded obs.: ', cnt
              WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'updated thisobs_f%ivar_obs_f ', &
                   thisobs%ivar_obs_f
@@ -2751,5 +2841,44 @@ CONTAINS
     globalobs = globalobs_in
 
   END SUBROUTINE PDAFomi_set_globalobs
+
+
+
+!-------------------------------------------------------------------------------
+!> Set search_type and sort_dir
+!!
+!! This routine can be used to set the variables
+!! search_type and sort_direction, which can optimize
+!! the performance of init_dim_obs_l
+!!
+!! __Revision history:__
+!! * 2025-11 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_searchtype(stype, sortdir)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: stype           !< Input value of search_type
+                               !< 0: Search routine of PDAF 3.0
+                               !< 1: Re-organized search code
+                               !< 2: Re-organized and optimized search code with ony one search loop
+                               !< 11: Search type using sorted observations
+                               !< 12: Search type using sorted observations with ony one search loop
+                               !< (2 and 12 need more memory with index array allocated with size dim_obs_f)
+    INTEGER, INTENT(in) :: sortdir         !< Input value of sort_dir
+
+    ! Initialization
+    search_type = stype
+    sort_dir = sortdir
+
+    ! Check value
+    IF (.NOT.(search_type==0 .OR. search_type==1 .OR. search_type==2 .OR.search_type==11 .OR.search_type==12)) THEN
+       WRITE (*,'(a)') 'PDAFomi - ERROR: no valid value of search_type !!!'
+       error = 16
+    END IF
+
+  END SUBROUTINE PDAFomi_set_searchtype
 
 END MODULE PDAFomi_obs_f

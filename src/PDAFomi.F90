@@ -39,7 +39,7 @@ MODULE PDAFomi
        PDAFomi_set_doassim, PDAFomi_set_disttype, PDAFomi_set_ncoord, PDAFomi_set_obs_err_type, &
        PDAFomi_set_use_global_obs, PDAFomi_set_inno_omit, PDAFomi_set_inno_omit_ivar, &
        PDAFomi_set_id_obs_p, PDAFomi_set_icoeff_p, PDAFomi_set_domainsize, PDAFomi_set_globalobs, &
-       n_obstypes_pdafomi => n_obstypes
+       PDAFomi_set_searchtype, n_obstypes_pdafomi => n_obstypes
   USE PDAFomi_obs_l
   USE PDAFomi_dim_obs_l
   USE PDAFomi_obs_op

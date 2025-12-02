@@ -1218,16 +1218,16 @@ CONTAINS
                      'PDAFomi', '--- isotropic localization factorized in 2+1 dimensions'
              END IF
              WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-                  'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
+                  'PDAFomi', '--- localization cut-off radius', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-                  'PDAFomi', '--- Support radius', thisobs_l%sradius
+                  'PDAFomi', '--- support radius', thisobs_l%sradius
           ELSE IF (thisobs_l%nradii==2) THEN
              WRITE (*, '(a, 8x, a)') &
                   'PDAFomi', '--- non-isotropic localization'
              WRITE (*, '(a, 8x, a, 1x, 2es11.3)') &
-                  'PDAFomi', '--- Localization cut-off radii', thisobs_l%cradius
+                  'PDAFomi', '--- localization cut-off radii', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, 2es11.3)') &
-                  'PDAFomi', '--- Support radii', thisobs_l%sradius
+                  'PDAFomi', '--- support radii', thisobs_l%sradius
           ELSE IF (thisobs_l%nradii==3) THEN
              IF (thisobs%disttype<10) THEN
                 WRITE (*, '(a, 8x, a)') &
@@ -1240,9 +1240,22 @@ CONTAINS
                 WRITE (*, '(a, 8x, a)') &
                      'PDAFomi', '--- use separate localization function in vertical direction'
              WRITE (*, '(a, 8x, a, 1x, 3es11.3)') &
-                  'PDAFomi', '--- Localization cut-off radii', thisobs_l%cradius
+                  'PDAFomi', '--- localization cut-off radii', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, 3es11.3)') &
-                  'PDAFomi', '--- Support radii', thisobs_l%sradius
+                  'PDAFomi', '--- support radii', thisobs_l%sradius
+          END IF
+          IF (thisobs%disttype==0 .OR. thisobs%disttype==10) THEN
+             WRITE (*, '(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- Cartesian distance calculation, disttype', thisobs%disttype
+          ELSEIF (thisobs%disttype==1 .OR. thisobs%disttype==11) THEN
+             WRITE (*, '(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- Cartesian distance calculation with periodicity, disttype', thisobs%disttype
+          ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN
+             WRITE (*, '(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- simplified geographic distance calculation, disttype', thisobs%disttype
+          ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN
+             WRITE (*, '(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- geographic distance calculation using haversine function, disttype', thisobs%disttype
           END IF
        ENDIF
 
@@ -1677,6 +1690,20 @@ CONTAINS
                'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
           WRITE (*, '(a, 8x, a, 1x, es11.3)') &
                'PDAFomi', '--- Support radius', thisobs_l%sradius
+
+          IF (thisobs%disttype==0 .OR. thisobs%disttype==10) THEN
+             WRITE (*, '(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- Cartesian distance calculation, disttype', thisobs%disttype
+          ELSEIF (thisobs%disttype==1 .OR. thisobs%disttype==11) THEN
+             WRITE (*, '(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- Cartesian distance calculation with periodicity, disttype', thisobs%disttype
+          ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN
+             WRITE (*, '(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- simplified geographic distance calculation, disttype', thisobs%disttype
+          ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN
+             WRITE (*, '(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- geographic distance calculation using haversine function, disttype', thisobs%disttype
+          END IF
        ENDIF
 
 
@@ -2549,8 +2576,6 @@ CONTAINS
          ONLY: obsdims
     USE PDAF_mod_parallel, &
        ONLY: npes
-!     USE PDAF_analysis_utils, &
-!          ONLY: PDAF_local_weight 
 
     IMPLICIT NONE
 
@@ -3077,9 +3102,6 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_localize_covar_serial_noniso(thisobs, iobs_all, dim, dim_obs, locweight, &
        cradius, sradius, coords, HP, HXY)
-
-!     USE PDAF_analysis_utils, &
-!          ONLY: PDAF_local_weight 
 
     IMPLICIT NONE
 
@@ -4517,9 +4539,6 @@ CONTAINS
   SUBROUTINE PDAFomi_weights_l(verbose, nobs_l, ncols, locweight, cradius, sradius, &
         matA, ivar_obs_l, dist_l, weight_l)
 
-!     USE PDAF_analysis_utils, &
-!          ONLY: PDAF_local_weight 
-
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -4678,9 +4697,6 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_weights_l_sgnl(verbose, nobs_l, ncols, locweight, cradius, sradius, &
         matA, ivar_obs_l, dist_l, weight_l)
-
-!     USE PDAF_analysis_utils, &
-!          ONLY: PDAF_local_weight 
 
     IMPLICIT NONE
 
@@ -4844,7 +4860,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id
+         offset_obs_g, obsdims, map_obs_id, rtmp
 
     IMPLICIT NONE
 
@@ -4873,12 +4889,16 @@ CONTAINS
     IF (ALLOCATED(thisobs%hxmean_diag_p)) DEALLOCATE(thisobs%hxmean_diag_p)
     IF (ALLOCATED(thisobs%hx_diag_p)) DEALLOCATE(thisobs%hx_diag_p)
 
+    ! Observation sorting array
+    IF (ALLOCATED(thisobs%idx_sort)) DEALLOCATE(thisobs%idx_sort)
+
     ! Reset assim flag
     thisobs%doassim = 0
 
     IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
     IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
     IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
+    IF (ALLOCATED(rtmp)) DEALLOCATE(rtmp)
 
     ! Reset counters over all observation types
     n_obstypes = 0
@@ -5078,7 +5098,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id, coords_p, &
+         offset_obs_g, obsdims, map_obs_id, coords_p, rtmp, &
          have_obsmean_diag, have_obsens_diag, rmsd, dim_obs_diag_p, obsstats
 
 
@@ -5109,13 +5129,18 @@ CONTAINS
           IF (ALLOCATED(obs_f_all(i)%ptr%hxmean_diag_p)) DEALLOCATE(obs_f_all(i)%ptr%hxmean_diag_p)
           IF (ALLOCATED(obs_f_all(i)%ptr%hx_diag_p)) DEALLOCATE(obs_f_all(i)%ptr%hx_diag_p)
 
+          ! Observation sorting array
+          IF (ALLOCATED(obs_f_all(i)%ptr%idx_sort)) DEALLOCATE(obs_f_all(i)%ptr%idx_sort)
+
           ! Reset assim flag
           obs_f_all(i)%ptr%doassim = 0
        END DO
 
        IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
+
        IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
        IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
+       IF (ALLOCATED(rtmp)) DEALLOCATE(rtmp)
 
        ! localization
        IF (ALLOCATED(coords_p)) DEALLOCATE(coords_p)

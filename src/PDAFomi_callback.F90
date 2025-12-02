@@ -865,7 +865,7 @@ SUBROUTINE PDAFomi_init_obscovar_cb(step, dim_obs, dim_obs_p, covar, m_state_p, 
 
   ! Initialize dummy to prevent compiler warning
   idummy = step
-  rdummy = m_state_p(1)
+  IF (dim_obs_p>0) rdummy = m_state_p(1)
 
 
 ! *************************************

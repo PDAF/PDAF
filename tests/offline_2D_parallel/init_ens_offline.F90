@@ -80,7 +80,11 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
         WRITE (ensstr, '(i1)') member
         IF (nx==36) THEN
            OPEN(11, file = '../inputs_offline.18x36/ens_'//TRIM(ensstr)//'.txt', status='old')
-        ELSE
+        ELSE IF (nx==256) THEN
+           OPEN(11, file = '../inputs_offline.256x128/ens_'//TRIM(ensstr)//'.txt', status='old')
+        ELSE IF (nx==512) THEN
+           OPEN(11, file = '../inputs_offline.512x512/ens_'//TRIM(ensstr)//'.txt', status='old')
+        ELSE IF (nx==2048) THEN
            OPEN(11, file = '../inputs_offline.512x2048/ens_'//TRIM(ensstr)//'.txt', status='old')
         END IF
 

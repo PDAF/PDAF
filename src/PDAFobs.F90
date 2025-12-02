@@ -270,7 +270,7 @@ CONTAINS
        ! Further the observation operator has to be executed in cases
        ! in which the operation include a global communication
        IF (omi_n_obstypes>0) THEN
-          IF (.NOT.ALLOCATED(HX_p)) ALLOCATE(HX_p(1,1))
+          IF (.NOT.ALLOCATED(HX_p)) ALLOCATE(HX_p(1,dim_ens))
           IF (.NOT.ALLOCATED(HXbar_p)) ALLOCATE(HXbar_p(1))
           IF (.NOT.ALLOCATED(obs_p)) ALLOCATE(obs_p(1))
 

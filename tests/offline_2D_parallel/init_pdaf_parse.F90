@@ -23,7 +23,8 @@ SUBROUTINE init_pdaf_parse()
        type_trans, type_sqrt, dim_lag, type_hyb, &
        hyb_gamma, hyb_kappa, type_winf, limit_winf, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
-       observe_ens, type_obs_init, do_omi_obsstats
+       observe_ens, type_obs_init, do_omi_obsstats, &
+       omi_search_type, omi_sort_dir, loc_noniso
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B
@@ -48,6 +49,17 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, rms_obs_A)
   handle = 'rms_obs_B'               ! Assumed uniform RMS error of the observations type B
   CALL parse(handle, rms_obs_B)
+
+  ! Parse variables for OMI configuration  
+  handle = 'omi_search_type'         ! Type of OMI's local observation search (for PDAFomi_set_lobs_f)
+  CALL parse(handle, omi_search_type)
+  handle = 'omi_sort_dir'            ! Direction in which OMI sorts observations (for PDAFomi_set_lobs_f)
+  CALL parse(handle, omi_sort_dir)
+
+  ! Parse option for non-isotropic localization
+  handle = 'loc_noniso  '            ! 0 for isotropic, >1 for non-isotropic
+  CALL parse(handle, loc_noniso)
+  
 
 ! The remaining parse commands should be generic; usually no change necessary
 

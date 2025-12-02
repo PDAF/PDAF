@@ -150,7 +150,8 @@ CONTAINS
          ONLY: PDAF_local_type, PDAFomi_gather_obs, PDAFomi_set_localize_covar
     USE mod_assimilation, &
          ONLY: nx, ny, ndim, dim_state_p, local_dims, filtertype, &
-         cradius, sradius, locweight, coords_p
+         cradius, sradius, locweight, coords_p, &
+         type_coords, coords_origin, coords_scale, deg2rad
 
     IMPLICIT NONE
 
@@ -163,7 +164,6 @@ CONTAINS
     INTEGER :: cnt_p, cnt0_p, cnt0       ! Counters
     INTEGER :: off_p                     ! Process-local offset in state vector
     INTEGER :: dim_obs_p                 ! Number of process-local observations
-    INTEGER :: localtype                 ! Localization type index (2 or 3 for covariance localization)
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
@@ -182,7 +182,7 @@ CONTAINS
     IF (assim_A) thisobs%doassim = 1
 
     ! Specify type of distance computation
-    thisobs%disttype = 0   ! 0=Cartesian, or 1=Cartesian with periodicity
+    thisobs%disttype = type_coords   ! 0=Cartesian, or 1=Cartesian with periodicity
 
     ! Number of coordinates used for distance computation
     ! The distance compution starts from the first row
@@ -194,7 +194,7 @@ CONTAINS
     ALLOCATE(thisobs%domainsize(2))
     thisobs%domainsize(1) = REAL(nx)
     thisobs%domainsize(2) = REAL(ny)
-    
+
     ! Specify whether to (1) use global observations for local filters,
     ! or (0) restrict the full observations to those relevant for a process domain
     thisobs%use_global_obs = 0
@@ -215,7 +215,11 @@ CONTAINS
 
     IF (nx==36) THEN
        OPEN (12, file='../inputs_offline.18x36/obs.txt', status='old')
-    ELSE
+    ELSE IF (nx==256) THEN
+       OPEN (12, file='../inputs_offline.256x128/obs.txt', status='old')
+    ELSE IF (nx==512) THEN
+       OPEN (12, file='../inputs_offline.512x512/obs.txt', status='old')
+    ELSE IF (nx==2048) THEN
        OPEN (12, file='../inputs_offline.512x2048/obs.txt', status='old')
     END IF
     DO i = 1, ny
@@ -286,6 +290,12 @@ CONTAINS
              END IF
           END DO
        END DO
+
+       IF (type_coords>1) THEN
+          ! Geographic coordinates - scale and shift to origin
+          ocoord_p(1, :) = deg2rad * (coords_origin(1) + coords_scale * (ocoord_p(1, :)-1.0))
+          ocoord_p(2, :) = deg2rad * (coords_origin(2) + coords_scale * (ocoord_p(2, :)-1.0))
+       END IF
 
 
 ! ****************************************************************
@@ -410,7 +420,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: coords_l, cradius, locweight, sradius
+         ONLY: coords_l, cradius, locweight, sradius, loc_noniso
 
     IMPLICIT NONE
 
@@ -420,13 +430,38 @@ CONTAINS
     INTEGER, INTENT(in)  :: dim_obs      !< Full dimension of observation vector
     INTEGER, INTENT(inout) :: dim_obs_l  !< Local dimension of observation vector
 
+! *** local variables ***
+    REAL :: crad_noniso(2)               ! cut-off radius for non-isotropic localization
+    REAL :: srad_noniso(2)               ! support radius for non-isotropic localization
+
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-    CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, cradius, sradius, dim_obs_l)
+    IF (loc_noniso == 0) THEN
+       ! Isotropic localization
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, cradius, sradius, dim_obs_l)
+    ELSEIF (loc_noniso == 1) THEN
+       ! Non-isotropic localization
+       crad_noniso(1) = cradius
+       crad_noniso(2) = cradius
+       srad_noniso(1) = sradius
+       srad_noniso(2) = sradius
+
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, crad_noniso, srad_noniso, dim_obs_l)
+    ELSEIF (loc_noniso == 2) THEN
+       ! Non-isotropic localization
+       crad_noniso(1) = cradius
+       crad_noniso(2) = 0.9*cradius
+       srad_noniso(1) = sradius
+       srad_noniso(2) = 0.9*sradius
+
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, crad_noniso, srad_noniso, dim_obs_l)
+    END IF
 
   END SUBROUTINE init_dim_obs_l_A
 

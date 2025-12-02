@@ -150,7 +150,8 @@ CONTAINS
          ONLY: PDAF_local_type, PDAFomi_gather_obs, PDAFomi_set_localize_covar
     USE mod_assimilation, &
          ONLY: nx, ny, ndim, dim_state_p, local_dims, filtertype, &
-         cradius, sradius, locweight, coords_p
+         cradius, sradius, locweight, coords_p, &
+         type_coords, coords_origin, coords_scale, deg2rad
 
     IMPLICIT NONE
 
@@ -181,7 +182,7 @@ CONTAINS
     IF (assim_B) thisobs%doassim = 1
 
     ! Specify type of distance computation
-    thisobs%disttype = 0   ! 0=Cartesian
+    thisobs%disttype = type_coords   ! 0=Cartesian, or 1=Cartesian with periodicity
 
     ! Number of coordinates used for distance computation
     ! The distance compution starts from the first row
@@ -214,7 +215,11 @@ CONTAINS
 
     IF (nx==36) THEN
        OPEN (12, file='../inputs_offline.18x36/obsB.txt', status='old')
-    ELSE
+    ELSE IF (nx==256) THEN
+       OPEN (12, file='../inputs_offline.256x128/obsB.txt', status='old')
+    ELSE IF (nx==512) THEN
+       OPEN (12, file='../inputs_offline.512x512/obsB.txt', status='old')
+    ELSE IF (nx==2048) THEN
        OPEN (12, file='../inputs_offline.512x2048/obsB.txt', status='old')
     END IF
     DO i = 1, ny
@@ -286,6 +291,12 @@ CONTAINS
           END DO
        END DO
 
+       IF (type_coords>1) THEN
+          ! Geographic coordinates - scale and shift to origin
+          ocoord_p(1, :) = deg2rad * (coords_origin(1) + coords_scale * (ocoord_p(1, :)-1.0))
+          ocoord_p(2, :) = deg2rad * (coords_origin(2) + coords_scale * (ocoord_p(2, :)-1.0))
+       END IF
+
 
 ! ****************************************************************
 ! *** Define observation errors for process-local observations ***
@@ -330,7 +341,7 @@ CONTAINS
 ! *********************************************************
 
 !     IF (twin_experiment .AND. filtertype/=100) THEN
-!        CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
+!        CALL read_syn_obs(file_syntobs_OBSTYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !     END IF
 
 
@@ -409,7 +420,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: coords_l, cradius, locweight, sradius
+         ONLY: coords_l, cradius, locweight, sradius, loc_noniso
 
     IMPLICIT NONE
 
@@ -419,13 +430,29 @@ CONTAINS
     INTEGER, INTENT(in)  :: dim_obs      !< Full dimension of observation vector
     INTEGER, INTENT(inout) :: dim_obs_l  !< Local dimension of observation vector
 
+! *** local variables ***
+    REAL :: crad_noniso(2)               ! cut-off radius for non-isotropic localization
+    REAL :: srad_noniso(2)               ! support radius for non-isotropic localization
+
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-    CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, cradius, sradius, dim_obs_l)
+    IF (loc_noniso == 0) THEN
+       ! Isotropic localization
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, cradius, sradius, dim_obs_l)
+    ELSEIF (loc_noniso == 1) THEN
+       ! Non-isotropic localization
+       crad_noniso(1) = cradius
+       crad_noniso(2) = 0.9*cradius
+       srad_noniso(1) = sradius
+       srad_noniso(2) = 0.9*sradius
+
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, crad_noniso, srad_noniso, dim_obs_l)
+    END IF
 
   END SUBROUTINE init_dim_obs_l_B
 

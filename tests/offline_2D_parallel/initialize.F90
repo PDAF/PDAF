@@ -14,7 +14,8 @@
 SUBROUTINE initialize()
 
   USE mod_assimilation, &   ! Assimilation variables
-       ONLY: nx, ny, nx_p, ndim, dim_state, dim_state_p, local_dims
+       ONLY: nx, ny, nx_p, ndim, dim_state, dim_state_p, local_dims, &
+       type_coords, coords_origin, coords_scale
   USE mod_parallel_pdaf, &  ! Parallelization variables
        ONLY: mype_world, mype_model, npes_model, task_id, abort_parallel
   USE parser, &             ! Parser function
@@ -36,6 +37,16 @@ SUBROUTINE initialize()
   handle='gridsize'
   CALL parse(handle, gridsize)
 
+  ! Parse settings for geographic coordinates
+  handle = 'type_coords'             ! Type of coordinate system (analogous to OMI)
+  CALL parse(handle, type_coords)
+  handle = 'coords_origin1'           ! Geographic coordinate offset - longitude
+  CALL parse(handle, coords_origin(1))
+  handle = 'coords_origin2'           ! Geographic coordinate offset - latitude
+  CALL parse(handle, coords_origin(2))
+  handle = 'coords_scale'             ! Scaling factor of coordinates from grid point indices
+  CALL parse(handle, coords_scale)
+
 ! *** Model specifications ***
 
   ! Number of coordinate directions
@@ -47,12 +58,18 @@ SUBROUTINE initialize()
   ELSEIF (gridsize==2) THEN
      nx = 256    ! Extent of grid in x-direction
      ny = 128    ! Extent of grid in y-direction
+  ELSEIF (gridsize==4) THEN
+     nx = 512    ! Extent of grid in x-direction
+     ny = 512    ! Extent of grid in y-direction
   ELSE
      nx = 2048   ! Extent of grid in x-direction
      ny = 512    ! Extent of grid in y-direction
   END IF
 
   dim_state   = nx * ny ! State dimension (shared via MOD_OFFLINE)
+
+  ! Specify values for geographic coordinates
+  coords_scale = 51.2 / MAX(NX, NY)
 
 ! *** Screen output ***
   screen2: IF (mype_world == 0) THEN

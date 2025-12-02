@@ -19,15 +19,17 @@ SUBROUTINE init_pdaf()
   USE PDAF, &                     ! PDAF interfaces and parameters
        ONLY: PDAF3_init, PDAF_set_iparam, PDAF_set_rparam, &
        PDAF_set_offline_mode, PDAF_DA_ENKF, PDAF_DA_PF, &
-       PDAFomi_set_domain_limits, PDAFomi_set_obs_diag
+       PDAFomi_set_domain_limits, PDAFomi_set_obs_diag, PDAFomi_set_searchtype
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, mype_filter, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: nx_p, ny, ndim, dim_state_p, local_dims, coords_p, &
+       ONLY: nx_p, nx, ny, ndim, dim_state_p, local_dims, coords_p, &
        screen, filtertype, subtype, dim_ens, &
        type_forget, forget, rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, pf_res_type, pf_noise_type, pf_noise_amp, &
-       observe_ens, type_obs_init, do_omi_obsstats
+       observe_ens, type_obs_init, do_omi_obsstats, &
+       type_coords, coords_origin, coords_scale, deg2rad, &
+       omi_search_type, omi_sort_dir
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -126,6 +128,10 @@ SUBROUTINE init_pdaf()
 
   IF (do_omi_obsstats) CALL PDAFomi_set_obs_diag(1)
 
+! *** Set search type for local observations ***
+
+  CALL PDAFomi_set_searchtype(omi_search_type, omi_sort_dir)
+
 ! *** Initial Screen output ***
 ! *** This is optional      ***
 
@@ -199,6 +205,12 @@ SUBROUTINE init_pdaf()
      coords_p(2, i) = REAL(i+off_p) - (coords_p(1,i)-1)*REAL(ny)
   END DO
 
+  IF (type_coords>1) THEN
+     ! Geographic coordinates - scale and shift to origin
+     coords_p(1, :) = deg2rad * (coords_origin(1) + coords_scale * (coords_p(1, :)-1.0))
+     coords_p(2, :) = deg2rad * (coords_origin(2) + coords_scale * (coords_p(2, :)-1.0))
+  END IF
+
 
 ! ************************************************************************
 ! *** Set domain coordinate limits (for use with OMI's use_global_obs) ***
@@ -214,6 +226,14 @@ SUBROUTINE init_pdaf()
     lim_coords(1,2) = REAL(off_nx + nx_p)  ! East
     lim_coords(2,1) = REAL(ny)             ! North
     lim_coords(2,2) = 1.0                  ! South
+
+    IF (type_coords>1) THEN
+       ! Geographic coordinates - scale and shift to origin
+       lim_coords(1,1) = deg2rad * (coords_origin(1) + coords_scale * (lim_coords(1,1)-1.0))  ! West
+       lim_coords(1,2) = deg2rad * (coords_origin(1) + coords_scale * (lim_coords(1,2)-1.0))  ! East
+       lim_coords(2,1) = deg2rad * (coords_origin(2) + coords_scale * (lim_coords(2,1)-1.0))  ! North
+       lim_coords(2,2) = deg2rad * (coords_origin(2) + coords_scale * (lim_coords(2,2)-1.0))  ! South
+    END IF
 
     CALL PDAFomi_set_domain_limits(lim_coords)
 
