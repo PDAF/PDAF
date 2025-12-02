@@ -769,7 +769,7 @@ CONTAINS
              WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'complete transform matrix (23):', pdaf_time_tot(23), 's'
           END IF
           WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'transform ensemble (18):', pdaf_time_tot(18), 's'
-          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'local to global (14):', pdaf_time_tot(14), 's'
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'local to global (14):', pdaf_time_tot(14), 's'
           IF (dim_lag >0) &
                WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
 
