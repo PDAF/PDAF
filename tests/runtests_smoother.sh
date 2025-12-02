@@ -10,7 +10,7 @@ RUNPAR="mpirun -np 8 ./PDAF_online"
 COMPILEPDAF=0
 COMPILE=1
 TEST_SUBTYPES=1
-TEST_PARALLEL=0
+TEST_PARALLEL=1
 
 echo "------------------ COMPILING ----------------"
 

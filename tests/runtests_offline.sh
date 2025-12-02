@@ -805,49 +805,6 @@ then
     # The results have to be identical to those of the serial runs.
 
 
-    # EnKF ##############
-
-    echo "     +++++++++++++ EnKF offline parallel +++++++++++++"
-
-    FTYPE=2
-    STYPE=0
-    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
-    export OMP_NUM_THREADS=4
-    cd offline_2D_parallel
-    make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
-    cd ..
-    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
-
-    FTYPE=2
-    STYPE=1
-    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
-    export OMP_NUM_THREADS=4
-    cd offline_2D_parallel
-    make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
-    cd ..
-    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
-
-
-    # LEnKF ##############
-
-    echo "     +++++++++++++ LEnKF offline parallel +++++++++++++"
-
-    FTYPE=8
-    STYPE=0
-    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
-    export OMP_NUM_THREADS=4
-    cd offline_2D_parallel
-    make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
-    cd ..
-    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
-
-
     # ESTKF ##############
 
     echo "     +++++++++++++ ESTKF offline parallel +++++++++++++"
@@ -911,8 +868,6 @@ then
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
-
-
     # ENSRF ##############
 
     echo "     +++++++++++++ ENSRF offline parallel +++++++++++++"
@@ -927,5 +882,48 @@ then
     $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_par_ftype${FTYPE}s${STYPE}
+
+
+    # EnKF ##############
+
+    echo "     +++++++++++++ EnKF offline parallel +++++++++++++"
+
+    FTYPE=2
+    STYPE=0
+    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=1
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=2
+    STYPE=1
+    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=1
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
+
+
+    # LEnKF ##############
+
+    echo "     +++++++++++++ LEnKF offline parallel +++++++++++++"
+
+    FTYPE=8
+    STYPE=0
+    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=1
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
 fi
