@@ -3,6 +3,7 @@
 # ARCH specifies PDAF_ARCH without and with PDAF
 export ARCH=linux_gfortran_openmpi
 DA_SPECS=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 5.0"
+DA_SPECS_GEO=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 5.0e5"
 DA_SPECS_PF=" -dim_ens 8 -forget 1.0 -pf_noise_amp 0.8 -screen 1 -cradius 5.0"
 DA_SPECS_2OBS="$DA_SPECS -assim_B T"
 DA_SPECS_PF_2OBS="$DA_SPECS_PF -assim_B T"
@@ -792,6 +793,51 @@ then
     $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -assim_A .true. -assim_B .true. > ../out.offline_2D_filter${FTYPE}s${STYPE}obsAB
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}obsAB
+
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE", subtype="$STYPE", forget 0.8, simplified geographic coords -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_GEO -filtertype $FTYPE -subtype $STYPE -type_coords 2
+    $RUNSTR $DA_SPECS_GEO  -filtertype $FTYPE -subtype $STYPE -type_coords 2 > ../out.offline_2D_filter${FTYPE}s${STYPE}coords2
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}coords2
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE", subtype="$STYPE", forget 0.8, haversine geographic coords -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_GEO -filtertype $FTYPE -subtype $STYPE -type_coords 3
+    $RUNSTR $DA_SPECS_GEO  -filtertype $FTYPE -subtype $STYPE -type_coords 3 > ../out.offline_2D_filter${FTYPE}s${STYPE}coords3
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}coords3
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE", subtype="$STYPE", forget 0.8, non-isotropic, equal radii -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -loc_noniso 1
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -loc_noniso 1 > ../out.offline_2D_filter${FTYPE}s${STYPE}noniso1
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE", subtype="$STYPE", forget 0.8, non-isotropic, distinct radii -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -loc_noniso 2
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -loc_noniso 2 > ../out.offline_2D_filter${FTYPE}s${STYPE}noniso2
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}noniso2
 
 fi
 
