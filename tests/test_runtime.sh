@@ -6,7 +6,7 @@ DA_SPECS=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 500.0 -gridsize 3"
 RUNSTR="mpirun -np 1 ./PDAF_offline"
 RUNPAR="mpirun -np 4 ./PDAF_offline"
 
-COMPILEPDAF=1
+COMPILEPDAF=0
 COMPILE=1
 GENERATE_INPUTS=1
 TEST_PAR=1
