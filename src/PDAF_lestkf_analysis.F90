@@ -211,9 +211,13 @@ SUBROUTINE PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      ALLOCATE(RiHL_l(dim_obs_l, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * rank)
 
+     CALL PDAF_timeit(21, 'old')
+
      CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA_l(domain_p, step, dim_obs_l, rank, obs_l, HL_l, RiHL_l)
      CALL PDAF_timeit(48, 'old')
+
+     CALL PDAF_timeit(21, 'new')
 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  R^-1(HXT_l)', RiHL_l

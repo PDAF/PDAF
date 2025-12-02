@@ -124,12 +124,40 @@ then
 
     FTYPE=7
     STYPE=0
-    echo "-------offline_2D, MPInp=4, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    echo "-------offline_2D, MPI 4 tasks, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
     export OMP_NUM_THREADS=1
     cd offline_2D_parallel
     make cleandataq
     echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
     $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_grid2_MPI4_filter${FTYPE}s${STYPE}
+    cd ..
+    if [ $DO_CHECK -eq 1 ]
+    then
+	python verification/check_offline2.py offline_2D_parallel offline_2D_grid2_ftype${FTYPE}s${STYPE}
+    fi
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, threads=1, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8, search type 12 -----------"
+    export OMP_NUM_THREADS=1
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 12 -omi_sort_dir 1
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 12 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search12dir1
+    cd ..
+    if [ $DO_CHECK -eq 1 ]
+    then
+	python verification/check_offline2.py offline_2D_parallel offline_2D_grid2_ftype${FTYPE}s${STYPE}
+    fi
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, threads=1, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8, search type 0 -----------"
+    export OMP_NUM_THREADS=1
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 0
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 0 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search0
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
