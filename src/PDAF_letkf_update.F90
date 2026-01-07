@@ -124,6 +124,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
 ! *** local variables ***
   INTEGER :: i, member               ! Counters
+  INTEGER :: first                   ! Flag indicating first call in local analysis loop
   INTEGER :: domain_p                ! Counter for local analysis domain
   INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
   INTEGER :: minusStep               ! Time step counter
@@ -350,7 +351,11 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
 !$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, Ainv_l, flag, forget_ana_l)
 
+  ! Set local value of forgetting factor
   forget_ana_l = forget_ana
+
+  ! Set flag for first call to smoother subroutine
+  first = 1
 
   ! Allocate ensemble transform matrix
   ALLOCATE(Ainv_l(dim_ens, dim_ens))
@@ -517,13 +522,16 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
      ! *** Perform smoothing of past ensembles ***
      CALL PDAF_smoothing_local(domain_p, step, dim_p, dim_l, dim_ens, &
           dim_lag, Ainv_l, ens_l, sens_p, cnt_maxlag, &
-          U_g2l_state, U_l2g_state, forget_ana, screen)
+          U_g2l_state, U_l2g_state, forget_ana, screen, first)
 
      CALL PDAF_timeit(15, 'old')
 
      ! clean up
      DEALLOCATE(ens_l, state_l)
      CALL PDAFobs_dealloc_local()
+
+     ! Set flag
+     first = 0
 
      CALL PDAF_timeit(51, 'old')
 
@@ -542,6 +550,9 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   DEALLOCATE(Ainv_l)
 !$OMP END PARALLEL
+
+  ! Increase lag counter
+  IF (dim_lag>0) cnt_maxlag = cnt_maxlag + 1
 
   CALL PDAF_timeit(51, 'new')
 

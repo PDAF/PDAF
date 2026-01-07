@@ -449,7 +449,7 @@ END SUBROUTINE PDAF_lnetf_ana
 !!
 SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
      dim_ens, HX_f, rndmat, U_g2l_obs, U_init_obs_l, U_likelihood_l, &
-     screen, T, flag)
+     screen, T, flag, first)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -483,6 +483,7 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   REAL, INTENT(inout) :: T(dim_ens, dim_ens)  !< local ensemble transformation matrix
   INTEGER, INTENT(inout) :: flag     !< Status flag
+  INTEGER, INTENT(in) :: first       !< Flag for first call
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
@@ -494,8 +495,6 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
 ! *** local variables ***
   INTEGER :: i, j, member, col, row  ! Counters
   INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  INTEGER, SAVE :: first = 1         ! Flag for very first call to routine
-  INTEGER, SAVE :: domain_save = 1   ! Index of domain from last call to routine
   INTEGER :: syev_info               ! Status flag for SYEV
   INTEGER :: ldwork                  ! Size of work array for SYEV
   REAL :: fac                        ! Multiplication factor
@@ -511,7 +510,7 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
   REAL :: total_weight               ! Sum of weights
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
 
-!$OMP THREADPRIVATE(mythread, nthreads, allocflag, first, domain_save)
+!$OMP THREADPRIVATE(mythread, nthreads, allocflag)
 
 
 ! **********************
@@ -528,7 +527,7 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
   mythread = 0
 #endif
 
-  IF ((domain_p <= domain_save) .OR. (first == 1)) THEN
+  IF (first == 1) THEN
      IF (mype == 0 .AND. screen > 0.AND. mythread==0) THEN
         WRITE (*, '(a, 5x, a)') &
              'PDAF', 'Compute transform matrix for smoother without inflation'
@@ -678,13 +677,6 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
 ! ********************
 ! *** Finishing up ***
 ! ********************
-  
-  ! Increment maxlag counter
-  IF ((domain_p <= domain_save) .OR. (first == 1)) THEN
-     ! Set flag
-     first = 0
-  END IF
-  domain_save = domain_p
 
   ! Set flag for memory counting
   IF (allocflag == 0) allocflag = 1
@@ -708,7 +700,7 @@ END SUBROUTINE PDAF_lnetf_smootherT
 !!
 SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
      dim_lag, Ainv, ens_l, sens_p, cnt_maxlag, &
-     U_g2l_state, U_l2g_state, screen)
+     U_g2l_state, U_l2g_state, screen, first)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -739,6 +731,7 @@ SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
   REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag)   !< PE-local smoother ensemble
   INTEGER, INTENT(inout) :: cnt_maxlag !< Count available number of time steps for smoothing
   INTEGER, INTENT(in) :: screen        !< Verbosity flag
+  INTEGER, INTENT(in) :: first         !< Flag for first call
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
@@ -750,14 +743,12 @@ SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
   INTEGER :: n_lags                    ! Available number of time instances for smoothing
   INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-  INTEGER, SAVE :: first = 1           ! Flag for very first call to routine
-  INTEGER, SAVE :: domain_save = 1     ! Index of domain from last call to routine
   REAL :: invdimens                    ! Inverse of global ensemble size
   REAL, ALLOCATABLE :: ens_blk(:,:)    ! Temporary block of state ensemble
   REAL, ALLOCATABLE :: W_smooth(:,:)   ! Weight matrix for smoothing
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
 
-!$OMP THREADPRIVATE(mythread, nthreads, allocflag, first, domain_save)
+!$OMP THREADPRIVATE(mythread, nthreads, allocflag)
 
   
 ! **********************
@@ -781,7 +772,7 @@ SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
      n_lags = cnt_maxlag
   END IF
 
-  IF ((domain_p <= domain_save) .OR. (first == 1)) THEN
+  IF (first == 1) THEN
      IF (mype == 0 .AND. screen > 0 .AND. n_lags > 0 .AND. mythread==0) THEN
         WRITE (*, '(a, 5x, a, i8)') 'PDAF', 'Perform smoothing up to lag ', n_lags
      END IF
@@ -865,16 +856,6 @@ SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
 ! ********************
 ! *** Finishing up ***
 ! ********************
-  
-  ! Increment maxlag counter
-  IF ((domain_p <= domain_save) .OR. (first == 1)) THEN
-
-     cnt_maxlag = cnt_maxlag + 1
-          
-     ! Set flag
-     first = 0
-  END IF
-  domain_save = domain_p
 
   ! Set flag for memory counting
   IF (allocflag == 0) allocflag = 1

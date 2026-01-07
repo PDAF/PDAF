@@ -116,6 +116,7 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
 ! *** local variables ***
   INTEGER :: i, member             ! Counters
+  INTEGER :: first                 ! Flag indicating first call in local analysis loop
   INTEGER :: domain_p              ! Counter for local analysis domain
   INTEGER, SAVE :: allocflag = 0   ! Flag whether first time allocation is done
   INTEGER, SAVE :: allocflag_l = 0 ! Flag whether first time allocation is done
@@ -384,7 +385,6 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
              state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs_l, &
              screen, debug, .false., .false., .true., .false., .false.)
      END IF
-
   END IF
 
   CALL PDAF_timeit(51, 'new')
@@ -426,9 +426,12 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! Initialize counters for statistics on local observations
   CALL PDAF_init_local_obsstats()
 
-!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, TA_l, TA_noinfl_l, flag)
+!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, TA_l, TA_noinfl_l, flag, first)
 
   CALL PDAF_timeit(51, 'new')
+
+  ! Set flag for first call to smoother subroutine
+  first = 1
 
   ! Allocate ensemble transform matrix
   ALLOCATE(TA_l(dim_ens, dim_ens))
@@ -454,7 +457,7 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lnetf_update -- Enter local analysis loop'
 
 !$OMP BARRIER
-!$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag) schedule(runtime)
+!$OMP DO schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p    
 
      ! Set flag that we are in the local analysis loop
@@ -561,7 +564,7 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
            CALL PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
                 dim_ens, HX_noinfl_f, rndmat, U_g2l_obs, U_init_obs_l, U_likelihood_l, &
-                screen, TA_noinfl_l, flag)
+                screen, TA_noinfl_l, flag, first)
 
            CALL PDAF_timeit(15, 'old')
         END IF
@@ -609,7 +612,7 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
         CALL PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
              dim_lag, TA_noinfl_l, ens_l, sens_p, cnt_maxlag, &
-             U_g2l_state, U_l2g_state, screen)
+             U_g2l_state, U_l2g_state, screen, first)
 
         CALL PDAF_timeit(15, 'old')
      END IF
@@ -621,6 +624,9 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
      ! Set allocflag
      allocflag_l = 1
+
+     ! Set flag
+     first = 0
 
   END DO localanalysis
 
@@ -635,6 +641,9 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   DEALLOCATE(TA_noinfl_l)
 
 !$OMP END PARALLEL
+
+  ! Increase lag counter
+  IF (dim_lag>0) cnt_maxlag = cnt_maxlag + 1
 
   CALL PDAF_timeit(8, 'old')
 
