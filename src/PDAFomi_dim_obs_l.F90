@@ -147,7 +147,7 @@ CONTAINS
        thisobs_l%sradius(1) = sradius
 
        ! For optimized search performance allocate index and coordinate arrays of size dim_obs_f
-       IF (search_type == 2 .OR. search_type == 12) THEN
+       IF (search_type == 2 .OR. search_type == 12 .OR. search_type == 22) THEN
           IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
           IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
           ALLOCATE(thisobs_l%id_obs_l(thisobs%dim_obs_f))
@@ -205,6 +205,13 @@ CONTAINS
           ! Search routine using sorted observations and only a single search loop
           ! (This needs more memory using local-observation arrays allocates with size dim_obs_f)
           CALL PDAFomi_check_dist2_loop_sort(thisobs_l, thisobs, coords_l, cnt_obs, 4)
+       ELSEIF (search_type == 21) THEN
+          ! Search routine using observations sorted in one coordinate direction and a computed upper loop limit
+          CALL PDAFomi_check_dist2_loop_sort2(thisobs_l, thisobs, coords_l, cnt_obs, 1)
+       ELSEIF (search_type == 22) THEN
+          ! Search routine using sorted observations and only a single search loop and a computed upper loop limit
+          ! (This needs more memory using local-observation arrays allocates with size dim_obs_f)
+          CALL PDAFomi_check_dist2_loop_sort2(thisobs_l, thisobs, coords_l, cnt_obs, 4)
        END IF
 
 
@@ -213,7 +220,7 @@ CONTAINS
 ! ************************************************
 
        ! Set mode for allocations
-       IF (search_type==2 .OR. search_type==12) THEN
+       IF (search_type==2 .OR. search_type==12 .OR. search_type==22) THEN
           initmode = 1
        ELSE
           initmode = 0
@@ -233,7 +240,7 @@ CONTAINS
 
        ! Count local observations and initialize index and distance arrays
        IF (thisobs_l%dim_obs_l>0) THEN
-          IF (search_type == 2 .OR. search_type == 12) THEN
+          IF (search_type == 2 .OR. search_type == 12 .OR. search_type == 22) THEN
              ! Initialize isotropic local observation information
              CALL PDAFomi_set_thisobs_l(thisobs_l, thisobs, coords_l, cnt_obs)
           ELSEIF (search_type == 0) THEN
@@ -245,6 +252,9 @@ CONTAINS
           ELSEIF (search_type == 11) THEN
              cnt_obs = 0
              CALL PDAFomi_check_dist2_loop_sort(thisobs_l, thisobs, coords_l, cnt_obs, 2)
+          ELSEIF (search_type == 21) THEN
+             cnt_obs = 0
+             CALL PDAFomi_check_dist2_loop_sort2(thisobs_l, thisobs, coords_l, cnt_obs, 2)
           END IF
        END IF
 
@@ -1439,7 +1449,7 @@ CONTAINS
 
        ! *** Compute periodic Cartesian distance ***
 
-       ! Reset startidx if coordinate direction of sorted observation is periodic
+       ! Reset startidx if coordinate direction if sorted observation is periodic
        IF (thisobs%domainsize(sort_dir)>0) startidx=1
 
        ! Compute constant value to prevent re-computing inside the loop
@@ -1827,6 +1837,601 @@ CONTAINS
   END SUBROUTINE PDAFomi_check_dist2_loop_sort
 
 
+!-------------------------------------------------------------------------------
+!> Check distance in case of isotropic localization
+!!
+!! This routine computes the distance between the location of
+!! a local analysis domains and all full observations and checks
+!! whether the observations lies within the localization radius.
+!! The computation can be for Cartesian grids with and without
+!! periodicity and for geographic coordinates. For Cartesian
+!! grids, the coordinates can be in any unit, while geographic
+!! coordinates must be provided in radians and the resulting
+!! distance will be in meters. Finally, the routine checks
+!! whether the distance is not larger than the cut-off radius.
+!!
+!! Choices for distance computation - disttype:
+!! 0: Cartesian distance in ncoord dimensions
+!! 1: Cartesian distance in ncoord dimensions with periodicity
+!!    (Needs specification of domsize(ncoord))
+!! 2: Aproximate geographic distance with horizontal coordinates in radians (-pi/+pi)
+!! 3: Geographic distance computation using haversine formula
+!! 10-13: Variants of distance types 0-3, but particularly for 3 dimensions in which 
+!!    a 2+1 dimensional localization is applied (distance weighting only in the horizontal)
+!!
+!! This code variant bases on PDAFomi_check_dist2_loop_sort but uses an upper loop
+!! limit from a bisection search instead of a repeated if-statement.
+!!
+!! __Revision history:__
+!! * 2026-01 - Lars Nerger - Initial code based on PDAFomi_check_dist2_loop_sort
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_check_dist2_loop_sort2(thisobs_l, thisobs, coordsX, cnt_obs, mode)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_f), INTENT(in) :: thisobs       !< Data type with full observation
+    REAL, INTENT(in) :: coordsX(:)           !< Coordinates of current analysis domain (ncoord)
+    INTEGER, INTENT(inout) :: cnt_obs        !< Count number of local observations
+    INTEGER, INTENT(in) :: mode              !< 1: count local observations
+                                             !< 2: initialize local arrays
+
+! *** Local variables ***
+    INTEGER :: i, k                 ! Counters
+    INTEGER :: verbose              ! verbosity flag
+    INTEGER :: domsize              ! Flag whether domainsize is set
+    REAL :: slon, slat              ! sine of distance in longitude or latitude
+    REAL :: distance2               ! square distance
+    REAL :: cradius2                ! squared localization cut-off radius
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+    REAL :: coordsO(thisobs%ncoord) ! Array for coordinates of a single observation
+    INTEGER :: startidx             ! Start index for observation search loop
+    INTEGER :: endidx               ! End index for observation search loop
+    INTEGER :: tree_level           ! Recursion level of tree search
+    REAL :: tree_offset             ! offset factor of tree search
+    REAL :: crad                    ! cut-off radius divided by Earth radius
+    REAL :: cos_coordsX             ! Cosine of 2nd element of coordsX
+    REAL :: lim_coord               ! Limit coordinate for exit check
+
+
+! **********************
+! *** Initialization ***
+! **********************
+
+    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+       domsize = 0
+    ELSE
+       domsize = 1
+    END IF
+
+    ! Determine start index
+    IF (thisobs%dim_obs_f>0) THEN
+       ! Determine start index using bisection search
+
+       startidx = thisobs%dim_obs_f
+       tree_level = 1
+       tree_offset = 0.0
+       CALL PDAFomi_tree_idx_lower(sort_dir, coordsX(sort_dir)-thisobs_l%cradius(1), thisobs%ocoord_f, &
+            thisobs%dim_obs_f, startidx, tree_offset, tree_level)
+
+       ! Determine upper loop index using bisection search
+
+       endidx = thisobs%dim_obs_f
+       tree_level = 1
+       tree_offset = 0.0
+       CALL PDAFomi_tree_idx_upper(sort_dir, coordsX(sort_dir)+thisobs_l%cradius(1), thisobs%ocoord_f, &
+            thisobs%dim_obs_f, endidx, tree_offset, tree_level)
+    ELSE
+       startidx = 1
+       endidx = 0
+    END IF
+
+    ! Set squared cut-off radius
+    cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
+
+    ! Debuggin output (outsize of loops for performance reasons)
+    IF (debug>0) THEN
+       IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+            ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute Cartesian distance'
+       ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute periodic Cartesian distance'
+       ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute geographic distance'
+       ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, &
+               '  compute geographic distance using haversine function'
+       END IF
+    END IF
+
+
+! ************************
+! *** Compute distance ***
+! ************************
+
+    norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+         ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
+
+       ! *** Compute Cartesian distance ***
+
+       ! Compute constant value to prevent re-computing inside the loop
+       lim_coord = coordsX(sort_dir) + thisobs_l%cradius(1)  ! Limit coordinate for exiting search loop
+
+       IF (thisobs%ncoord>=3) THEN
+
+          scancountA3: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(3) = ABS(coordsX(3) - coordsO(3))
+             IF (dists(3) <=thisobs_l%cradius(1)) THEN
+
+                dists(2) = ABS(coordsX(2) - coordsO(2))
+                IF (dists(2) <= thisobs_l%cradius(1)) THEN
+
+                   dists(1) = ABS(coordsX(1) - coordsO(1))
+                   IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                      ! full squared distance
+                      distance2 = 0.0
+                      IF (thisobs%disttype<10) THEN
+                         ! full 3D localization
+                         DO k = 1, thisobs%ncoord
+                            distance2 = distance2 + dists(k)*dists(k)
+                         END DO
+                      ELSE
+                         ! factorized 2+1D localization
+                         DO k = 1, thisobs%ncoord-1
+                            distance2 = distance2 + dists(k)*dists(k)
+                         END DO
+                      END IF
+
+                      IF (distance2 <= cradius2) THEN
+
+                         ! Increment counter
+                         cnt_obs = cnt_obs + 1
+
+                         IF (mode == 2 .OR. mode == 4) THEN
+                            ! For internal storage (use in prodRinvA_l)
+                            thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                            thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                         END IF
+                      END IF
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountA3
+
+       ELSEIF (thisobs%ncoord==2) THEN
+
+          scancountA2: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(2) = ABS(coordsX(2) - coordsO(2))
+             IF (dists(2) <= thisobs_l%cradius(1)) THEN
+
+                dists(1) = ABS(coordsX(1) - coordsO(1))
+                IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                   ! full squared distance
+                   distance2 = dists(1)*dists(1) + dists(2)*dists(2)
+
+                   IF (distance2 <= cradius2) THEN
+
+                      ! Increment counter
+                      cnt_obs = cnt_obs + 1
+
+                      IF (mode == 2 .OR. mode == 4) THEN
+                         ! For internal storage (use in prodRinvA_l)
+                         thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                         thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                      END IF
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountA2
+
+       ELSEIF (thisobs%ncoord==1) THEN
+
+          scancountA1: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(1) = ABS(coordsX(1) - coordsO(1))
+             IF (dists(1) <= thisobs_l%cradius(1)) THEN
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+
+                IF (distance2 <= cradius2) THEN
+
+                   ! Increment counter
+                   cnt_obs = cnt_obs + 1
+
+                   IF (mode == 2 .OR. mode == 4) THEN
+                      ! For internal storage (use in prodRinvA_l)
+                      thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                      thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountA1
+       END IF
+
+    ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN norm
+
+       ! *** Compute periodic Cartesian distance ***
+
+       ! Reset startidx if coordinate direction if sorted observation is periodic
+       IF (thisobs%domainsize(sort_dir)>0) startidx=1
+
+       ! Reset upper loop index if sorted observation is periodic
+       IF (thisobs%domainsize(sort_dir)/=0) endidx = thisobs%dim_obs_f
+
+       ! Compute constant value to prevent re-computing inside the loop
+       lim_coord = coordsX(sort_dir) + thisobs_l%cradius(1)  ! Limit coordinate for exiting search loop
+
+       IF (thisobs%ncoord>=3) THEN
+
+          scancountB3: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             IF (thisobs%domainsize(3)<=0.0) THEN 
+                dists(3) = ABS(coordsX(3) - coordsO(3))
+             ELSE
+                dists(3) = MIN(ABS(coordsX(3) - coordsO(3)), &
+                     ABS(ABS(coordsX(3) - coordsO(3))-thisobs%domainsize(3)))
+             END IF
+             IF (dists(3) <= thisobs_l%cradius(1)) THEN
+
+                IF (thisobs%domainsize(2)<=0.0) THEN 
+                   dists(2) = ABS(coordsX(2) - coordsO(2))
+                ELSE
+                   dists(2) = MIN(ABS(coordsX(2) - coordsO(2)), &
+                        ABS(ABS(coordsX(2) - coordsO(2))-thisobs%domainsize(2)))
+                END IF
+                IF (dists(2) <= thisobs_l%cradius(1)) THEN
+
+                   IF (thisobs%domainsize(1)<=0.0) THEN 
+                      dists(1) = ABS(coordsX(1) - coordsO(1))
+                   ELSE
+                      dists(1) = MIN(ABS(coordsX(1) - coordsO(1)), &
+                           ABS(ABS(coordsX(1) - coordsO(1))-thisobs%domainsize(1)))
+                   END IF
+                   IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                      ! full squared distance
+                      distance2 = 0.0
+                      IF (thisobs%disttype<10) THEN
+                         ! full 3D localization
+                         DO k = 1, thisobs%ncoord
+                            distance2 = distance2 + dists(k)*dists(k)
+                         END DO
+                      ELSE
+                         ! factorized 2+1D localization
+                         DO k = 1, thisobs%ncoord-1
+                            distance2 = distance2 + dists(k)*dists(k)
+                         END DO
+                      END IF
+
+                      IF (distance2 <= cradius2) THEN
+                         ! Increment counter
+                         cnt_obs = cnt_obs + 1
+
+                         IF (mode == 2 .OR. mode == 4) THEN
+                            ! For internal storage (use in prodRinvA_l)
+                            thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                            thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                         END IF
+                      END IF
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountB3
+
+       ELSEIF (thisobs%ncoord==2) THEN
+
+          scancountB2: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             IF (thisobs%domainsize(2)<=0.0) THEN 
+                dists(2) = ABS(coordsX(2) - coordsO(2))
+             ELSE
+                dists(2) = MIN(ABS(coordsX(2) - coordsO(2)), &
+                     ABS(ABS(coordsX(2) - coordsO(2))-thisobs%domainsize(2)))
+             END IF
+             IF (dists(2) <= thisobs_l%cradius(1)) THEN
+
+                IF (thisobs%domainsize(1)<=0.0) THEN 
+                   dists(1) = ABS(coordsX(1) - coordsO(1))
+                ELSE
+                   dists(1) = MIN(ABS(coordsX(1) - coordsO(1)), &
+                        ABS(ABS(coordsX(1) - coordsO(1))-thisobs%domainsize(1)))
+                END IF
+                IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 1, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+
+                   IF (distance2 <= cradius2) THEN
+
+                      ! Increment counter
+                      cnt_obs = cnt_obs + 1
+
+                      IF (mode == 2 .OR. mode == 4) THEN
+                         ! For internal storage (use in prodRinvA_l)
+                         thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                         thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                      END IF
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountB2
+
+       ELSEIF (thisobs%ncoord==1) THEN
+
+          scancountB1: DO i = 1, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             IF (thisobs%domainsize(1)<=0.0) THEN 
+                dists(1) = ABS(coordsX(1) - coordsO(1))
+             ELSE
+                dists(1) = MIN(ABS(coordsX(1) - coordsO(1)), &
+                     ABS(ABS(coordsX(1) - coordsO(1))-thisobs%domainsize(1)))
+             END IF
+             IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+
+                IF (distance2 <= cradius2) THEN
+
+                   ! Increment counter
+                   cnt_obs = cnt_obs + 1
+
+                   IF (mode == 2 .OR. mode == 4) THEN
+                      ! For internal storage (use in prodRinvA_l)
+                      thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                      thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountB1
+
+       END IF
+
+    ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN norm
+
+       ! *** Compute distance from geographic coordinates ***
+
+       ! Compute some constant values to prevent re-computing inside the loop
+       crad = thisobs_l%cradius(1) / r_earth ! Scaled cradius
+       cos_coordsX = COS(coordsX(2))         ! Cosine of coordsX(2)
+       lim_coord = coordsX(sort_dir) + crad  ! Limit coordinate for exiting search loop
+
+       IF (thisobs%ncoord==3) THEN
+
+          ! 3D localization
+          
+          scancountC3: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(3) = ABS(coordsX(3) - coordsO(3))
+             IF (dists(3) <= thisobs_l%cradius(1)) THEN
+
+                dists(2) = ABS(coordsX(2) - coordsO(2))
+                IF (dists(2) <= crad) THEN
+
+                   dists(1) = MIN( ABS(coordsX(1) - coordsO(1)), &
+                        ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
+                   IF (dists(1) <= crad) THEN
+
+                      ! full squared distance
+                      IF (thisobs%disttype<10) THEN
+                         ! full 3D localization
+                         distance2 = dists(1)*dists(1) + dists(2)*dists(2)
+                         distance2 = distance2 * r2_earth + dists(3)*dists(3)
+                      ELSE
+                         ! factorized 2+1D localization
+                         distance2 = dists(1)*dists(1) + dists(2)*dists(2)
+                         distance2 = distance2 * r2_earth
+                      END IF
+
+                      IF (distance2 <= cradius2) THEN
+
+                         ! Increment counter
+                         cnt_obs = cnt_obs + 1
+
+                         IF (mode == 2 .OR. mode == 4) THEN
+                            ! For internal storage (use in prodRinvA_l)
+                            thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                            thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                         END IF
+                      END IF
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountC3
+
+       ELSE
+
+          ! 2D localization
+
+          scancountC2: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(2) = ABS(coordsX(2) - coordsO(2))
+             IF (dists(2) <= crad) THEN
+
+                dists(1) = MIN( ABS(coordsX(1) - coordsO(1)), &
+                     ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
+                IF (dists(1) <= crad) THEN
+
+                   ! full squared distance
+                   distance2 = dists(1)*dists(1) + dists(2)*dists(2)
+                   distance2 = distance2 * r2_earth
+
+                   IF (distance2 <= cradius2) THEN
+
+                      ! Increment counter
+                      cnt_obs = cnt_obs + 1
+
+                      IF (mode == 2 .OR. mode == 4) THEN
+                         ! For internal storage (use in prodRinvA_l)
+                         thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                         thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                      END IF
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountC2
+
+       END IF
+ 
+    ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN norm
+
+       ! *** Compute distance from geographic coordinates with haversine formula ***
+
+       ! Compute some constant values to prevent re-computing inside the loop
+       crad = thisobs_l%cradius(1) / r_earth ! Scaled cradius
+       cos_coordsX = COS(coordsX(2))         ! Cosine of coordsX(2)
+       lim_coord = coordsX(sort_dir) + crad  ! Limit coordinate for exiting search loop
+
+       IF (thisobs%ncoord==3) THEN
+
+          scancountD3: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(3) = ABS(coordsX(3) - coordsO(3))
+             IF (dists(3) <= thisobs_l%cradius(1)) THEN
+
+                dists(2) = ABS(coordsX(2) - coordsO(2))
+                IF (dists(2) <= crad) THEN
+
+                   ! Haversine formula
+                   slon = SIN((coordsX(1) - coordsO(1))/2)
+                   slat = SIN((coordsX(2) - coordsO(2))/2)
+
+                   dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                   IF (dists(2)<=1.0) THEN
+                      dists(2) = 2.0 * ASIN(dists(2))
+                   ELSE
+                      dists(2) = pi
+                   END IF
+
+                   IF (dists(2) <= crad) THEN
+
+                      ! full squared distance
+                      IF (thisobs%disttype<10) THEN
+                         ! full 3D localization
+                         distance2 = dists(3)*dists(3) + dists(2)*dists(2)*r2_earth
+                      ELSE
+                         ! factorized 2+1D localization
+                         distance2 = dists(2)*dists(2) * r2_earth
+                      END IF
+
+                      IF (distance2 <= cradius2) THEN
+
+                         ! Increment counter
+                         cnt_obs = cnt_obs + 1
+
+                         IF (mode == 2 .OR. mode == 4) THEN
+                            ! For internal storage (use in prodRinvA_l)
+                            thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                            thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                         END IF
+                      END IF
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountD3
+
+       ELSE
+
+          scancountD2: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(2) = ABS(coordsX(2) - coordsO(2))
+             IF (dists(2) < crad) THEN
+
+                ! Haversine formula
+                slon = SIN((coordsX(1) - coordsO(1))/2)
+                slat = SIN((coordsX(2) - coordsO(2))/2)
+
+                dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                IF (dists(2)<=1.0) THEN
+                   dists(2) = 2.0 * ASIN(dists(2))
+                ELSE
+                   dists(2) = pi
+                END IF
+                IF (dists(2) < crad) THEN
+
+                   ! full squared distance
+                   distance2 = dists(2)*dists(2) * r2_earth
+
+                   IF (distance2 <= cradius2) THEN
+
+                      ! Increment counter
+                      cnt_obs = cnt_obs + 1
+
+                      IF (mode == 2 .OR. mode == 4) THEN
+                         ! For internal storage (use in prodRinvA_l)
+                         thisobs_l%id_obs_l(cnt_obs) = i                       ! node index
+                         thisobs_l%distance_l(cnt_obs) = SQRT(distance2)       ! distance
+                      END IF
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountD2
+
+       END IF
+    END IF norm
+
+    ! Set cradius and sradius for all local observations 
+    IF (mode == 2) THEN
+       thisobs_l%cradius_l(1:cnt_obs) = thisobs_l%cradius(1)   ! isotropic cut-off radius
+       thisobs_l%sradius_l(1:cnt_obs) = thisobs_l%sradius(1)   ! isotropic support radius
+    END IF
+
+    IF (debug>0 .AND. mode==2) THEN
+       DO i = 1, cnt_obs
+          WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
+               '  valid observation with coordinates', thisobs%ocoord_f(1:thisobs%ncoord, &
+               thisobs_l%id_obs_l(i))
+       END DO
+    END IF
+
+  END SUBROUTINE PDAFomi_check_dist2_loop_sort2
+
+
 
 
 !-------------------------------------------------------------------------------
@@ -1964,7 +2569,7 @@ CONTAINS
        thisobs_l%sradius(:) = sradius(:)
 
        ! For optimized search performance allocate local observation arrays of size dim_obs_f
-       IF (search_type == 2 .OR. search_type == 12) THEN
+       IF (search_type == 2 .OR. search_type == 12 .OR. search_type == 22) THEN
           IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
           IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
           IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
@@ -2034,6 +2639,13 @@ CONTAINS
              ! Search routine using sorted observations and only a single search loop
              ! (This needs more memory using local-observation arrays allocates with size dim_obs_f)
              CALL PDAFomi_check_dist2_noniso_loop_sort(thisobs_l, thisobs, coords_l, cnt_obs, 4)
+          ELSEIF (search_type == 21) THEN
+             ! Search routine using observations sorted in one coordinate direction and a computed upper loop limit
+             CALL PDAFomi_check_dist2_noniso_loop_sort2(thisobs_l, thisobs, coords_l, cnt_obs, 1)
+          ELSEIF (search_type == 22) THEN
+             ! Search routine using sorted observations and only a single search loop and a computed upper loop limit
+             ! (This needs more memory using local-observation arrays allocates with size dim_obs_f)
+             CALL PDAFomi_check_dist2_noniso_loop_sort2(thisobs_l, thisobs, coords_l, cnt_obs, 4)
           END IF
        ELSE
           WRITE (*,*) '+++++ ERROR PDAF-OMI: nonisotropic localization is only possible in 1, 2 or 3 dimensions'
@@ -2046,7 +2658,7 @@ CONTAINS
 ! ************************************************
 
        ! Set mode for allocations
-       IF (search_type==2 .OR. search_type==12) THEN
+       IF (search_type==2 .OR. search_type==12 .OR. search_type==22) THEN
           initmode = 2
        ELSE
           initmode = 0
@@ -2083,6 +2695,9 @@ CONTAINS
              ELSEIF (search_type == 11) THEN
                 cnt_obs = 0
                 CALL PDAFomi_check_dist2_noniso_loop_sort(thisobs_l, thisobs, coords_l, cnt_obs, 2)
+             ELSEIF (search_type == 21) THEN
+                cnt_obs = 0
+                CALL PDAFomi_check_dist2_noniso_loop_sort2(thisobs_l, thisobs, coords_l, cnt_obs, 2)
              END IF
           ELSE
              WRITE (*,*) '+++++ ERROR PDAF-OMI: nonisotropic localization is only possible in 1, 2 or 3 dimensions'
@@ -3204,7 +3819,7 @@ CONTAINS
 
        ! *** Compute periodic Cartesian distance ***
 
-       ! Reset startidx if coordinate direction of sorted observation is periodic
+       ! Reset startidx if coordinate direction if sorted observation is periodic
        IF (thisobs%domainsize(sort_dir)>0) startidx=1
 
        ! Compute constant value to prevent re-computing inside the loop
@@ -3529,6 +4144,505 @@ CONTAINS
     END IF
 
   END SUBROUTINE PDAFomi_check_dist2_noniso_loop_sort
+
+
+!-------------------------------------------------------------------------------
+!> Check distance in case of nonisotropic localization
+!!
+!! This routine computes the distance between the observation and a 
+!! model grid point and the cut-off radius of an ellipse (in 2D)
+!! or ellipsoid (in 3D) in the direction of the distance. Finally,
+!! the routine checks whether the distance is not larger than the
+!! cut-off radius.
+!!
+!! Choices for distance computation - disttype:
+!! 0: Cartesian distance in ncoord dimensions
+!! 1: Cartesian distance in ncoord dimensions with periodicity
+!!    (Needs specification of domsize(ncoord))
+!! 2: Aproximate geographic distance with horizontal coordinates in radians (-pi/+pi)
+!! 3: Geographic distance computation using haversine formula
+!! 10-13: Variants of distance types 0-3, but particularly for 3 dimensions in which 
+!!    a 2+1 dimensional localization is applied (distance weighting only in the horizontal)
+!!
+!! This code variant bases on PDAFomi_check_dist2_noniso_loop_sort but uses an upper loop
+!! limit from a bisection search instead of a repeated if-statement.
+!!
+!! __Revision history:__
+!! * 2025-11 - Lars Nerger - Initial code based on PDAFomi_check_dist2_loop_opt
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_check_dist2_noniso_loop_sort2(thisobs_l, thisobs, coordsX, cnt_obs, mode)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_f), INTENT(in) :: thisobs       !< Data type with full observation
+    REAL, INTENT(in) :: coordsX(:)           !< Coordinates of current analysis domain (ncoord)
+    INTEGER, INTENT(inout) :: cnt_obs        !< Count number of local observations
+    INTEGER, INTENT(in) :: mode              !< 1: count local observations
+                                             !< 2: initialize local arrays
+
+! *** Local variables ***
+    INTEGER :: i, k                 ! Counters
+    INTEGER :: verbose              ! verbosity flag
+    INTEGER :: domsize              ! Flag whether domainsize is set
+    REAL :: slon, slat              ! sine of distance in longitude or latitude
+    REAL :: distance2               ! square distance
+    REAL :: cradius2                ! squared localization cut-off radius
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+    REAL :: coordsO(thisobs%ncoord) ! Array for coordinates of a single observation
+    INTEGER :: startidx             ! Start index for observation search loop
+    INTEGER :: endidx               ! End index for observation search loop
+    INTEGER :: tree_level           ! Recursion level of tree search
+    REAL :: tree_offset             ! offset factor of tree search
+    REAL :: crad1                   ! Cut-off radius in direction 1 divided by Earth radius
+    REAL :: crad2                   ! Cut-off radius in direction 2 divided by Earth radius
+    REAL :: cos_coordsX             ! Cosine of 2nd element of coordsX
+    REAL :: lim_coord               ! Limit coordinate for exit check
+
+
+! **********************
+! *** Initialization ***
+! **********************
+
+    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+       domsize = 0
+    ELSE
+       domsize = 1
+    END IF
+
+    ! Determine start index
+    IF (thisobs%dim_obs_f>0) THEN
+       ! Determine start index using bisection search
+
+       startidx = thisobs%dim_obs_f
+       tree_level = 1
+       tree_offset = 0.0
+       CALL PDAFomi_tree_idx_lower(sort_dir, coordsX(sort_dir)-thisobs_l%cradius(1), thisobs%ocoord_f, &
+            thisobs%dim_obs_f, startidx, tree_offset, tree_level)
+
+       ! Determine upper loop index using bisection search
+
+       endidx = thisobs%dim_obs_f
+       tree_level = 1
+       tree_offset = 0.0
+       CALL PDAFomi_tree_idx_upper(sort_dir, coordsX(sort_dir)+thisobs_l%cradius(1), thisobs%ocoord_f, &
+            thisobs%dim_obs_f, endidx, tree_offset, tree_level)
+    ELSE
+       startidx = 1
+       endidx = 0
+    END IF
+
+    ! Debuggin output (outsize of loops for performance reasons)
+    IF (debug>0) THEN
+       IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+            ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute Cartesian distance'
+       ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute periodic Cartesian distance'
+       ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute geographic distance'
+       ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, &
+               '  compute geographic distance using haversine function'
+       END IF
+       WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  use non-isotropic localization'
+    END IF
+
+
+! ************************
+! *** Compute distance ***
+! ************************
+
+    norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+         ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
+
+       ! *** Compute Cartesian distance ***
+
+       ! Compute constant value to prevent re-computing inside the loop
+       lim_coord = coordsX(sort_dir) + thisobs_l%cradius(sort_dir)  ! Limit coordinate for exiting search loop
+
+       IF (thisobs%ncoord>=3) THEN
+
+          scancountA3: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(3) = ABS(coordsX(3) - coordsO(3))
+             IF (dists(3) <=thisobs_l%cradius(3)) THEN
+
+                dists(2) = ABS(coordsX(2) - coordsO(2))
+                IF (dists(2) <= thisobs_l%cradius(2)) THEN
+
+                   dists(1) = ABS(coordsX(1) - coordsO(1))
+                   IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                      ! full squared distance
+                      distance2 = 0.0
+                      IF (thisobs%disttype<10) THEN
+                         ! full 3D localization
+                         DO k = 1, thisobs%ncoord
+                            distance2 = distance2 + dists(k)*dists(k)
+                         END DO
+                      ELSE
+                         ! factorized 2+1D localization
+                         DO k = 1, thisobs%ncoord-1
+                            distance2 = distance2 + dists(k)*dists(k)
+                         END DO
+                      END IF
+
+                      CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountA3
+
+       ELSEIF (thisobs%ncoord==2) THEN
+
+          scancountA2: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(2) = ABS(coordsX(2) - coordsO(2))
+             IF (dists(2) <= thisobs_l%cradius(2)) THEN
+
+                dists(1) = ABS(coordsX(1) - coordsO(1))
+                IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                   ! full squared distance
+                   distance2 = dists(1)*dists(1) + dists(2)*dists(2)
+
+                   CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+                END IF
+             END IF
+
+          END DO scancountA2
+
+       ELSEIF (thisobs%ncoord==1) THEN
+
+          scancountA1: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(1) = ABS(coordsX(1) - coordsO(1))
+             IF (dists(1) <= thisobs_l%cradius(1)) THEN
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+
+                CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+             END IF
+
+          END DO scancountA1
+       END IF
+
+    ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN norm
+
+       ! *** Compute periodic Cartesian distance ***
+
+       ! Reset startidx if coordinate direction if sorted observation is periodic
+       IF (thisobs%domainsize(sort_dir)>0) startidx=1
+
+       ! Reset upper loop index if sorted observation is periodic
+       IF (thisobs%domainsize(sort_dir)/=0) endidx = thisobs%dim_obs_f
+
+       ! Compute constant value to prevent re-computing inside the loop
+       lim_coord = coordsX(sort_dir) + thisobs_l%cradius(sort_dir)  ! Limit coordinate for exiting search loop
+
+       IF (thisobs%ncoord>=3) THEN
+
+          scancountB3: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             IF (thisobs%domainsize(3)<=0.0) THEN 
+                dists(3) = ABS(coordsX(3) - coordsO(3))
+             ELSE
+                dists(3) = MIN(ABS(coordsX(3) - coordsO(3)), &
+                     ABS(ABS(coordsX(3) - coordsO(3))-thisobs%domainsize(3)))
+             END IF
+             IF (dists(3) <= thisobs_l%cradius(3)) THEN
+
+                IF (thisobs%domainsize(2)<=0.0) THEN 
+                   dists(2) = ABS(coordsX(2) - coordsO(2))
+                ELSE
+                   dists(2) = MIN(ABS(coordsX(2) - coordsO(2)), &
+                        ABS(ABS(coordsX(2) - coordsO(2))-thisobs%domainsize(2)))
+                END IF
+                IF (dists(2) <= thisobs_l%cradius(2)) THEN
+
+                   IF (thisobs%domainsize(1)<=0.0) THEN 
+                      dists(1) = ABS(coordsX(1) - coordsO(1))
+                   ELSE
+                      dists(1) = MIN(ABS(coordsX(1) - coordsO(1)), &
+                           ABS(ABS(coordsX(1) - coordsO(1))-thisobs%domainsize(1)))
+                   END IF
+                   IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                      ! full squared distance
+                      distance2 = 0.0
+                      IF (thisobs%disttype<10) THEN
+                         ! full 3D localization
+                         DO k = 1, thisobs%ncoord
+                            distance2 = distance2 + dists(k)*dists(k)
+                         END DO
+                      ELSE
+                         ! factorized 2+1D localization
+                         DO k = 1, thisobs%ncoord-1
+                            distance2 = distance2 + dists(k)*dists(k)
+                         END DO
+                      END IF
+
+                      CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountB3
+
+       ELSEIF (thisobs%ncoord==2) THEN
+
+          scancountB2: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             IF (thisobs%domainsize(2)<=0.0) THEN 
+                dists(2) = ABS(coordsX(2) - coordsO(2))
+             ELSE
+                dists(2) = MIN(ABS(coordsX(2) - coordsO(2)), &
+                     ABS(ABS(coordsX(2) - coordsO(2))-thisobs%domainsize(2)))
+             END IF
+             IF (dists(2) <= thisobs_l%cradius(2)) THEN
+
+                IF (thisobs%domainsize(1)<=0.0) THEN 
+                   dists(1) = ABS(coordsX(1) - coordsO(1))
+                ELSE
+                   dists(1) = MIN(ABS(coordsX(1) - coordsO(1)), &
+                        ABS(ABS(coordsX(1) - coordsO(1))-thisobs%domainsize(1)))
+                END IF
+                IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 1, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+
+                   CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+                END IF
+             END IF
+
+          END DO scancountB2
+
+       ELSEIF (thisobs%ncoord==1) THEN
+
+          scancountB1: DO i = 1, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             IF (thisobs%domainsize(1)<=0.0) THEN 
+                dists(1) = ABS(coordsX(1) - coordsO(1))
+             ELSE
+                dists(1) = MIN(ABS(coordsX(1) - coordsO(1)), &
+                     ABS(ABS(coordsX(1) - coordsO(1))-thisobs%domainsize(1)))
+             END IF
+             IF (dists(1) <= thisobs_l%cradius(1)) THEN
+
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+
+                CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+             END IF
+
+          END DO scancountB1
+
+       END IF
+
+    ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN norm
+
+       ! *** Compute distance from geographic coordinates ***
+
+       ! Compute some constant values to prevent re-computing inside the loop
+       crad1 = thisobs_l%cradius(1) / r_earth ! Scaled cradius
+       crad2 = thisobs_l%cradius(2) / r_earth ! Scaled cradius
+       cos_coordsX = COS(coordsX(2))          ! Cosine of coordsX(2)
+       IF (sort_dir==1) THEN
+          lim_coord = coordsX(sort_dir) + crad1   ! Limit coordinate for exiting search loop
+       ELSEIF (sort_dir==2) THEN
+          lim_coord = coordsX(sort_dir) + crad2   ! Limit coordinate for exiting search loop
+       ELSE
+          lim_coord = coordsX(sort_dir) + thisobs_l%cradius(3)   ! Limit coordinate for exiting search loop
+       END IF
+
+       IF (thisobs%ncoord==3) THEN
+
+          ! 3D localization
+          
+          scancountC3: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(3) = ABS(coordsX(3) - coordsO(3))
+             IF (dists(3) <= thisobs_l%cradius(3)) THEN
+
+                dists(2) = ABS(coordsX(2) - coordsO(2))
+                IF (dists(2) <= crad2) THEN
+
+                   dists(1) = MIN( ABS(coordsX(1) - coordsO(1)), &
+                        ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
+                   IF (dists(1) <= crad1) THEN
+
+                      ! full squared distance
+                      IF (thisobs%disttype<10) THEN
+                         ! full 3D localization
+                         distance2 = dists(1)*dists(1) + dists(2)*dists(2)
+                         distance2 = distance2 * r2_earth + dists(3)*dists(3)
+                      ELSE
+                         ! factorized 2+1D localization
+                         distance2 = dists(1)*dists(1) + dists(2)*dists(2)
+                         distance2 = distance2 * r2_earth
+                      END IF
+
+                      CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountC3
+
+       ELSE
+
+          ! 2D localization
+
+          scancountC2: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(2) = ABS(coordsX(2) - coordsO(2))
+             IF (dists(2) <= crad2) THEN
+
+                dists(1) = MIN( ABS(coordsX(1) - coordsO(1)), &
+                     ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
+                IF (dists(1) <= crad1) THEN
+
+                   ! full squared distance
+                   distance2 = dists(1)*dists(1) + dists(2)*dists(2)
+                   distance2 = distance2 * r2_earth
+
+                   CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+                END IF
+             END IF
+
+          END DO scancountC2
+
+       END IF
+ 
+    ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN norm
+
+       ! *** Compute distance from geographic coordinates with haversine formula ***
+
+       ! Compute some constant values to prevent re-computing inside the loop
+       crad1 = thisobs_l%cradius(1) / r_earth ! Scaled cradius
+       crad2 = thisobs_l%cradius(2) / r_earth ! Scaled cradius
+       cos_coordsX = COS(coordsX(2))          ! Cosine of coordsX(2)
+       IF (sort_dir==1) THEN
+          lim_coord = coordsX(sort_dir) + crad1   ! Limit coordinate for exiting search loop
+       ELSEIF (sort_dir==2) THEN
+          lim_coord = coordsX(sort_dir) + crad2   ! Limit coordinate for exiting search loop
+       ELSE
+          lim_coord = coordsX(sort_dir) + thisobs_l%cradius(3)   ! Limit coordinate for exiting search loop
+       END IF
+
+       IF (thisobs%ncoord==3) THEN
+
+          scancountD3: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(3) = ABS(coordsX(3) - coordsO(3))
+             IF (dists(3) <= thisobs_l%cradius(3)) THEN
+
+                dists(2) = ABS(coordsX(2) - coordsO(2))
+                IF (dists(2) <= crad2) THEN
+
+                   ! Haversine formula
+                   slon = SIN((coordsX(1) - coordsO(1))/2)
+                   slat = SIN((coordsX(2) - coordsO(2))/2)
+
+                   dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                   IF (dists(2)<=1.0) THEN
+                      dists(2) = 2.0 * ASIN(dists(2))
+                   ELSE
+                      dists(2) = pi
+                   END IF
+
+                   IF (dists(2) <= crad1) THEN
+
+                      ! full squared distance
+                      IF (thisobs%disttype<10) THEN
+                         ! full 3D localization
+                         distance2 = dists(3)*dists(3) + dists(2)*dists(2)*r2_earth
+                      ELSE
+                         ! factorized 2+1D localization
+                         distance2 = dists(2)*dists(2) * r2_earth
+                      END IF
+
+                      CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+                   END IF
+                END IF
+             END IF
+
+          END DO scancountD3
+
+       ELSE
+
+          scancountD2: DO i = startidx, endidx
+
+             coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+             dists(2) = ABS(coordsX(2) - coordsO(2))
+             IF (dists(2) < crad2) THEN
+
+                ! Haversine formula
+                slon = SIN((coordsX(1) - coordsO(1))/2)
+                slat = SIN((coordsX(2) - coordsO(2))/2)
+
+                dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                IF (dists(2)<=1.0) THEN
+                   dists(2) = 2.0 * ASIN(dists(2))
+                ELSE
+                   dists(2) = pi
+                END IF
+                IF (dists(2) < max(crad1, crad2)) THEN
+
+                   ! full squared distance
+                   distance2 = dists(2)*dists(2) * r2_earth
+
+                   CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
+                END IF
+             END IF
+
+          END DO scancountD2
+
+       END IF
+    END IF norm
+
+    IF (debug>0 .AND. mode==2) THEN
+       DO i = 1, cnt_obs
+          WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
+               '  valid observation with coordinates', thisobs%ocoord_f(1:thisobs%ncoord, &
+               thisobs_l%id_obs_l(i))
+       END DO
+    END IF
+
+  END SUBROUTINE PDAFomi_check_dist2_noniso_loop_sort2
 
 
 
@@ -4169,5 +5283,57 @@ CONTAINS
     END IF
 
   END SUBROUTINE PDAFomi_tree_idx_lower
+
+
+
+
+
+!-------------------------------------------------------------------------------
+!> Perform tree search to determine end index of local observation search
+!!
+!! This routine is used if a search mode with sorted observations is used. In
+!! this case, the routine can perform a tree search with bisections to determine
+!! the upper loop index for the loop search local observation.
+!!
+!! __Revision history:__
+!! * 2026-01 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  RECURSIVE SUBROUTINE PDAFomi_tree_idx_upper(row, tst, points, npts, iupper, offset, level)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: row          ! row of 'points' that is tested
+    REAL, INTENT(in) :: tst             ! Grid point coordinate which is tested
+    REAL, INTENT(in) :: points(:,:)     ! Array of observation coordinates
+    INTEGER, INTENT(in) :: npts         ! length of observation array
+    INTEGER, INTENT(inout) :: iupper    ! resulting end index
+    REAL, INTENT(inout) :: offset       ! offset factor
+    INTEGER, INTENT(inout) :: level     ! recursion level
+
+! *** Local variables ***
+    INTEGER :: tstidx       ! Index for which the coordinate is tested
+    REAL :: scale           ! The scale factor tested at a recursion level
+    INTEGER :: maxlevel=10  ! Maximum number of recursion levels
+
+    IF (level<=maxlevel) THEN
+
+       scale = 0.5**level
+       tstidx = FLOOR((npts) * (scale + offset))
+
+       level = level + 1
+
+       IF (tst < points(row, tstidx)) THEN
+          iupper = tstidx
+          CALL PDAFomi_tree_idx_upper(row, tst, points, npts, iupper, offset, level)
+       ELSE
+          offset = scale + offset
+          CALL PDAFomi_tree_idx_upper(row, tst, points, npts, iupper, offset, level)
+       END IF
+
+    END IF
+
+  END SUBROUTINE PDAFomi_tree_idx_upper
 
 END MODULE PDAFomi_dim_obs_l

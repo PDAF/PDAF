@@ -214,10 +214,11 @@ MODULE PDAFomi_obs_f
                                !< 2: Re-organized and optimized search code with ony one search loop
                                !< 11: Search type using sorted observations
                                !< 12: Search type using sorted observations with ony one search loop
-                               !< (2 and 12 need more memory arrays allocated with size dim_obs_f)
+                               !< 21: Search type using sorted observations and upper loop limit
+                               !< 22: Search type using sorted observations and upper loop limit with ony one search loop
+                               !< (2, 12, and 22 need more memory as arrays are allocated with size dim_obs_f)
   INTEGER :: sort_dir = 2      !< index of coordinate to be sorted
                                !< For geographic coordinates, 2 is generally recommended as 1 (longitude) is periodic
-  REAL, ALLOCATABLE :: rtmp(:) !< temporary array for re-sorting
 
   TYPE obs_arr_f
      TYPE(obs_f), POINTER :: ptr
@@ -280,6 +281,7 @@ CONTAINS
     REAL, ALLOCATABLE :: obs_g(:)           ! Global full observation vector (used in case of limited obs.)
     REAL, ALLOCATABLE :: ivar_obs_g(:)      ! Global full inverse variances (used in case of limited obs.)
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
+    REAL, ALLOCATABLE :: rtmp(:)            ! temporary array for re-sorting
     INTEGER :: status                       ! Status flag for PDAF gather operation
     INTEGER :: localfilter                  ! Whether the filter is domain-localized
     INTEGER :: maxid                        ! maximum index in thisobs%id_obs_p
@@ -516,21 +518,37 @@ CONTAINS
        END IF fullobs
 
        IF (mype == 0 .AND. screen >0 .AND. localfilter==1 .AND. covarloc==0) THEN
-          WRITE (*, '(a, 5x, a, 1x)') 'PDAFomi', '--- Search type for local observations:'
+          WRITE (*, '(a, 5x, a, 1x, i3)') 'PDAFomi', '--- Search type for local observations:', search_type
           IF (search_type == 0) THEN
-             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- 0: search function of PDAF 3.0'
+             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- original search function of PDAF 3.0'
           ELSEIF (search_type == 1) THEN
-             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- 1: optimized search function, double loop'
+             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- optimized search function'
           ELSEIF (search_type == 2) THEN
-             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- 2: optimized search function, single loop'
+             WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- optimized search function, single loop'
           ELSEIF (search_type == 11) THEN
              sort_dir = MIN(sort_dir, thisobs%ncoord)
-             WRITE (*, '(a, 8x, a, 1x, i2, 1x, a)') 'PDAFomi', &
-                  '--- 11: use sorted observations along coordinate direction', sort_dir, 'with double loop'
+             WRITE (*, '(a, 8x, a)') 'PDAFomi', &
+                  '--- search sorted obs.; double loop'
+             WRITE (*, '(a, 8x, a, 1x, i2)') 'PDAFomi', &
+                  '--- sorted coordinate direction', sort_dir
           ELSEIF (search_type == 12) THEN
              sort_dir = MIN(sort_dir, thisobs%ncoord)
-             WRITE (*, '(a, 8x, a, 1x, i2, 1x, a)') 'PDAFomi', &
-                  '--- 12: use sorted observations along coordinate direction', sort_dir, 'with single loop'
+             WRITE (*, '(a, 8x, a)') 'PDAFomi', &
+                  '--- search sorted obs.; single loop'
+             WRITE (*, '(a, 8x, a, 1x, i2)') 'PDAFomi', &
+                  '--- sorted coordinate direction', sort_dir
+          ELSEIF (search_type == 21) THEN
+             sort_dir = MIN(sort_dir, thisobs%ncoord)
+             WRITE (*, '(a, 8x, a)') 'PDAFomi', &
+                  '--- search sorted obs.; double loop; upper loop limit'
+             WRITE (*, '(a, 8x, a, 1x, i2)') 'PDAFomi', &
+                  '--- sorted coordinate direction', sort_dir
+          ELSEIF (search_type == 22) THEN
+             sort_dir = MIN(sort_dir, thisobs%ncoord)
+             WRITE (*, '(a, 8x, a)') 'PDAFomi', &
+                  '--- search sorted obs.; single loop; upper loop limit'
+             WRITE (*, '(a, 8x, a, 1x, i2)') 'PDAFomi', &
+                  '--- sorted coordinate direction', sort_dir
           ELSE
              WRITE (*,'(a)') 'PDAFomi - ERROR: no valid value of search_type !!!'
              error = 16
@@ -572,6 +590,8 @@ CONTAINS
           DO i = 1, dim_obs_f
              thisobs%ivar_obs_f(i) = rtmp(thisobs%idx_sort(i))
           END DO
+
+          DEALLOCATE(rtmp)
 
        END IF sort_obs
 
@@ -735,6 +755,7 @@ CONTAINS
     INTEGER :: i                           ! Counter
     INTEGER :: status                      ! Status flag for PDAF gather operation
     INTEGER :: localfilter                 ! Whether the filter is domain-localized
+    REAL, ALLOCATABLE :: rtmp(:)            ! temporary array for re-sorting
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
     INTEGER :: obsmember                   ! Ensemble member index for which the routine is called
 
@@ -817,10 +838,14 @@ CONTAINS
 
     IF (search_type>10 .AND. localfilter==1 .AND. covarloc==0) THEN
 
-       rtmp(:) = obsstate_f(:)
+       ALLOCATE(rtmp(thisobs%dim_obs_f))
+
+       rtmp(:) = obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f)
        DO i = 1, thisobs%dim_obs_f
-          obsstate_f(i) = rtmp(thisobs%idx_sort(i))
+          obsstate_f(thisobs%off_obs_f + i) = rtmp(thisobs%idx_sort(i))
        END DO
+
+       DEALLOCATE(rtmp)
 
     END IF
 
@@ -2863,10 +2888,12 @@ CONTAINS
     INTEGER, INTENT(in) :: stype           !< Input value of search_type
                                !< 0: Search routine of PDAF 3.0
                                !< 1: Re-organized search code
-                               !< 2: Re-organized and optimized search code with ony one search loop
+                               !< 2: Re-organized and optimized search code with only one search loop
                                !< 11: Search type using sorted observations
-                               !< 12: Search type using sorted observations with ony one search loop
-                               !< (2 and 12 need more memory with index array allocated with size dim_obs_f)
+                               !< 12: Search type using sorted observations with only one search loop
+                               !< 21: Search type using sorted observations with a computed upper loop limit
+                               !< 22: Search type using sorted observations with a computed upper loop limit and only one search loop
+                               !< (2, 12 and 22 need more memory with index array allocated with size dim_obs_f)
     INTEGER, INTENT(in) :: sortdir         !< Input value of sort_dir
 
     ! Initialization
@@ -2874,7 +2901,8 @@ CONTAINS
     sort_dir = sortdir
 
     ! Check value
-    IF (.NOT.(search_type==0 .OR. search_type==1 .OR. search_type==2 .OR.search_type==11 .OR.search_type==12)) THEN
+    IF (.NOT.(search_type==0 .OR. search_type==1 .OR. search_type==2 .OR.search_type==11 &
+         .OR. search_type==12 .OR. search_type==21 .OR. search_type==22)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: no valid value of search_type !!!'
        error = 16
     END IF

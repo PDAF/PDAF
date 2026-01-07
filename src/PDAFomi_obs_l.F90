@@ -4860,7 +4860,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id, rtmp
+         offset_obs_g, obsdims, map_obs_id
 
     IMPLICIT NONE
 
@@ -4898,7 +4898,6 @@ CONTAINS
     IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
     IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
     IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
-    IF (ALLOCATED(rtmp)) DEALLOCATE(rtmp)
 
     ! Reset counters over all observation types
     n_obstypes = 0
@@ -5098,7 +5097,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id, coords_p, rtmp, &
+         offset_obs_g, obsdims, map_obs_id, coords_p, &
          have_obsmean_diag, have_obsens_diag, rmsd, dim_obs_diag_p, obsstats
 
 
@@ -5140,7 +5139,6 @@ CONTAINS
 
        IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
        IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
-       IF (ALLOCATED(rtmp)) DEALLOCATE(rtmp)
 
        ! localization
        IF (ALLOCATED(coords_p)) DEALLOCATE(coords_p)

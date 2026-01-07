@@ -2,4 +2,8 @@ build/*.o
 external/**/*.mod
 external/**/*.o
 src/*~
+tests/**/*.mod
+tests/**/*.o
+tutorial/**/*.mod
+tutorial/**/*.o
 Srcfiles
