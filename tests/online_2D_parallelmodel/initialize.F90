@@ -44,17 +44,20 @@ SUBROUTINE initialize()
   ! Number of coordinate directions
   ndim = 2
 
-  IF (gridsize==1) THEN
-     nx = 36    ! Extent of grid in x-direction
-     ny = 18    ! Extent of grid in y-direction
-  ELSEIF (gridsize==2) THEN
+  IF (gridsize==2) THEN
      nx = 256    ! Extent of grid in x-direction
      ny = 128    ! Extent of grid in y-direction
-  ELSE
+  ELSEIF (gridsize==3) THEN
      nx = 2048   ! Extent of grid in x-direction
      ny = 512    ! Extent of grid in y-direction
+  ELSEIF (gridsize==4) THEN
+     nx = 512    ! Extent of grid in x-direction
+     ny = 512    ! Extent of grid in y-direction
+  ELSE
+     ! Default grid size
+     nx = 36    ! Extent of grid in x-direction
+     ny = 18    ! Extent of grid in y-direction
   END IF
-
 
 ! *** Screen output ***
   IF (mype_world == 0) THEN
