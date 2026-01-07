@@ -3,6 +3,7 @@
 # A script to plot the 2D field of observations from the online_2D_serialmodel tutorial.
 # Requires Python 3, Matplotlib and Numpy.
 # The script is identical to plot_field.py except for a color range limit.
+# This variant is for grid size 3: 512x2048 grid points
 
 # Usage: ./plot_obs.py <filename>
 

@@ -2,6 +2,7 @@
 
 # A script to plot the 2D field from the online_2D_serialmodel tutorial.
 # Requires Python 3, Matplotlib and Numpy.
+# This variant is for grid size 3: 512x2048 grid points
 
 # Usage: ./plot_field.py <filename>
 

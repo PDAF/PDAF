@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-# A script to plot the 2D field from the online_2D_serialmodel tutorial.
+# A script to plot the difference of two 2D fields from the tutorial.
 # Requires Python 3, Matplotlib and Numpy.
+# This variant is for grid size 3: 512x2048 grid points
 
-# Usage: ./plot_field.py <filename1> <filename2>
+# Usage: ./plot_diff3.py <filename1> <filename2>
 
 import matplotlib.pyplot as plt
 import numpy as np

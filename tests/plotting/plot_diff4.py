@@ -2,9 +2,9 @@
 
 # A script to plot the difference of two 2D fields from the tutorial.
 # Requires Python 3, Matplotlib and Numpy.
-# This variant is for the default grid size: 18x36 grid points
+# This variant is for grid size 4: 512x512 grid points
 
-# Usage: ./plot_diff.py <filename1> <filename2>
+# Usage: ./plot_diff4.py <filename1> <filename2>
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,13 +13,13 @@ import argparse as ap
 def read_and_plot(filename1, filename2):
     field1 = np.loadtxt(filename1)
     field2 = np.loadtxt(filename2)
-    field1 = field1.reshape(18,36)
-    field2 = field2.reshape(18,36)
+    field1 = field1.reshape(512,512)
+    field2 = field2.reshape(512,512)
     rmse = 0;
-    for i in range(16):
-       for j in range(36):
+    for i in range(512):
+       for j in range(512):
 	       rmse = rmse + (field1[i,j]-field2[i,j])**2
-    rmse = np.sqrt(1/(18*36)*(rmse));
+    rmse = np.sqrt(1/(512*512)*(rmse));
     print('RMSE: ', rmse)
 
     title = (filename1+' - '+filename2)
