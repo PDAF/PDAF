@@ -19,7 +19,8 @@ SUBROUTINE init_pdaf()
   USE PDAF, &                     ! PDAF interfaces and parameters
        ONLY: PDAF3_init, PDAF_init_forecast, PDAF_iau_init, PDAF_set_iparam, &
        PDAF_set_rparam, PDAF_DA_ENKF, PDAF_DA_PF, &
-       PDAFomi_set_domain_limits, PDAFomi_set_obs_diag, PDAFomi_set_domain_limits
+       PDAFomi_set_domain_limits, PDAFomi_set_obs_diag, PDAFomi_set_domain_limits, &
+       PDAFomi_set_searchtype
   USE mod_parallel_model, &       ! Parallelization variables for model
        ONLY: mype_world, abort_parallel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
@@ -30,7 +31,8 @@ SUBROUTINE init_pdaf()
        rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, delt_obs, steps_iau, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
-       observe_ens, type_obs_init, do_omi_obsstats, dim_lag
+       observe_ens, type_obs_init, do_omi_obsstats, dim_lag, &
+       omi_search_type, omi_sort_dir
   USE mod_model, &                ! Model variables
        ONLY: nx, ny, nx_p, ndim
   USE obs_A_pdafomi, &            ! Variables for observation type A
@@ -145,6 +147,10 @@ SUBROUTINE init_pdaf()
 ! *** Activate PDAF-OMI observation statistics ***
 
   IF (do_omi_obsstats) CALL PDAFomi_set_obs_diag(1)
+
+! *** Set search type for local observations ***
+
+  CALL PDAFomi_set_searchtype(omi_search_type, omi_sort_dir)
 
 ! *** Initial Screen output ***
 ! *** This is optional      ***

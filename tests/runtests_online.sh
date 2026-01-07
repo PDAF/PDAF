@@ -17,6 +17,7 @@ TEST_SUBTYPES=1
 TEST_IAU=1
 TEST_PARALLEL=1
 TEST_PARALLEL_2OBS=1
+TEST_SEARCHTYPE_2OBS=1
 
 echo "------------------ COMPILING ----------------"
 
@@ -1001,6 +1002,117 @@ then
     make cleandataq
     echo $RUNPAR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE
     $RUNPAR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_par_obsAB_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+fi
+
+
+if [ $TEST_SEARCHTYPE_2OBS -eq 1 ]
+then
+
+        # Test types for local observations search with 2 observai
+
+    # LESTKF ##############
+
+    echo "     +++++++++++++ Test search types for local observations obsAB +++++++++++++"
+
+    echo "     +++++++++++++ LESTKF search_type=0 obsAB +++++++++++++"
+
+    FTYPE=7
+    STYPE=0
+    SEARCHTYPE=0
+    echo "-------online_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE
+    $RUNPAR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE > ../out.online_2D_par_obsAB_searchtype0_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+
+    echo "     +++++++++++++ LESTKF search_type=1 obsAB +++++++++++++"
+
+    FTYPE=7
+    STYPE=0
+    SEARCHTYPE=1
+    echo "-------online_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE
+    $RUNPAR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE > ../out.online_2D_par_obsAB_searchtype1_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    echo "     +++++++++++++ LESTKF search_type=2 obsAB +++++++++++++"
+
+    FTYPE=7
+    STYPE=0
+    SEARCHTYPE=2
+    echo "-------online_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE
+    $RUNPAR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE > ../out.online_2D_par_obsAB_searchtype2_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    echo "     +++++++++++++ LESTKF search_type=11 obsAB +++++++++++++"
+
+    FTYPE=7
+    STYPE=0
+    SEARCHTYPE=11
+    echo "-------online_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE
+    $RUNPAR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE > ../out.online_2D_par_obsAB_searchtype11_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    echo "     +++++++++++++ LESTKF search_type=12 obsAB +++++++++++++"
+
+    FTYPE=7
+    STYPE=0
+    SEARCHTYPE=12
+    echo "-------online_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE
+    $RUNPAR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE > ../out.online_2D_par_obsAB_searchtype12_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    echo "     +++++++++++++ LESTKF search_type=21 obsAB +++++++++++++"
+
+    FTYPE=7
+    STYPE=0
+    SEARCHTYPE=21
+    echo "-------online_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE
+    $RUNPAR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE > ../out.online_2D_par_obsAB_searchtype21_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_obsAB_ftype${FTYPE}s${STYPE}
+
+    echo "     +++++++++++++ LESTKF search_type=22 obsAB +++++++++++++"
+
+        FTYPE=7
+    STYPE=0
+    SEARCHTYPE=22
+    echo "-------online_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS_2OBS -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE
+    $RUNPAR $DA_SPECS_2OBS  -filtertype $FTYPE -subtype $STYPE -omi_search_type $SEARCHTYPE > ../out.online_2D_par_obsAB_searchtype22_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_obsAB_ftype${FTYPE}s${STYPE}
 

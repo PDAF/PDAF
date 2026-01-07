@@ -439,11 +439,23 @@ CONTAINS
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
+    ! Using loc_noniso is simply to be able to test isotropic and
+    ! non-isotropic localization for verification purposes
+
     IF (loc_noniso == 0) THEN
        ! Isotropic localization
        CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
             locweight, cradius, sradius, dim_obs_l)
-    ELSEIF (loc_noniso == 1) THEN
+    ELSEIF (loc_noniso == 2) THEN
+       ! Non-isotropic localization with equal radii
+       crad_noniso(1) = cradius
+       crad_noniso(2) = cradius
+       srad_noniso(1) = sradius
+       srad_noniso(2) = sradius
+
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, crad_noniso, srad_noniso, dim_obs_l)
+    ELSEIF (loc_noniso == 2) THEN
        ! Non-isotropic localization
        crad_noniso(1) = cradius
        crad_noniso(2) = 0.9*cradius

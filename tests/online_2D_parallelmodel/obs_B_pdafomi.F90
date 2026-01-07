@@ -395,7 +395,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: coords_l, cradius, locweight, sradius
+         ONLY: coords_l, cradius, locweight, sradius, loc_noniso
 
     IMPLICIT NONE
 
@@ -405,13 +405,41 @@ CONTAINS
     INTEGER, INTENT(in)  :: dim_obs      !< Full dimension of observation vector
     INTEGER, INTENT(inout) :: dim_obs_l  !< Local dimension of observation vector
 
+! *** local variables ***
+    REAL :: crad_noniso(2)               ! cut-off radius for non-isotropic localization
+    REAL :: srad_noniso(2)               ! support radius for non-isotropic localization
+
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-    CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, cradius, sradius, dim_obs_l)
+    ! Using loc_noniso is simply to be able to test isotropic and
+    ! non-isotropic localization for verification purposes
+
+    IF (loc_noniso == 0) THEN
+       ! Isotropic localization
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, cradius, sradius, dim_obs_l)
+    ELSEIF (loc_noniso == 2) THEN
+       ! Non-isotropic localization with equal radii
+       crad_noniso(1) = cradius
+       crad_noniso(2) = cradius
+       srad_noniso(1) = sradius
+       srad_noniso(2) = sradius
+
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, crad_noniso, srad_noniso, dim_obs_l)
+    ELSEIF (loc_noniso == 2) THEN
+       ! Non-isotropic localization
+       crad_noniso(1) = cradius
+       crad_noniso(2) = 0.9*cradius
+       srad_noniso(1) = sradius
+       srad_noniso(2) = 0.9*sradius
+
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, crad_noniso, srad_noniso, dim_obs_l)
+    END IF
 
   END SUBROUTINE init_dim_obs_l_B
 

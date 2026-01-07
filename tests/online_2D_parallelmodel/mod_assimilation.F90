@@ -27,6 +27,13 @@ MODULE mod_assimilation
 ! *** Variables specific for model setup ***
 
   REAL :: coords_l(2)                   !< Coordinates of local analysis domain
+  INTEGER :: loc_noniso=0               !< Whether to apply non-isotropic localization
+                                        !< (used in obs-modules to test non-isotropic localization)
+  
+! *** Variables for OMI configuration ***
+
+  INTEGER :: omi_search_type=2          !< Type of OMI's local observation search (for parsing)
+  INTEGER :: omi_sort_dir=2             !< Direction in which OMI sorts observations (for parsing)
 
 ! *** Variables to handle multiple fields in the state vector ***
 
