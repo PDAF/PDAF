@@ -92,6 +92,6 @@ MODULE PDAF_mod_core
   REAL, TARGET, ALLOCATABLE :: skewness(:)  !< Skewness of ensemble for each local domain
   REAL, TARGET, ALLOCATABLE :: kurtosis(:)  !< Kurtosis of ensemble for each local domain
 
-!$OMP THREADPRIVATE(cnt_maxlag, obs_member, debug)
+!$OMP THREADPRIVATE(obs_member, debug)
 
 END MODULE PDAF_mod_core

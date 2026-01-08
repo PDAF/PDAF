@@ -381,7 +381,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- Enter local analysis loop'
 
 !$OMP BARRIER
-!$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag) schedule(runtime)
+!$OMP DO schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p
 
      ! Set flag that we are in the local analysis loop
