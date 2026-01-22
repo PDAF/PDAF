@@ -57,5 +57,5 @@ MPI_INC =
 OBJ_MPI = 
 
 # NetCDF (only required for Lorenz96)
-NC_LIB   = 
-NC_INC   = 
+NC_LIB   = -L/usr/local/lib -lnetcdff -lnetcdf
+NC_INC   = -I/usr/local/include
