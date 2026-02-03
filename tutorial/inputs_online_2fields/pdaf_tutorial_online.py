@@ -10,11 +10,12 @@
 
 import numpy as np
 
-dim_x = 36          # Grid dimension in x-direction
+dim_x = 36         # Grid dimension in x-direction
 dim_y = 18         # Grid dimension in y-direction
 dim_ens = 9        # Maximum ensemble size
 dim_step = 18      # Number of time steps
-stddev_obs = 0.5   # Observation error standard deviation
+stddev_obs = 0.5   # error standard deviation for observations type A
+stddev_obsB = 0.25 # error standard deviation for observations type B
 dxobs = 5          # x-Grid spacing for observations type A
 dyobs = 4          # y-Grid spacing for observations type A
 dxobsB = 6         # x-Grid spacing for observations type B
@@ -94,10 +95,10 @@ for step in range(1,dim_step+1):
    fieldB[0,:,step] = fieldB[-1,:,step-1]
 
 if dowrite==1:
-   np.savetxt('trueB_initial.txt', field[:,:,0])
+   np.savetxt('trueB_initial.txt', fieldB[:,:,0])
 
    for step in range(1,dim_step+1):
-      np.savetxt('trueB_step'+str(step)+'.txt', field[:,:,step])
+      np.savetxt('trueB_step'+str(step)+'.txt', fieldB[:,:,step])
 
 
 # Ensemble states - inverted
@@ -146,7 +147,7 @@ if dowrite==1:
 
 obs_errorB = np.zeros((dim_y, dim_x, dim_step+1))
 full_obsB = np.zeros((dim_y, dim_x, dim_step+1))
-obs_errorB = stddev_obs * np.random.randn(dim_y, dim_x, dim_step+1) 
+obs_errorB = stddev_obsB * np.random.randn(dim_y, dim_x, dim_step+1) 
 
 full_obsB[:,:,:] = fieldB[:,:,:] + obs_errorB
 
@@ -193,7 +194,7 @@ for step in range(1,dim_step+1):
       icoeff[3] = (obs_interp[i,0] - gx[0]) * (obs_interp[i,1] - gy[0])/denum
 
       # Interpolate
-      iobs[i,0,step] = icoeff[0]*field[np.int(gy[0]-1),np.int(gx[0]-1),step] + icoeff[1]*field[np.int(gy[0]-1),np.int(gx[1]-1),step] + icoeff[2]*field[np.int(gy[1]-1),np.int(gx[0]-1),step] + icoeff[3]*field[np.int(gy[1]-1),np.int(gx[1]-1),step]
+      iobs[i,0,step] = icoeff[0]*field[int(gy[0]-1),int(gx[0]-1),step] + icoeff[1]*field[int(gy[0]-1),int(gx[1]-1),step] + icoeff[2]*field[int(gy[1]-1),int(gx[0]-1),step] + icoeff[3]*field[int(gy[1]-1),int(gx[1]-1),step]
 
       # Add error
       iobs[i,0,step] = iobs[i,0,step] + iobs_error[i, step]
@@ -217,7 +218,7 @@ if dowrite==1:
    iobs_full[:,:,:] = -999
    for step in range(1,dim_step+1):
       for i in range(len(obs_interp)):
-         iobs_full[np.int(np.floor(obs_interp[i,1])), np.int(np.floor(obs_interp[i,0])),step] = iobs[i,0,step]
+         iobs_full[int(np.floor(obs_interp[i,1])), int(np.floor(obs_interp[i,0])),step] = iobs[i,0,step]
 
    for step in range(1,dim_step+1):
       np.savetxt('iobs_field_step'+str(step)+'.txt', iobs_full[:,:,step])
