@@ -543,4 +543,39 @@ CONTAINS
 
   END SUBROUTINE PDAF3_generate_obs_offline
 
+
+!-------------------------------------------------------------------------------
+!> Interface to transfer state to PDAF
+!!
+!! Variant for just calling prepoststep.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2026-02 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF3_prepost_offline(prepoststep_pdaf, outflag)
+
+  USE PDAF_cb_procedures
+  USE PDAFprepost, ONLY: PDAF_prepost_offline
+
+  IMPLICIT NONE
+  
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: outflag !< Status flag
+  
+! *** Argument procedures ***
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf             !< User supplied pre/poststep routine
+
+
+! **************************************************
+! *** Call the full put_state interface routine  ***
+! **************************************************
+
+  CALL PDAF_prepost_offline(prepoststep_pdaf, outflag)
+
+END SUBROUTINE PDAF3_prepost_offline
+
 END MODULE PDAF3_assim_offline_ens

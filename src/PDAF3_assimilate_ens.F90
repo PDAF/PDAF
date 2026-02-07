@@ -628,4 +628,44 @@ SUBROUTINE PDAF3_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
 
 END SUBROUTINE PDAF3_generate_obs
 
+
+!-------------------------------------------------------------------------------
+!> Interface to transfer state to PDAF
+!!
+!! Variant for just calling prepoststep.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2026-02 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF3_prepost(collect_state_pdaf, distribute_state_pdaf, &
+       prepoststep_pdaf, next_observation_pdaf, outflag)
+
+  USE PDAF_cb_procedures
+  USE PDAFprepost, ONLY: PDAF_prepost
+
+  IMPLICIT NONE
+  
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: outflag !< Status flag
+  
+! *** Argument procedures ***
+  PROCEDURE(collect_cb) :: collect_state_pdaf           !< Routine to collect a state vector
+  PROCEDURE(distribute_cb) :: distribute_state_pdaf     !< Routine to distribute a state vector
+  PROCEDURE(prepost_cb) :: prepoststep_pdaf             !< User supplied pre/poststep routine
+  PROCEDURE(next_obs_cb) :: next_observation_pdaf       !< Provide information on next forecast
+
+
+! **************************************************
+! *** Call the full put_state interface routine  ***
+! **************************************************
+
+  CALL PDAF_prepost(collect_state_pdaf, distribute_state_pdaf, &
+       prepoststep_pdaf, next_observation_pdaf, outflag)
+
+END SUBROUTINE PDAF3_prepost
+
 END MODULE PDAF3_assimilate_ens
