@@ -457,4 +457,72 @@ SUBROUTINE PDAF_get_fcst_info(steps, time, doexit)
 
 END SUBROUTINE PDAF_get_fcst_info
 
+!--------------------------------------------------------------------------
+!> Get seed vector for random number generation
+!!
+!! Helper routine for PDAF.
+!! The routine returns the values of the seed vector.
+!! It can be used in cases where one later intends
+!! to reset the seed to specified values (using
+!! PDAF_set_seed) to ensure that the same random 
+!! values are used again.
+!!
+!! Note: seedvec is only initialized if 
+!! PDAF_generate_rndmat was called before. If not
+!! the values of ssedvec are zero.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2026-02 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF_get_seed(seedvec)
+
+  USE PDAF_mod_core, ONLY: use_seed_direct, iseedvec
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(out) :: seedvec(4)
+
+  ! Provide seed values as output
+  seedvec = iseedvec
+
+END SUBROUTINE PDAF_get_seed
+
+
+!--------------------------------------------------------------------------
+!> Get number of random number calls in PDAF_generate_rndmat
+!!
+!! Helper routine for PDAF.
+!! The routine returns the value how often the 
+!! random number generate larnvTYPE was called in
+!! PDAF_generate_rndmat. The counter is initialized
+!! the beginning and with each call to PDAF_set_seed.
+!!
+!! The value can be used to check for the consistency 
+!! in the number of calls as with each call the seed
+!! values change.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2026-02 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF_get_rndcount(rndcount)
+
+  USE PDAF_mod_core, ONLY: cnt_rndmat
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(out) :: rndcount
+
+  ! Provide seed values as output
+  rndcount = cnt_rndmat
+
+END SUBROUTINE PDAF_get_rndcount
+
 END MODULE PDAF_get

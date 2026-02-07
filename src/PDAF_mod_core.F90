@@ -76,8 +76,13 @@ MODULE PDAF_mod_core
   INTEGER :: cnt_maxlag=0                   !< Smoother: Count maximum number of past time instances
   LOGICAL :: inloop=.false.                 !< Whether the program is in the local analysis loop
   LOGICAL :: use_PDAF_assim=.false.         !< Whether we use PDAF_assimilate
+
+  ! *** Control seeds for random number generation
   INTEGER :: seedset=1                      !< Seed set for PDAF_generate_rndmat; can be set with PDAF_set_seedset
-  LOGICAL :: new_seedset=.FALSE.            !< Whether the seetset was reset by PDAF_set_seedset
+  LOGICAL :: new_seedset=.false.            !< Whether the seetset was reset by PDAF_set_seedset
+  LOGICAL :: use_seed_direct = .false.      ! Flag whether iseedvec was set
+  INTEGER :: iseedvec(4)=0                  !< Vector of random number seeds to be set with PDAF_set_seed
+  INTEGER :: cnt_rndmat=0                   !< Count number of calls to PDAF_generate_rndmat
 
   ! *** Information variables for ensemble loop operations ***
   INTEGER :: member_save = 1                !< Store member index for query with PDAF_get_memberid

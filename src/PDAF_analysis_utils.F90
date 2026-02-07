@@ -68,7 +68,7 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 #include "typedefs.h"
 
   USE PDAF_mod_core, &
-       ONLY: seedset, new_seedset
+       ONLY: seedset, new_seedset, use_seed_direct, iseedvec, cnt_rndmat
 
   IMPLICIT NONE
 
@@ -237,6 +237,13 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
      new_seedset = .FALSE.
   END IF
 
+  ! Set seed if was set using PDAF_set_seed
+  IF (use_seed_direct) THEN
+     iseed = iseedvec
+     use_seed_direct = .false.
+     cnt_rndmat = 0
+  END IF
+
 
 ! *** First step of iteration       ***  
 ! *** Determine mat_iter for iter=1 ***
@@ -244,6 +251,9 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
   ! Get random number [-1,1]
   CALL larnvTYPE(2, iseed, 1, rndvec(1))
   
+  ! Increment counter
+  cnt_rndmat = cnt_rndmat + 1
+
   IF (rndvec(1) >= 0.0) THEN
      mat_itermin1(1, 1) = +1.0
   ELSE
@@ -258,6 +268,9 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
       
      ! Get random vector of dimension DIM (elements in [-1,1])
      CALL larnvTYPE(2, iseed, iter, rndvec(1:iter))
+
+     ! Increment counter
+     cnt_rndmat = cnt_rndmat + 1
 
      ! Normalize random vector
      norm = 0.0
@@ -376,6 +389,9 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 
         ! Get random vector of dimension DIM (elements in [0,1])
         CALL larnvTYPE(1, iseed, dim, rndvec)
+
+        ! Increment counter
+        cnt_rndmat = cnt_rndmat + 1
 
         loopcols: DO i = 1, col - 1
            DO j = 1, dim

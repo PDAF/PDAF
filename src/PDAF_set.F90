@@ -380,6 +380,40 @@ SUBROUTINE PDAF_set_seedset(seedset_in)
 
 END SUBROUTINE PDAF_set_seedset
 
+!--------------------------------------------------------------------------
+!> Set seed vector for random number generation
+!!
+!! Helper routine for PDAF.
+!! The routine allows to set the seed vector that
+!! is used in PDAF_generate_rndmat. Setting the
+!! seed wih this routine overwrite the choice of
+!! seedset with PDAF_set_seedset.
+!!
+!! Important: seedvec(4) has to be an odd number.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2026-02 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF_set_seed(seedvec)
+
+  USE PDAF_mod_core, ONLY: use_seed_direct, iseedvec
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(in) :: seedvec(4)
+
+  ! Set seed vector
+  iseedvec = seedvec
+
+  ! Set flag for seeds set by user
+  use_seed_direct = .true.
+
+END SUBROUTINE PDAF_set_seed
+
 
 !--------------------------------------------------------------------------
 !> Set pointer to smoother ensemble
