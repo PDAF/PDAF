@@ -483,4 +483,103 @@ SUBROUTINE PDAF_force_analysis()
 
 END SUBROUTINE PDAF_force_analysis
 
+
+!-------------------------------------------------------------------------------
+!> Generate vector of random values
+!!
+!! Helper routine for PDAF.
+!! The routine returns a vector of random number
+!! of specified distribution.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2026-02 - Lars Nerger - Initial code combining previous codes
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_generate_rndvec(len, vec, stddev, dist, iseed)
+
+  implicit none
+
+! *** Arguments ***
+  integer, intent(in) :: len           ! Length of vector to process
+  real, intent(inout) :: vec(:)        ! value to be perturbed
+  real, intent(in)    :: stddev        ! Standard deviation of lognormal distribution
+  integer, intent(in) :: dist          ! Distribution: 
+                                       !   (1) Normal, N(vec, stddev^2)
+                                       !   (2) Log-normal, logN(vec, stddev^2)
+                                       !   (3) uniform: vec + stddev*U(0,1))
+                                       !   (4) uniform: vec + stddev*U(-1,1))
+                                       !   (5) Laplace
+  integer, intent(in) :: iseed(4)      ! Seed for dlarnv (last entry has to be odd)
+
+! *** Local variables ***
+  integer :: i                         ! Counter
+  real :: sigma2                       ! Variance for lognormal
+  real, allocatable :: logval(:)       ! Logrithmic value of input value
+  real, allocatable :: rndval(:)       ! Normal random value
+
+
+  ALLOCATE(rndval(len))
+
+  IF (dist==1 .OR. dist==2) THEN
+
+     ! Generate Gaussian-distributed random number
+     CALL dlarnv(3, iseed, len, rndval)
+
+     IF (dist==1) THEN
+
+        ! Normal distribution
+
+        vec = vec + stddev*rndval
+
+     ELSEIF (dist==2) THEN
+
+        ! Log-normal distribution
+
+        ALLOCATE(logval(len))
+
+        sigma2 = log(1.0 + stddev*stddev)
+        logval = log(vec) -0.5 * sigma2
+
+        vec = exp(logval + sqrt(sigma2) * rndval) ! Eq. (A10) from Ciavatta et al. (2016)
+
+        DEALLOCATE(logval)
+     END IF
+
+  ELSEIF (dist==3) THEN
+
+     ! Generate uniformly distributed random vector (0,1)
+     CALL dlarnv(1, iseed, len, rndval)
+
+     vec = vec + stddev*rndval
+
+  ELSEIF (dist==4) THEN
+
+     ! Generate uniformly distributed random vector (-1,1)
+     CALL dlarnv(2, iseed, len, rndval)
+
+     vec = vec + stddev*rndval
+
+  ELSEIF (dist==5) THEN
+
+     ! Generate random Laplace distributed noise
+
+     CALL dlarnv(1, iseed, len, rndval)
+
+     DO i = 1, len
+        rndval(i) = sign(1.0, (rndval(i)-0.5)) * log(1.0 - 2.0*ABS(rndval(i)-0.5))
+     END DO
+
+     ! Add noise to generate observations
+     vec = vec + sqrt(stddev/2.0) * rndval
+
+  END IF
+
+  DEALLOCATE(rndval)
+
+END SUBROUTINE PDAF_generate_rndvec
+
+
 END MODULE PDAF_utils
