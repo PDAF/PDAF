@@ -1,7 +1,7 @@
 
 # PDAF (Parallel Data Assimilation Framework)
 
-Copyright 2004-2025, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
+Copyright 2004-2026, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
 For license information, please see the file LICENSE.txt.
 
@@ -9,14 +9,6 @@ For full documentation and tutorial, see: http://pdaf.awi.de
 
 We recommend to subscribe to the PDAF mailing list via the
 online form at https://pdaf.awi.de/register
-
-
-## Note on PDAF V3.0
-
-In the upgrade to PDAF V3.0 there are changes which make PDAF3
-fully backward-compatible. If one has a code implemented for PDAF2,
-one needs a few adaptions. For more information, see:
-https://pdaf.awi.de/trac/wiki/PortingToPDAF3
 
 ## Introduction
 
@@ -27,6 +19,7 @@ high computational efficiency.
 PDAF can be used
 - to perform data assimilation with high-dimensional models,
 - to assess data assimilation methods with small models,
+- to perform ensemble simulations, e.g. for sensitivity analyses,
 - to teach ensemble data assimilation, and
 - to develop new data assimilation methods and test them in a unified environment
 
