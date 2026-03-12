@@ -42,8 +42,6 @@ CONTAINS
 
     USE PDAF_mod_core, &
          ONLY: cnt_steps, nsteps, assim_flag, reset_fcst_flag
-    USE PDAF_mod_parallel, &
-         ONLY: mype_world
     USE PDAFget_state, &
          ONLY: PDAF_get_state
     USE PDAFput_state_prepost, &
