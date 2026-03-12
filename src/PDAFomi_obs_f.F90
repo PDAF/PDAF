@@ -188,7 +188,8 @@ MODULE PDAFomi_obs_f
   INTEGER :: have_obsens_diag=0           ! Flag whether the observed ensemble is initialized for obs. diagnostics
   INTEGER, TARGET, ALLOCATABLE :: dim_obs_diag_p(:)     ! Array of observation dimensions
   REAL, TARGET, ALLOCATABLE :: rmsd(:)    ! Vector of observation-model RMSDs
-  REAL, TARGET, ALLOCATABLE :: obsstats(:,:) ! Array of observation statistics
+  REAL, TARGET, ALLOCATABLE :: obsstats(:,:)    ! Array of observation statistics
+  REAL, TARGET, ALLOCATABLE :: crps_allobs(:,:) ! Array of CRPS values for all observation types
 
   INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
   INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index

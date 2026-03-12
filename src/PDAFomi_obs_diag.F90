@@ -26,12 +26,12 @@ MODULE PDAFomi_obs_diag
 
   USE PDAFomi_obs_f, &
        ONLY: obs_diag, obs_f_all, n_obstypes, have_obsmean_diag, &
-       have_obsens_diag, rmsd, dim_obs_diag_p, obsstats
+       have_obsens_diag, rmsd, dim_obs_diag_p, obsstats, crps_allobs
 
   IMPLICIT NONE
 
   PRIVATE :: obs_diag, obs_f_all, n_obstypes, have_obsmean_diag, &
-       have_obsens_diag, rmsd, dim_obs_diag_p, obsstats
+       have_obsens_diag, rmsd, dim_obs_diag_p, obsstats, crps_allobs
 
 CONTAINS
 
@@ -370,6 +370,29 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !!> Compute RMS deviation beetween observation and observed ensemble mean
 !!
+!! This routine is an alias for PDAFomi_diag_obs_rmsd
+!!
+!! __Revision history:__
+!! * 2026-03 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_diag_rmsd(nobs, rmsd_pointer, verbose)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: nobs                   !< Number of observation types
+    REAL, POINTER, INTENT(inout) :: rmsd_pointer(:)  !< Vector of RMSD values
+    INTEGER, INTENT(in) :: verbose                   !< Verbosity flag
+
+    CALL PDAFomi_diag_obs_rmsd(nobs, rmsd_pointer, verbose)
+   
+  END SUBROUTINE PDAFomi_diag_rmsd
+
+
+!-------------------------------------------------------------------------------
+!!> Compute RMS deviation beetween observation and observed ensemble mean
+!!
 !! This routine computes the RMSD between the observation and the
 !! observed ensemble mean.
 !!
@@ -685,6 +708,154 @@ CONTAINS
     END IF habeobs
 
   END SUBROUTINE PDAFomi_diag_stats
+
+
+
+!-------------------------------------------------------------------------------
+!!> Compute CRPS between observation and observed ensemble
+!!
+!! This routine computes the CRPS between the observation and the
+!! observed ensemble. It return a poiter to an array with values
+!! for each observation type including the CRPS, reliability,
+!! potential CRPS and uncertainty.
+!!
+!! __Revision history:__
+!! * 2026-03 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_diag_crps(nobs, crps_pointer, perturb, verbose)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+    USE PDAF_diag, &
+         ONLY: PDAF_diag_crps
+    USE PDAF_utils, &
+         ONLY: PDAF_generate_rndvec
+    USE PDAF_mod_core, &
+         ONLY: dim_ens
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: nobs                    !< Number of observation types
+    REAL, POINTER, INTENT(inout) :: crps_pointer(:,:) !< Array of CRPS values
+    INTEGER, INTENT(in) :: perturb                    !< 1 to add perturbations to observations
+    INTEGER, INTENT(in) :: verbose                    !< Verbosity flag
+
+! *** Local variables ***
+    INTEGER :: id_obs                ! Counters
+    INTEGER :: status                ! Status flag
+    REAL, ALLOCATABLE :: rndvec(:)   ! Gaussian perturbations
+    REAL, ALLOCATABLE :: obs_pert(:) ! Perturbed observations vector
+    INTEGER, SAVE :: iseed(4)        ! Seed for random number generation
+    LOGICAL, SAVE :: first=.true.    ! Flag for first call
+    REAL :: CRPS                     ! CRPS
+    REAL :: reli                     ! Reliability
+    REAL :: pot_CRPS                 ! Potential CRPS
+    REAL :: uncert                   ! Uncertainty
+
+
+! ***********************
+! *** Initialization  ***
+! ***********************
+
+    ! Pre-initialize nobs
+    nobs = 0
+
+    haveobs: IF (n_obstypes > 0  .AND. (have_obsens_diag>0)) THEN
+
+       ! Set number of obstypes
+       nobs = n_obstypes
+
+
+! ********************************
+! *** Initialize CRPS pointer  ***
+! ********************************
+
+       IF (ALLOCATED(crps_allobs)) DEALLOCATE(crps_allobs)
+       ALLOCATE(crps_allobs(4, n_obstypes))
+       crps_allobs = 0.0
+
+       ! Set pointer
+       crps_pointer => crps_allobs
+
+
+! ***********************************************
+! *** Compute CRPS for each observation type  ***
+! ***********************************************
+
+       pert: IF (perturb == 0) THEN
+
+          ! Compute CRPS without perturbing the observations
+
+          DO id_obs = 1, n_obstypes
+
+             CALL PDAF_diag_crps(obs_f_all(id_obs)%ptr%dim_obs_p, dim_ens, 0, &
+                  obs_f_all(id_obs)%ptr%HX_diag_p, obs_f_all(id_obs)%ptr%obs_diag_p, &
+                  CRPS, reli, pot_CRPS, uncert, status)
+
+             crps_allobs(1, id_obs) = CRPS
+             crps_allobs(2, id_obs) = reli
+             crps_allobs(3, id_obs) = pot_CRPS
+             crps_allobs(4, id_obs) = uncert
+
+          END DO
+
+       ELSE pert
+
+          ! Compute CRPS with perturbed observations
+
+          DO id_obs = 1, n_obstypes
+
+             ALLOCATE(obs_pert(obs_f_all(id_obs)%ptr%dim_obs_p))
+             ALLOCATE(rndvec(obs_f_all(id_obs)%ptr%dim_obs_p))
+
+             IF (first) THEN
+                iseed(1) = 1053
+                iseed(2) = 153
+                iseed(3) = 53
+                iseed(4) = 2053
+                first = .false.
+             END IF
+
+             ! Generate normally distribute random vector 
+             CALL PDAF_generate_rndvec(obs_f_all(id_obs)%ptr%dim_obs_p, rndvec, 1.0, 1, iseed)
+
+             ! Create perturbed observation vector
+             obs_pert = rndvec/SQRT(obs_f_all(id_obs)%ptr%ivar_obs_diag_p(:)) + obs_f_all(id_obs)%ptr%obs_diag_p(:)
+
+             ! Compute CPRS and its decomposition
+             CALL PDAF_diag_crps(obs_f_all(id_obs)%ptr%dim_obs_p, dim_ens, 0, &
+                  obs_f_all(id_obs)%ptr%HX_diag_p, obs_pert, &
+                  CRPS, reli, pot_CRPS, uncert, status)
+
+             crps_allobs(1, id_obs) = CRPS
+             crps_allobs(2, id_obs) = reli
+             crps_allobs(3, id_obs) = pot_CRPS
+             crps_allobs(4, id_obs) = uncert
+
+             DEALLOCATE(obs_pert, rndvec)
+
+          END DO
+
+       END IF pert
+
+       IF (verbose>0) THEN
+          WRITE(*,'(a, 5x, a)') 'PDAFomi', 'Decomposed CRPS for each observation type'
+          WRITE(*,'(a, 3x, a, 1x, a,2x, 4(a, 1x))') 'PDAFomi', 'obs-ID', &
+               '   CRPS    ', 'reliability', ' pot. CRPS ', 'uncertainty'
+          DO id_obs = 1, n_obstypes
+             WRITE (*, '(a, 4x, i3, 1x, 4es12.3)') &
+                  'PDAFomi', id_obs, crps_allobs(1:4, id_obs)
+          END DO
+       END IF
+
+    END IF haveobs
+
+  END SUBROUTINE PDAFomi_diag_crps
+
 
 !-------------------------------------------------------------------------------
 !!> Set omitted observation by high observation error for diagnistics only
