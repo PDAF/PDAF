@@ -5098,7 +5098,8 @@ CONTAINS
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
          offset_obs_g, obsdims, map_obs_id, coords_p, &
-         have_obsmean_diag, have_obsens_diag, rmsd, dim_obs_diag_p, obsstats
+         have_obsmean_diag, have_obsens_diag, rmsd, dim_obs_diag_p, &
+         obsstats, crps_allobs
 
 
 ! *** Local variables
@@ -5148,6 +5149,7 @@ CONTAINS
        IF (ALLOCATED(rmsd)) DEALLOCATE(rmsd)
        IF (ALLOCATED(dim_obs_diag_p)) DEALLOCATE(dim_obs_diag_p)
        IF (ALLOCATED(obsstats)) DEALLOCATE(obsstats)
+       IF (ALLOCATED(crps_allobs)) DEALLOCATE(crps_allobs)
 
        ! Reset counters over all observation types
        n_obstypes = 0
