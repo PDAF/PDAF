@@ -370,13 +370,13 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !!> Compute RMS deviation beetween observation and observed ensemble mean
 !!
-!! This routine is an alias for PDAFomi_diag_obs_rmsd
+!! This routine is an alias for PDAFomi_diag_rmsd
 !!
 !! __Revision history:__
 !! * 2026-03 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_diag_rmsd(nobs, rmsd_pointer, verbose)
+  SUBROUTINE PDAFomi_diag_obs_rmsd(nobs, rmsd_pointer, verbose)
 
     IMPLICIT NONE
 
@@ -385,9 +385,10 @@ CONTAINS
     REAL, POINTER, INTENT(inout) :: rmsd_pointer(:)  !< Vector of RMSD values
     INTEGER, INTENT(in) :: verbose                   !< Verbosity flag
 
-    CALL PDAFomi_diag_obs_rmsd(nobs, rmsd_pointer, verbose)
+    CALL PDAFomi_diag_rmsd(nobs, rmsd_pointer, verbose)
    
-  END SUBROUTINE PDAFomi_diag_rmsd
+  END SUBROUTINE PDAFomi_diag_obs_rmsd
+
 
 
 !-------------------------------------------------------------------------------
@@ -400,7 +401,7 @@ CONTAINS
 !! * 2025-03 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_diag_obs_rmsd(nobs, rmsd_pointer, verbose)
+  SUBROUTINE PDAFomi_diag_rmsd(nobs, rmsd_pointer, verbose)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -506,14 +507,14 @@ CONTAINS
 
     END IF haveobs
 
-  END SUBROUTINE PDAFomi_diag_obs_rmsd
+  END SUBROUTINE PDAFomi_diag_rmsd
 
 
 
 !-------------------------------------------------------------------------------
 !!> Compute statistics for difference beetween observation and observed ensemble mean
 !!
-!! This routine compute different statistic comparing
+!! This routine computes different statistics comparing
 !! the observation vector and the observed ensemble mean.
 !! The array obstats is organized so that the first
 !! index is the type of statistics, while the second
@@ -543,7 +544,7 @@ CONTAINS
     USE PDAF_mod_parallel, &
          ONLY: COMM_filter
     USE PDAF_diag, &
-         ONLY: PDAF_diag_ensmean
+         ONLY: PDAF_diag_ensmean, PDAF_diag_stats
     USE PDAF_mod_core, &
          ONLY: dim_ens
 
@@ -584,7 +585,7 @@ CONTAINS
 
 
     ! Allocate RMSD vector
-    habeobs: IF (n_obstypes > 0  .AND. (have_obsmean_diag>0 .OR. have_obsens_diag>0)) THEN
+    haveobs: IF (n_obstypes > 0  .AND. (have_obsmean_diag>0 .OR. have_obsens_diag>0)) THEN
 
        ! Set number of obstypes
        nobs = n_obstypes
@@ -608,9 +609,6 @@ CONTAINS
 
        DO id_obs = 1, n_obstypes
 
-          ! Get global state dimension
-          CALL MPI_Allreduce(obs_f_all(id_obs)%ptr%dim_obs_p, dim_g, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
-
           IF (have_obsens_diag>0) THEN
              ! *** When only the observed ensemble is initialized ***
              ! *** we need to compute the observed ensemble mean   ***
@@ -619,79 +617,9 @@ CONTAINS
                   obs_f_all(id_obs)%ptr%HX_diag_p, status)
           END IF
 
-          ! Check that either the full observed ensemble or its mean was stored
-          IF (have_obsmean_diag>0 .OR. have_obsens_diag>0) THEN
-
-             ! *** Compute mean observation and observed ensemble mean ***
-
-             ! PE-local means
-             means_p(:) = 0.0
-             DO i = 1, obs_f_all(id_obs)%ptr%dim_obs_p
-                means_p(1) = means_p(1) + obs_f_all(id_obs)%ptr%obs_diag_p(i)
-                means_p(2) = means_p(2) + obs_f_all(id_obs)%ptr%HXmean_diag_p(i)
-             END DO
-             means_p(:) = means_p(:) / REAL(dim_g)
-
-             ! Get global means
-             CALL MPI_Allreduce(means_p, means_g, 2, MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
-             mean_obs = means_g(1)
-             mean_HXmean = means_g(2)
-
-
-             ! *** Compute statistics ***
-
-             corr_p = 0.0
-             cRMSD_p = 0.0
-             var_o_p = 0.0
-             var_HX_p = 0.0
-             mad_p = 0.0
-             DO i = 1, obs_f_all(id_obs)%ptr%dim_obs_p
-                ! Observation variance
-                var_o_p = var_o_p + (obs_f_all(id_obs)%ptr%obs_diag_p(i) - mean_obs)**2
-
-                ! Variance of observed ensemble mean
-                var_HX_p = var_HX_p + (obs_f_all(id_obs)%ptr%HXmean_diag_p(i) - mean_HXmean)**2
-
-                ! Centered RMS difference
-                crmsd_p = crmsd_p + (obs_f_all(id_obs)%ptr%obs_diag_p(i) - obs_f_all(id_obs)%ptr%HXmean_diag_p(i) &
-                     - mean_obs + mean_HXmean)**2
-
-                ! Correlation
-                corr_p = corr_p + (obs_f_all(id_obs)%ptr%obs_diag_p(i) - mean_obs) * &
-                     (obs_f_all(id_obs)%ptr%HXmean_diag_p(i) - mean_HXmean)
-
-                ! Non-centered RMS difference
-                mad_p = mad_p + ABS(obs_f_all(id_obs)%ptr%obs_diag_p(i) - obs_f_all(id_obs)%ptr%HXmean_diag_p(i))
-             END DO
-             stats_p(1) = corr_p / REAL(dim_g-1)
-             stats_p(2) = crmsd_p / REAL(dim_g)
-             stats_p(3) = mad_p / REAL(dim_g)
-             stats_p(4) = var_o_p / REAL(dim_g-1)
-             stats_p(5) = var_HX_p / REAL(dim_g-1)
-
-
-             ! *** Get global statistics ***
-             CALL MPI_Allreduce(stats_p, stats_g, 6, MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
-
-             ! Complete computation of global correlation
-             obsstats(1, id_obs) = stats_g(1) / (SQRT(stats_g(4)) * SQRT(stats_g(5)))
-
-             ! Complete computation of global centered rmsd
-             obsstats(2, id_obs) = SQRT(stats_g(2))
-
-             ! Compute global bias
-             obsstats(3, id_obs) = mean_obs - mean_HXmean
-
-             ! Set mean absolute deviation
-             obsstats(4, id_obs) = stats_g(3)
-
-             ! Set observation standard deviation
-             obsstats(5, id_obs) = SQRT(stats_g(4))
-
-             ! Set observed ensemble mean standard deviation
-             obsstats(6, id_obs) = SQRT(stats_g(5))
-
-          END IF
+          ! Call statistics routine of PDAF_diag
+          CALL PDAF_diag_stats(obs_f_all(id_obs)%ptr%dim_obs_p, obs_f_all(id_obs)%ptr%obs_diag_p, &
+               obs_f_all(id_obs)%ptr%HXmean_diag_p, obsstats(:,id_obs), 0)
 
        END DO
 
@@ -705,10 +633,9 @@ CONTAINS
           END DO
        END IF
 
-    END IF habeobs
+    END IF haveobs
 
   END SUBROUTINE PDAFomi_diag_stats
-
 
 
 !-------------------------------------------------------------------------------

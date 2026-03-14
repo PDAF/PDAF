@@ -1594,4 +1594,142 @@ SUBROUTINE PDAF_diag_reliability_budget(n_times, dim_ens, dim_p, &
 
 END SUBROUTINE PDAF_diag_reliability_budget
 
+
+
+!-------------------------------------------------------------------------------
+!!> Compute statistics for difference beetween two vectors
+!!
+!! This routine computes different statistics comparing
+!! two vectors (e.g. an observation and related observed state)
+!!
+!! The statistics are in the array obsstats as follows
+!! * 1: correlation
+!! * 2: centered RMS deviation
+!! * 3: bias vector 1 - vector 2
+!! * 4: mean absolute deviation vector 1 - vector 2
+!! * 5: standard deviation of vector 1
+!! * 6: standard deviation of vector 2
+!! The statistics 1, 5, ans 6 are the usual values shown
+!! in Taylor diagrams.
+!!
+!! __Revision history:__
+!! * 2026-03 - Lars Nerger - Initial code based on PDAFomi_diag_stats
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_diag_stats(dim_p, vec1, vec2, stats, verbose)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+    USE MPI
+    USE PDAF_mod_parallel, &
+         ONLY: COMM_filter
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_p     !< Size of vector
+    REAL, INTENT(inout) :: vec1(:)   !< Vector 1
+    REAL, INTENT(inout) :: vec2(:)   !< Vector 2
+    REAL, INTENT(inout) :: stats(6)  !< Vector holding statistics
+    INTEGER, INTENT(in) :: verbose   !< Verbosity flag
+
+! *** Local variables ***
+    INTEGER :: i                     ! Counter
+    INTEGER :: dim_g                 ! Global number of observations of one obs. type
+    INTEGER :: MPIerr                ! MPI status flag
+    REAL :: stats_p(6)               ! PE-local statistics array
+    REAL :: means_p(2), means_g(2)   ! mean observations and obs. ensemble mean
+    REAL :: mad_p                    ! PE-local mean absolute deviation
+    REAL :: crmsd_p                  ! PE-local centered RMS difference
+    REAL :: corr_p                   ! PE-local centered RMS difference
+    REAL :: var_1_p                  ! PE-local centered RMS difference for vec1
+    REAL :: var_2_p                  ! PE-local centered RMS difference for vec2
+
+
+! ***************************
+! *** Compute statistics  ***
+! ***************************
+
+    ! Get global state dimension
+    CALL MPI_Allreduce(dim_p, dim_g, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+
+
+    ! *** Compute mean observation and observed ensemble mean ***
+
+    ! PE-local means
+    means_p(:) = 0.0
+    DO i = 1, dim_p
+       means_p(1) = means_p(1) + vec1(i)
+       means_p(2) = means_p(2) + vec2(i)
+    END DO
+    means_p(:) = means_p(:) / REAL(dim_g)
+
+    ! Get global means
+    CALL MPI_Allreduce(means_p, means_g, 2, MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
+
+
+    ! *** Compute statistics ***
+
+    corr_p = 0.0
+    cRMSD_p = 0.0
+    var_1_p = 0.0
+    var_2_p = 0.0
+    mad_p = 0.0
+    DO i = 1, dim_p
+       ! variance in vector 1
+       var_1_p = var_1_p + (vec1(i) - means_g(1))**2
+
+       ! Variance in vector 2
+       var_2_p = var_2_p + (vec2(i) - means_g(2))**2
+
+       ! Centered RMS difference
+       crmsd_p = crmsd_p + (vec1(i) - vec2(i) &
+            - means_g(1) + means_g(2))**2
+
+       ! Correlation
+       corr_p = corr_p + (vec1(i) - means_g(1)) * &
+            (vec2(i) - means_g(2))
+
+       ! Non-centered absolute difference
+       mad_p = mad_p + ABS(vec1(i) - vec2(i))
+    END DO
+    stats_p(1) = corr_p / REAL(dim_g-1)
+    stats_p(2) = crmsd_p / REAL(dim_g)
+    stats_p(4) = mad_p / REAL(dim_g)
+    stats_p(5) = var_1_p / REAL(dim_g-1)
+    stats_p(6) = var_2_p / REAL(dim_g-1)
+
+
+    ! *** Get global statistics ***
+    CALL MPI_Allreduce(stats_p, stats, 6, MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
+
+    ! Complete computation of global correlation
+    stats(1) = stats(1) / (SQRT(stats(5)) * SQRT(stats(6)))
+
+    ! Complete computation of global centered rmsd
+    stats(2) = SQRT(stats(2))
+
+    ! Compute global bias
+    stats(3) = means_g(1) - means_g(2)
+
+    ! Set mean absolute deviation
+    ! - nothing to do
+
+    ! Set observation standard deviation
+    stats(5) = SQRT(stats(5))
+
+    ! Set observed ensemble mean standard deviation
+    stats(6) = SQRT(stats(6))
+
+    IF (verbose>0) THEN
+       WRITE(*,'(a, 5x, a)') 'PDAFomi', 'Statistics on deviations: vector 1 - vector 2'
+       WRITE(*,'(a, 6x, a, 3x, 5(a, 3x), a)') 'PDAF', '  corr   ', 'cRMSD  ', &
+            '   bias   ', '  MAD   ', 'STDDEV(1)', 'STDDEV(2)'
+       WRITE (*, '(a, 6x, f7.3, 5es12.3)') 'PDAF', stats(1), stats(2:6)
+    END IF
+
+  END SUBROUTINE PDAF_diag_stats
+
 END MODULE PDAF_diag
