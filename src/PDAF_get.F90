@@ -460,16 +460,8 @@ END SUBROUTINE PDAF_get_fcst_info
 !--------------------------------------------------------------------------
 !> Get seed vector for random number generation
 !!
-!! Helper routine for PDAF.
-!! The routine returns the values of the seed vector.
-!! It can be used in cases where one later intends
-!! to reset the seed to specified values (using
-!! PDAF_set_seed) to ensure that the same random 
-!! values are used again.
-!!
-!! Note: seedvec is only initialized if 
-!! PDAF_generate_rndmat was called before. If not
-!! the values of ssedvec are zero.
+!! This is an alias to PDAF_get_seedvec and should
+!! rather not be used.
 !!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
@@ -490,6 +482,41 @@ SUBROUTINE PDAF_get_seed(seedvec)
   seedvec = iseedvec
 
 END SUBROUTINE PDAF_get_seed
+
+
+!--------------------------------------------------------------------------
+!> Get seed vector for random number generation
+!!
+!! Helper routine for PDAF.
+!! The routine returns the values of the seed vector.
+!! It can be used in cases where one later intends
+!! to reset the seed to specified values (using
+!! PDAF_set_seed) to ensure that the same random 
+!! values are used again.
+!!
+!! Note: seedvec is only initialized if 
+!! PDAF_generate_rndmat was called before. If not
+!! the values of ssedvec are zero.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2026-02 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF_get_seedvec(seedvec)
+
+  USE PDAF_mod_core, ONLY: use_seed_direct, iseedvec
+
+  IMPLICIT NONE
+
+  INTEGER, INTENT(out) :: seedvec(4)
+
+  ! Provide seed values as output
+  seedvec = iseedvec
+
+END SUBROUTINE PDAF_get_seedvec
 
 
 !--------------------------------------------------------------------------
