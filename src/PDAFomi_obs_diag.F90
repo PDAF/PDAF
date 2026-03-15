@@ -534,7 +534,7 @@ CONTAINS
 !! * 2025-03 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_diag_stats(nobs, obsstats_ptr, verbose)
+  SUBROUTINE PDAFomi_diag_diffstats(nobs, obsstats_ptr, verbose)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -635,7 +635,7 @@ CONTAINS
 
     END IF haveobs
 
-  END SUBROUTINE PDAFomi_diag_stats
+  END SUBROUTINE PDAFomi_diag_diffstats
 
 
 !-------------------------------------------------------------------------------
