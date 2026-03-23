@@ -632,6 +632,7 @@ CONTAINS
     USE PDAF_pf, ONLY: PDAF_pf_set_rparam
     USE PDAF_ensrf, ONLY: PDAF_ensrf_set_rparam
     USE PDAF_3dvar, ONLY: PDAF_3dvar_set_rparam
+    USE PDAF_genobs, ONLY: PDAF_genobs_set_rparam
 
     IMPLICIT NONE
 
@@ -674,7 +675,7 @@ CONTAINS
     ELSE IF (TRIM(filterstr) == '3DVAR') THEN
        CALL PDAF_3dvar_set_rparam(id, value, flag)
     ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
-       ! There are no real parameters in GENOBS
+       CALL PDAF_genobs_set_rparam(id, value, flag)
     ELSE
        WRITE (*,*) 'PDAF-ERROR: invalid DA method - likely PDAF is not yet initialized' 
     END IF

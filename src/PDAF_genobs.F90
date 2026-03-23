@@ -198,6 +198,9 @@ END SUBROUTINE PDAF_genobs_init
 !!
   SUBROUTINE PDAF_genobs_set_iparam(id, value, flag)
 
+    USE PDAF_mod_parallel, &
+         ONLY: mype_world
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -226,11 +229,52 @@ END SUBROUTINE PDAF_genobs_init
           flag = 8
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a, i3/)') &
-            'PDAF-WARNING: Invalid integer parameter index', id
+       IF (mype_world==0) WRITE (*,'(5x, a, i3, a)') &
+            'PDAF-Note: PDAF_set_iparam - integer parameter with index', id,' is not used'
     END SELECT
 
   END SUBROUTINE PDAF_genobs_set_iparam
+
+
+!-------------------------------------------------------------------------------
+!> Set real parameter specific for GENOBS
+!!
+!! __Revision history:__
+!! * 2026-03 - Lars Nerger - Initial code
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_genobs_set_rparam(id, value, flag)
+
+    USE PDAF_mod_parallel, &
+         ONLY: mype_world
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in)  :: id       !< Index of parameter
+    REAL, INTENT(in)     :: value    !< Parameter value
+    INTEGER, INTENT(out) :: flag     !< Status flag: 0 for no error
+
+! *** Local variable
+    REAL :: rdummy                   ! dummy variable to prevent compiler warning
+
+! ****************************
+! *** INITIALIZE VARIABLES ***
+! ****************************
+
+    ! dummy initialization
+    rdummy = value
+
+    ! Initialize status flag
+    flag = 0
+
+    SELECT CASE(id) 
+    CASE DEFAULT
+       IF (mype_world==0) WRITE (*,'(5x, a, i3, a)') &
+            'PDAF-Note: PDAF_set_rparam - real parameter with index', id,' is not used'
+    END SELECT
+
+  END SUBROUTINE PDAF_genobs_set_rparam
 
 !-------------------------------------------------------------------------------
 !> Information output on options for GENOBS

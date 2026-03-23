@@ -314,6 +314,8 @@ CONTAINS
 
     USE PDAFobs, &
          ONLY: type_obs_init, observe_ens
+    USE PDAF_mod_parallel, &
+         ONLY: mype_world
 
     IMPLICIT NONE
 
@@ -338,7 +340,6 @@ CONTAINS
     CASE(3)
        ! Not used
     CASE(4)
-write (*,*) 'TYPE_HYB', type_hyb
        type_hyb = value
        IF (type_hyb<0 .OR. type_hyb>4) THEN
           WRITE (*,'(/5x, a/)') &
@@ -374,9 +375,8 @@ write (*,*) 'TYPE_HYB', type_hyb
           flag = 8
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a, i3/)') &
-            'PDAF-ERROR(8): Invalid integer parameter index'
-       flag = 8
+       IF (mype_world==0) WRITE (*,'(5x, a, i3, a)') &
+            'PDAF-Note: PDAF_set_iparam - integer parameter with index', id,' is not used'
     END SELECT
 
   END SUBROUTINE PDAF_lknetf_set_iparam
@@ -390,6 +390,9 @@ write (*,*) 'TYPE_HYB', type_hyb
 !! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_set_rparam(id, value, flag)
+
+    USE PDAF_mod_parallel, &
+         ONLY: mype_world
 
     IMPLICIT NONE
 
@@ -429,8 +432,8 @@ write (*,*) 'TYPE_HYB', type_hyb
           flag = 8
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a, i3/)') &
-            'PDAF-WARNING: Invalid real parameter index', id
+       IF (mype_world==0) WRITE (*,'(5x, a, i3, a)') &
+            'PDAF-Note: PDAF_set_rparam - real parameter with index', id,' is not used'
     END SELECT
 
   END SUBROUTINE PDAF_lknetf_set_rparam

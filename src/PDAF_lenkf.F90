@@ -261,6 +261,8 @@ CONTAINS
          ONLY: dim_ens
     USE PDAFobs, &
          ONLY: type_obs_init, observe_ens
+    USE PDAF_mod_parallel, &
+         ONLY: mype_world
 
     IMPLICIT NONE
 
@@ -313,8 +315,8 @@ CONTAINS
           flag = 8
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a, i3/)') &
-            'PDAF-WARNING: Invalid integer parameter index', id
+       IF (mype_world==0) WRITE (*,'(5x, a, i3, a)') &
+            'PDAF-Note: PDAF_set_iparam - integer parameter with index', id,' is not used'
     END SELECT
 
   END SUBROUTINE PDAF_lenkf_set_iparam
@@ -328,6 +330,9 @@ CONTAINS
 !! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lenkf_set_rparam(id, value, flag)
+
+    USE PDAF_mod_parallel, &
+         ONLY: mype_world
 
     IMPLICIT NONE
 
@@ -353,8 +358,8 @@ CONTAINS
           flag = 7
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a, i3/)') &
-            'PDAF-WARNING: Invalid real parameter index', id
+       IF (mype_world==0) WRITE (*,'(5x, a, i3, a)') &
+            'PDAF-Note: PDAF_set_rparam - real parameter with index', id,' is not used'
     END SELECT
 
   END SUBROUTINE PDAF_lenkf_set_rparam
