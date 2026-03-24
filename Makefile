@@ -54,6 +54,7 @@ EXTDIR:=external
 # Modules used in PDAF
 SRC_MOD_PDAF =  PDAF_timer.F90 \
 		PDAF_memcount.F90 \
+		PDAF_parser.F90 \
 		PDAF_mod_parallel.F90 \
 		PDAF_mod_core.F90 \
 		PDAFobs.F90

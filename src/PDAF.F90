@@ -32,7 +32,8 @@ MODULE PDAF
   USE PDAF_DA
   USE PDAF_set
   USE PDAF_get
-  USe PDAF_utils
+  USE PDAF_utils
+  USE PDAF_parser
   USE PDAF_diag
   USE PDAF_sample
   USE PDAF_comm_obs
