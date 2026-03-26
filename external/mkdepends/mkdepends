@@ -11,6 +11,7 @@ use File::Basename;
 # AC 06.11.2019: regex is case-insensitive for search of 'use' keyword.
 # AC 26.10.2021: last argument is build path
 # AC 05.06.2024: ignore case in findmember
+# LN 26.03.2026: out-comment generation of Srcfile
 #
 $date = `date`; chop($date);
 $cwd = cwd();
@@ -220,8 +221,8 @@ sub mksrcfiles {
   local (@paths) = @_;
 #
   $outfile_srcs     = "Srcfiles";
-  open(SRCFILES,"> $outfile_srcs")   or 
-    die "$prog: Can't open output file $outfile_srcs\n";
+#  open(SRCFILES,"> $outfile_srcs")   or 
+#    die "$prog: Can't open output file $outfile_srcs\n";
 #
 # Make list of source files (*.F, *.c, *.F90):
 # (header files are not included in SRCFILES)
@@ -245,8 +246,8 @@ sub mksrcfiles {
     print STDERR "$prog: Found $nfiles source files in $dir\n";
   }
   print STDERR "\n";
-  foreach $file (sort keys %src) { print SRCFILES "$file\n"; }
-  close SRCFILES;
+#  foreach $file (sort keys %src) { print SRCFILES "$file\n"; }
+#  close SRCFILES;
 #
 # Add list of header files (*.h) to %src for the rest of mkdepends:
 #
