@@ -116,7 +116,7 @@ CONTAINS
     IF (modified) THEN
        intvalue = parsed_int
        IF (mype == 0) WRITE (*, '(2x, a, a, a, i10)') &
-            'PARSER: ', TRIM(handle), '=', parsed_int
+            'PDAF_PARSE: ', TRIM(handle), '=', parsed_int
     END IF
   END SUBROUTINE PDAF_parse_int
 
@@ -159,7 +159,7 @@ CONTAINS
     IF (modified) THEN
        realvalue = parsed_real
        IF (mype == 0) WRITE (*, '(2x, a, a, a, es12.4)') &
-            'PARSER: ', TRIM(handle), '=', parsed_real
+            'PDAF_PARSE: ', TRIM(handle), '=', parsed_real
     END IF
   END SUBROUTINE PDAF_parse_real
 
@@ -200,7 +200,7 @@ CONTAINS
           CALL get_command_argument(i+1, str2_check)
           IF (mype == 0) THEN
              IF (.NOT. TRIM(str2_check) == TRIM(str2)) THEN
-                WRITE (*,'(2x, a)') "PARSER: ERROR, command line input too long."
+                WRITE (*,'(2x, a)') "PDAF_PARSE: ERROR, command line input too long."
                 WRITE (*,'(2x, a, 1x, a)') "called handle=", TRIM(string)
                 WRITE (*,'(2x, a, 1x, a)') "parsed handle=", TRIM(str1)
                 WRITE (*,'(2x, a, 1x, a)') "parsed input(cut)=", TRIM(str2)
@@ -221,7 +221,7 @@ CONTAINS
     IF (modified) THEN
        charvalue = parsed_string
        IF (mype == 0) WRITE (*, '(2x, a, a, a, a)') &
-           'PARSER: ', TRIM(handle), '= ', TRIM(parsed_string)
+           'PDAF_PARSE: ', TRIM(handle), '= ', TRIM(parsed_string)
     END IF
 
   END SUBROUTINE PDAF_parse_string
@@ -265,7 +265,7 @@ CONTAINS
     IF (modified) THEN
        logvalue = parsed_log
        IF (mype == 0) WRITE (*, '(2x, a, a, a, l1)') &
-            'PARSER: ', TRIM(handle), '=', parsed_log
+            'PDAF_PARSE: ', TRIM(handle), '=', parsed_log
     END IF
   END SUBROUTINE PDAF_parse_logical
 
