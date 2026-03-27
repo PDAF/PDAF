@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2025 Paul Kirchgessner / Lars Nerger
+! Copyright (c) 2014-2026 Paul Kirchgessner / Lars Nerger
 !
 ! This file is part of PDAF.
 !

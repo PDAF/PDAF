@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2025 Lars Nerger
+! Copyright (c) 2004-2026 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -56,7 +56,7 @@ SUBROUTINE PDAF_print_version()
      WRITE(*, '(a)')  'PDAF    +++                       PDAF                         +++'
      WRITE(*, '(a)')  'PDAF    +++       Parallel Data Assimilation Framework         +++'
      WRITE(*, '(a)')  'PDAF    +++                                                    +++'
-     WRITE(*, '(a)')  'PDAF    +++                   Version 3.0                      +++'
+     WRITE(*, '(a)')  'PDAF    +++                   Version 3.1                      +++'
      WRITE(*, '(a)')  'PDAF    +++                                                    +++'
      WRITE(*, '(a)')  'PDAF    +++                   Please cite                      +++'
      WRITE(*, '(a)')  'PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++'
