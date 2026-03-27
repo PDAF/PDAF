@@ -510,7 +510,6 @@ CONTAINS
   END SUBROUTINE PDAFomi_diag_rmsd
 
 
-
 !-------------------------------------------------------------------------------
 !!> Compute statistics for difference beetween observation and observed ensemble mean
 !!
@@ -534,7 +533,7 @@ CONTAINS
 !! * 2025-03 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_diag_diffstats(nobs, obsstats_ptr, verbose)
+  SUBROUTINE PDAFomi_diag_stats(nobs, obsstats_ptr, verbose)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -544,7 +543,7 @@ CONTAINS
     USE PDAF_mod_parallel, &
          ONLY: COMM_filter
     USE PDAF_diag, &
-         ONLY: PDAF_diag_ensmean, PDAF_diag_stats
+         ONLY: PDAF_diag_ensmean, PDAF_diag_diffstats
     USE PDAF_mod_core, &
          ONLY: dim_ens
 
@@ -618,7 +617,7 @@ CONTAINS
           END IF
 
           ! Call statistics routine of PDAF_diag
-          CALL PDAF_diag_stats(obs_f_all(id_obs)%ptr%dim_obs_p, obs_f_all(id_obs)%ptr%obs_diag_p, &
+          CALL PDAF_diag_diffstats(obs_f_all(id_obs)%ptr%dim_obs_p, obs_f_all(id_obs)%ptr%obs_diag_p, &
                obs_f_all(id_obs)%ptr%HXmean_diag_p, obsstats(:,id_obs), 0)
 
        END DO
@@ -634,6 +633,26 @@ CONTAINS
        END IF
 
     END IF haveobs
+
+  END SUBROUTINE PDAFomi_diag_stats
+
+
+
+!-------------------------------------------------------------------------------
+!!> Alias to PDAFomi_diag_stats
+!!
+!! __Revision history:__
+!! * 2026-03 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_diag_diffstats(nobs, obsstats_ptr, verbose)
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: nobs                     !< Number of observation types
+    REAL, POINTER, INTENT(inout) :: obsstats_ptr(:,:)  !< Array of observation statistics
+    INTEGER, INTENT(in) :: verbose                     !< Verbosity flag
+
+    CALL PDAFomi_diag_stats(nobs, obsstats_ptr, verbose)
 
   END SUBROUTINE PDAFomi_diag_diffstats
 

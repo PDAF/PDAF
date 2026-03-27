@@ -1616,7 +1616,7 @@ END SUBROUTINE PDAF_diag_reliability_budget
 !! * 2026-03 - Lars Nerger - Initial code based on PDAFomi_diag_stats
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAF_diag_stats(dim_p, vec1, vec2, stats, verbose)
+  SUBROUTINE PDAF_diag_diffstats(dim_p, vec1, vec2, stats, verbose)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -1730,6 +1730,6 @@ END SUBROUTINE PDAF_diag_reliability_budget
        WRITE (*, '(a, 6x, f7.3, 5es12.3)') 'PDAF', stats(1), stats(2:6)
     END IF
 
-  END SUBROUTINE PDAF_diag_stats
+  END SUBROUTINE PDAF_diag_diffstats
 
 END MODULE PDAF_diag
