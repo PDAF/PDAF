@@ -446,8 +446,8 @@ CONTAINS
     INTEGER, INTENT(in) :: type_parallel        !< Type of parallelization
     INTEGER, INTENT(in) :: online_coupling      !< 1: online DA coupling, 0: offline DA coupling
     INTEGER, INTENT(inout) :: n_modeltasks      !< Number of model tasks
-    INTEGER, INTENT(inout) :: dim_ens           !< Ensemble size / number of model tasks
-    INTEGER, INTENT(out) :: COMM_model          !< Model MPI communicator for model tasks
+    INTEGER, INTENT(in) :: dim_ens              !< Ensemble size / number of model tasks
+    INTEGER, INTENT(inout) :: COMM_model        !< Model MPI communicator for model tasks
     INTEGER, INTENT(out) :: npes_model          !< Number of Processs in COMM_model
     INTEGER, INTENT(out) :: mype_model          !< Process rank in COMM_model
     INTEGER, INTENT(out) :: COMM_assim          !< MPI communicator for assimilation processes 
