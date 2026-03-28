@@ -427,7 +427,7 @@ CONTAINS
 !! * 2026-03 - Lars Nerger - Initial code moving functionality from user code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAF3_init_parallel(screen, type_parallel, online_coupling, n_modeltasks, dim_ens, &
+  SUBROUTINE PDAF3_init_parallel(screen, type_parallel, online_coupling, dim_ens, n_modeltasks, &
        COMM_model, mype_model, npes_model, COMM_assim, mype_assim, npes_assim, &
        task_id)
 
@@ -445,8 +445,8 @@ CONTAINS
     ! Model variables for parallelization
     INTEGER, INTENT(in) :: type_parallel        !< Type of parallelization
     INTEGER, INTENT(in) :: online_coupling      !< 1: online DA coupling, 0: offline DA coupling
-    INTEGER, INTENT(inout) :: n_modeltasks      !< Number of model tasks
     INTEGER, INTENT(in) :: dim_ens              !< Ensemble size / number of model tasks
+    INTEGER, INTENT(inout) :: n_modeltasks      !< Number of model tasks
     INTEGER, INTENT(inout) :: COMM_model        !< Model MPI communicator for model tasks
     INTEGER, INTENT(out) :: npes_model          !< Number of Processs in COMM_model
     INTEGER, INTENT(out) :: mype_model          !< Process rank in COMM_model
@@ -466,6 +466,7 @@ CONTAINS
     INTEGER :: mype_pdaf                        ! Rank in COMM_pdaf
     INTEGER :: npes_pdaf                        ! Size of COMM_pdaf
     INTEGER :: dummy                            ! Dummy variable to avoid compiler warning
+    LOGICAL :: iniflag                          ! Flag whether MPI is initialized
 
 
 ! ************************************************
@@ -479,7 +480,20 @@ CONTAINS
     IF (online_coupling==0) n_modeltasks = 1
 
 
-! ***              COMM_PDAF                          ***
+! *** Initialize MPI if not yet initialized ***
+
+    CALL MPI_Initialized(iniflag, MPIerr)
+    IF (.NOT.iniflag) THEN
+       CALL MPI_Init(MPIerr)
+
+       COMM_model = MPI_COMM_WORLD
+
+       CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
+       IF (mype_model==0 .AND. screen>0) &
+            WRITE (*, '(/a, 2x, a)') 'PDAF', 'MPI-initialization by PDAF'
+    END IF
+
+! ***                   COMM_PDAF                     ***
 ! *** This is the communicator in which PDAF operates ***
 
     COMM_pdaf = COMM_model
@@ -492,7 +506,7 @@ CONTAINS
 
     ! Initial screen output
     IF (mype_pdaf == 0 .AND. screen>0) &
-         WRITE (*, '(/a, 2x, a)') 'PDAF', 'Initialize MPI communicators for assimilation with PDAF'
+         WRITE (*, '(/a, 2x, a)') 'PDAF', '+++ Initialize MPI communicators for assimilation with PDAF +++'
 
     ! *** Check consistency of number of parallel ensemble tasks ***
     IF (online_coupling==1) THEN
@@ -605,21 +619,21 @@ CONTAINS
 
     IF (screen > 0) THEN
        IF (mype_pdaf == 0) THEN
-          WRITE (*, '(/a, 2x, a)') 'PDAF Pconf', 'Process configuration:'
-          WRITE (*, '(a, 2x, a6, a9, a10, a14, a13, /a, 2x, a5, a9, a7, a7, a7, a7, a7, /a, 2x, a)') &
-               'PDAF Pconf', 'world', 'assim', 'model', 'couple', 'assimPE', &
-               'PDAF Pconf', 'rank', 'rank', 'task', 'rank', 'task', 'rank', 'T/F', &
-               'PDAF Pconf', '----------------------------------------------------------'
+          WRITE (*, '(a13, 2x, a)') 'PDAF    Pconf', 'Process configuration:'
+          WRITE (*, '(a13, 2x, a6, a9, a12, a17, a15, /a13, 2x, a5, a9, a8, a9, a8, a9, a9, /a13, 2x, a)') &
+               'PDAF    Pconf', 'world', 'assim', 'model', 'couple', 'assimPE', &
+               'PDAF    Pconf', 'rank', 'rank', 'task', 'rank', 'task', 'rank', 'T/F', &
+               'PDAF    Pconf', '------------------------------------------------------------'
        END IF
        CALL MPI_Barrier(COMM_pdaf, MPIerr)
        IF (task_id == 1) THEN
-          WRITE (*, '(a, 2x, i4, 4x, i4, 4x, i3, 4x, i3, 4x, i3, 4x, i3, 5x, l3)') &
-               'PDAF Pconf', mype_pdaf, mype_assim, task_id, mype_model, color_couple, &
+          WRITE (*, '(a, 2x, i5, 4x, i5, 4x, i4, 4x, i5, 4x, i4, 4x, i5, 5x, l3)') &
+               'PDAF    Pconf', mype_pdaf, mype_assim, task_id, mype_model, color_couple, &
                mype_couple, filterpe
        ENDIF
        IF (task_id > 1) THEN
-          WRITE (*,'(a, 2x, i4, 12x, i3, 4x, i3, 4x, i3, 4x, i3, 5x, l3)') &
-               'PDAF Pconf', mype_pdaf, task_id, mype_model, color_couple, mype_couple, filterpe
+          WRITE (*,'(a, 2x, i5, 13x, i4, 4x, i5, 4x, i4, 4x, i5, 5x, l3)') &
+               'PDAF    Pconf', mype_pdaf, task_id, mype_model, color_couple, mype_couple, filterpe
        END IF
        CALL MPI_Barrier(COMM_pdaf, MPIerr)
 
