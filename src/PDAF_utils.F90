@@ -279,10 +279,10 @@ SUBROUTINE PDAF_deallocate()
 
   USE mpi
   USE PDAF_mod_core, &
-       ONLY: dim_bias_p, state, Ainv, ens, &
+       ONLY: screen, dim_bias_p, state, Ainv, ens, &
        sens, bias, dim_lag
   USE PDAF_mod_parallel, &
-       ONLY: filterpe, COMM_couple, mpi_init_by_pdaf, MPIerr
+       ONLY: filterpe, mype_world, COMM_couple, mpi_init_by_pdaf, MPIerr
   USE PDAF_iau, &
        ONLY: PDAF_iau_dealloc
 
@@ -326,7 +326,10 @@ SUBROUTINE PDAF_deallocate()
   END IF on_filterpe
 
   ! Finalize MPI, if initialized by PDAF
-  IF (mpi_init_by_pdaf) CALL MPI_finalize(MPIerr)
+  IF (mpi_init_by_pdaf) THEN
+     IF (screen>0 .and. mype_world==0) WRITE (*,'(a,2x,a)') 'PDAF', 'MPI-finalize by PDAF'
+     CALL MPI_finalize(MPIerr)
+  END IF
 
 END SUBROUTINE PDAF_deallocate
 

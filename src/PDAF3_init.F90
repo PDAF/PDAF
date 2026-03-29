@@ -435,7 +435,7 @@ CONTAINS
     USE PDAF_mod_parallel, &
          ONLY: COMM_pdaf, COMM_model_mod=>COMM_model, COMM_filter_mod=>COMM_filter, &
          COMM_couple, task_id_mod=>task_id, n_modeltasks_mod=>n_modeltasks, filterpe, &
-         isset_comm_pdaf, isset_parallel
+         isset_comm_pdaf, isset_parallel, mpi_init_by_pdaf
 
     IMPLICIT NONE
 
@@ -485,6 +485,8 @@ CONTAINS
     CALL MPI_Initialized(iniflag, MPIerr)
     IF (.NOT.iniflag) THEN
        CALL MPI_Init(MPIerr)
+
+       mpi_init_by_pdaf = .TRUE.
 
        COMM_model = MPI_COMM_WORLD
 
