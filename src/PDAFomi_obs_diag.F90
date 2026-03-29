@@ -540,8 +540,6 @@ CONTAINS
 #include "typedefs.h"
 
     USE MPI
-    USE PDAF_mod_parallel, &
-         ONLY: COMM_filter
     USE PDAF_diag, &
          ONLY: PDAF_diag_ensmean, PDAF_diag_diffstats
     USE PDAF_mod_core, &
@@ -555,21 +553,9 @@ CONTAINS
     INTEGER, INTENT(in) :: verbose                     !< Verbosity flag
 
 ! *** Local variables ***
-    INTEGER :: i, id_obs             ! Counters
+    INTEGER :: id_obs             ! Counters
     INTEGER :: nstats                ! Number of observation statistics
     INTEGER :: status                ! Status flag
-    INTEGER :: dim_g                 ! Global number of observations of one obs. type
-    INTEGER :: MPIerr                ! MPI status flag
-    REAL :: stats_p(6)               ! PE-local statistics array
-    REAL :: stats_g(6)               ! Global statistics array
-    REAL :: mean_obs                 ! mean of observation vector
-    REAL :: mean_HXmean              ! mean of observed ensemble mean
-    REAL :: means_p(2), means_g(2)   ! mean observations and obs. ensemble mean
-    REAL :: mad_p                    ! PE-local mean absolute deviation
-    REAL :: crmsd_p                  ! PE-local centered RMS difference
-    REAL :: corr_p                   ! PE-local centered RMS difference
-    REAL :: var_o_p                  ! PE-local centered RMS difference
-    REAL :: var_Hx_p                 ! PE-local centered RMS difference
 
 
 ! ***********************
