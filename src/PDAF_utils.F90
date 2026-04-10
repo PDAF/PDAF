@@ -264,9 +264,10 @@ END SUBROUTINE PDAF_alloc_bias
 
 
 !-------------------------------------------------------------------------------
-!> Deallocate PDAF-internal arrays
+!> Deallocate PDAF-internal arrays and finalize MPI
 !!
 !! Perform deallocation of PDAF-internal arrays
+!! Further finalize MPI if is was initialized by PDAF.
 !!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
@@ -327,11 +328,33 @@ SUBROUTINE PDAF_deallocate()
 
   ! Finalize MPI, if initialized by PDAF
   IF (mpi_init_by_pdaf) THEN
-     IF (screen>0 .and. mype_world==0) WRITE (*,'(a,2x,a)') 'PDAF', 'MPI-finalize by PDAF'
+     IF (screen>0 .and. mype_world==0) WRITE (*,'(a,2x,a)') 'PDAF', 'MPI_finalize called by PDAF'
      CALL MPI_finalize(MPIerr)
   END IF
 
 END SUBROUTINE PDAF_deallocate
+
+
+!-------------------------------------------------------------------------------
+!> Alias for PDAF_deallocate
+!!
+!! Perform deallocation of PDAF-internal arrays
+!! Further finalize MPI if is was initialized by PDAF.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2026-04 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF_finalize()
+
+  IMPLICIT NONE
+
+  CALL PDAF_deallocate()
+
+END SUBROUTINE PDAF_finalize
 
 
 !-------------------------------------------------------------------------------

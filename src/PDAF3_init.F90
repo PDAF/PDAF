@@ -508,7 +508,7 @@ CONTAINS
 
     ! Initial screen output
     IF (mype_pdaf == 0 .AND. screen>0) &
-         WRITE (*, '(/a, 2x, a)') 'PDAF', '+++ Initialize MPI communicators for assimilation with PDAF +++'
+         WRITE (*, '(/a, 2x, a)') 'PDAF', '*** Initialize MPI communicators for assimilation with PDAF ***'
 
     ! *** Check consistency of number of parallel ensemble tasks ***
     IF (online_coupling==1) THEN
