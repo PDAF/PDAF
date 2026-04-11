@@ -357,6 +357,38 @@ SUBROUTINE PDAF_finalize()
 END SUBROUTINE PDAF_finalize
 
 
+
+
+!-------------------------------------------------------------------------------
+!> Abort parallel program
+!!
+!! Call MPI_abort to end program in case of an error.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2026-04 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
+SUBROUTINE PDAF_abort(err)
+
+  USE mpi
+
+  IMPLICIT NONE
+
+! *** Argument
+  INTEGER, INTENT(in) :: err    ! Error value
+
+! *** local variable
+  INTEGER :: MPIerr
+
+  ! Abort program
+  CALL  MPI_Abort(MPI_COMM_WORLD, err, MPIerr)
+
+END SUBROUTINE PDAF_abort
+
+
 !-------------------------------------------------------------------------------
 !> Get value of a correlation function
 !!
