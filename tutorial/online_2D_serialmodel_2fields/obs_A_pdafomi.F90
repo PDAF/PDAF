@@ -149,7 +149,9 @@ CONTAINS
     USE PDAF, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: filtertype, cradius, fields, id
+         ONLY: filtertype, cradius
+    USE mod_statevector_pdaf, &
+         ONLY: id, sfields
     USE mod_model, &
          ONLY: nx, ny
 
@@ -248,7 +250,7 @@ CONTAINS
           cnt0 = cnt0 + 1
           IF (obs_field(i,j) > -999.0) THEN
              cnt = cnt + 1
-             thisobs%id_obs_p(1, cnt) = cnt0 + fields(id%fieldA)%off
+             thisobs%id_obs_p(1, cnt) = cnt0 + sfields(id%fieldA)%off
              obs_p(cnt) = obs_field(i, j)
              ocoord_p(1, cnt) = REAL(j)
              ocoord_p(2, cnt) = REAL(i)

@@ -29,32 +29,6 @@ MODULE mod_assimilation
 
   REAL :: coords_l(2)                   !< Coordinates of local analysis domain
 
-! *** Variables to handle multiple fields in the state vector ***
-
-  !< Fortran type holding the indices of model fields in the state vector
-  !< This can be extended to any number of fields - it severs to give each field a name
-  !< ++ For the tutorial example, it contains two fields
-  TYPE field_ids
-     INTEGER :: fieldA 
-     INTEGER :: fieldB
-  END TYPE field_ids
-
-  !< Type variable holding field IDs in state vector
-  TYPE(field_ids) :: id
-
-  !< number of fields in state vector
-  INTEGER :: n_fields                   
-
-  !< Generic type storing size and offset of each model field in the state vector
-  !< This is generic, but one could extend this type to more variables, e.g. to store a field name
-  TYPE state_field
-     INTEGER :: dim    ! size of field in state vector
-     INTEGER :: off    ! offset of field in state vector
-  END TYPE state_field
-
-  !< Vector of type variable holding dimension and offset of each field
-  TYPE(state_field), ALLOCATABLE :: fields(:)
-
 !$OMP THREADPRIVATE(coords_l)
 
 

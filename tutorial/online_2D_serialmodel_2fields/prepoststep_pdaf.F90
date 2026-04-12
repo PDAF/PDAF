@@ -34,8 +34,8 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   USE mod_model, &             ! Model variables
        ONLY: nx, ny
-  USE mod_assimilation, &      ! Assimilation variables
-       ONLY: n_fields, fields, id
+  USE mod_statevector_pdaf, &  ! Statevector variables
+       ONLY: n_fields, sfields, id
   USE mod_parallel_pdaf, &     ! Parallelization variables
        ONLY: COMM_filter
   USE PDAF, &                  ! PDAF diagnostic routine
@@ -99,10 +99,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ! for each field in the state vector
   DO j = 1, n_fields
      ! Start and end index
-     istart = 1 + fields(j)%off
-     iend = fields(j)%dim + fields(j)%off
+     istart = 1 + sfields(j)%off
+     iend = sfields(j)%dim + sfields(j)%off
 
-     CALL PDAF_diag_stddev(fields(j)%dim, dim_ens, &
+     CALL PDAF_diag_stddev(sfields(j)%dim, dim_ens, &
           state_p(istart:iend), ens_p(istart:iend,:), &
           ens_stddev(j), 1, COMM_filter, pdaf_status)
   END DO
@@ -113,8 +113,11 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *****************
 
   ! Output RMS errors given by sampled covar matrix
-  WRITE (*, '(12x, a, 2es12.4)') &
-       'RMS errors according to sampled variance: ', ens_stddev
+  WRITE (*, '(8x,a)') 'Ensemble standard deviation (estimated RMS error)'
+  DO i = 1, n_fields
+     WRITE (*,'(8x,a13,4x,a10,2x,es12.4)') &
+          'stddev-'//anastr, TRIM(sfields(i)%name), ens_stddev(i)
+  END DO
 
   DEALLOCATE(ens_stddev)
 
@@ -123,7 +126,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** File output ***
 ! *******************
 
-  IF (.not. firsttime) THEN
+  IF (.NOT. firsttime) THEN
 
      WRITE (*, '(8x, a)') '--- write ensemble and state estimate'
 
@@ -141,7 +144,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
         ! Field
         DO j = 1, nx
-           field_tmp(1:ny, j) = ens_p(fields(id%fieldA)%off + 1 + (j-1)*ny : fields(id%fieldA)%off + j*ny, member)
+           field_tmp(1:ny, j) = ens_p(sfields(id%fieldA)%off + 1 + (j-1)*ny : sfields(id%fieldA)%off + j*ny, member)
         END DO
 
         WRITE (ensstr, '(i2.2)') member
@@ -156,7 +159,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
         ! FieldB
         DO j = 1, nx
-           field_tmp(1:ny, j) = ens_p(fields(id%fieldB)%off + 1 + (j-1)*ny : fields(id%fieldB)%off + j*ny, member)
+           field_tmp(1:ny, j) = ens_p(sfields(id%fieldB)%off + 1 + (j-1)*ny : sfields(id%fieldB)%off + j*ny, member)
         END DO
 
         WRITE (ensstr, '(i2.2)') member
@@ -174,7 +177,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
      ! Field
      DO j = 1, nx
-        field_tmp(1:ny, j) = state_p(fields(id%fieldA)%off + 1 + (j-1)*ny : fields(id%fieldA)%off + j*ny)
+        field_tmp(1:ny, j) = state_p(sfields(id%fieldA)%off + 1 + (j-1)*ny : sfields(id%fieldA)%off + j*ny)
      END DO
 
      OPEN(11, file = 'state_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
@@ -187,7 +190,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
      ! FieldB
      DO j = 1, nx
-        field_tmp(1:ny, j) = state_p(fields(id%fieldB)%off + 1 + (j-1)*ny : fields(id%fieldB)%off + j*ny)
+        field_tmp(1:ny, j) = state_p(sfields(id%fieldB)%off + 1 + (j-1)*ny : sfields(id%fieldB)%off + j*ny)
      END DO
 
      OPEN(12, file = 'stateB_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')

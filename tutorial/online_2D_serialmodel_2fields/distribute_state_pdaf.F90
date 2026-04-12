@@ -22,8 +22,8 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
   USE mod_model, &             ! Model variables
        ONLY: nx, ny, field, fieldB
-  USE mod_assimilation, &      ! Assimilation variables
-       ONLY: fields, id
+  USE mod_statevector_pdaf, &  ! Statevector variables
+       ONLY: id, sfields
 
   IMPLICIT NONE
   
@@ -39,19 +39,19 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 ! *** Initialize model fields from state  ***
 !********************************************
 
-  ! + For the 2D tutorial model the state vector and
-  ! + the model field are identical. Hence, the field
-  ! + array is directly initialized from an ensemble 
-  ! + state vector by each model PE.
+  ! + For the 2D tutorial model with 2 fields, the
+  ! + state vector and the model field are identical.
+  ! + Hence, the field arrays are directly initialized
+  ! + from an ensemble state vector by each model PE.
 
   ! Field
   DO j = 1, nx
-     field(1:ny, j) = state_p(fields(id%fieldA)%off + 1 + (j-1)*ny : fields(id%fieldA)%off + j*ny)
+     field(1:ny, j) = state_p(sfields(id%fieldA)%off + 1 + (j-1)*ny : sfields(id%fieldA)%off + j*ny)
   END DO
 
   ! FieldB
   DO j = 1, nx
-     fieldB(1:ny, j) = state_p(fields(id%fieldB)%off + 1 + (j-1)*ny : fields(id%fieldB)%off + j*ny)
+     fieldB(1:ny, j) = state_p(sfields(id%fieldB)%off + 1 + (j-1)*ny : sfields(id%fieldB)%off + j*ny)
   END DO
 
 END SUBROUTINE distribute_state_pdaf

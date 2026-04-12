@@ -17,8 +17,8 @@
 !!
 SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 
-  USE mod_assimilation, &      ! Assimilation variables
-       ONLY: dim_state_p
+  USE mod_model, &      ! Assimilation variables
+       ONLY: nx, ny
 
   IMPLICIT NONE
 
@@ -32,6 +32,6 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! ************************************
   
   ! Here simply the state dimension
-  n_domains_p = dim_state_p
+  n_domains_p = nx*ny
 
 END SUBROUTINE init_n_domains_pdaf

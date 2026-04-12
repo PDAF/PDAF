@@ -24,8 +24,8 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
   USE mod_model, &             ! Model variables
        ONLY: nx, ny, field, fieldB
-  USE mod_assimilation, &      ! Assimilation variables
-       ONLY: fields, id
+  USE mod_statevector_pdaf, &  ! Statevector variables
+       ONLY: id, sfields
   
 
   IMPLICIT NONE
@@ -42,19 +42,14 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! *** Initialize state vector from model fields ***
 ! *************************************************
 
-  ! + For the 2D tutorial model the state vector and
-  ! + the model field are identical. Hence, state vector
-  ! + directly initialized from the model field by
-  ! + each model PE.
-
   ! Field
   DO j = 1, nx
-     state_p(fields(id%fieldA)%off + 1 + (j-1)*ny : fields(id%fieldA)%off + j*ny) = field(1:ny, j)
+     state_p(sfields(id%fieldA)%off + 1 + (j-1)*ny : sfields(id%fieldA)%off + j*ny) = field(1:ny, j)
   END DO
 
   ! FieldB
   DO j = 1, nx
-     state_p(fields(id%fieldB)%off + 1 + (j-1)*ny : fields(id%fieldB)%off + j*ny) = fieldB(1:ny, j)
+     state_p(sfields(id%fieldB)%off + 1 + (j-1)*ny : sfields(id%fieldB)%off + j*ny) = fieldB(1:ny, j)
   END DO
   
 END SUBROUTINE collect_state_pdaf

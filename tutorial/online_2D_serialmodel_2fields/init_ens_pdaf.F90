@@ -22,10 +22,10 @@
 SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_model, &         ! Model variables
+  USE mod_model, &             ! Model variables
        ONLY: nx, ny
-  USE mod_assimilation, &  ! Assimilation variables
-       ONLY: fields, id
+  USE mod_statevector_pdaf, &  ! Statevector variables
+       ONLY: id, sfields
 
   IMPLICIT NONE
 
@@ -73,7 +73,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
         READ (11, *) readfield(i, :)
      END DO
      DO j = 1, nx
-        ens_p(fields(id%fieldA)%off + 1 + (j-1)*ny : fields(id%fieldA)%off + j*ny, member) = readfield(1:ny, j)
+        ens_p(sfields(id%fieldA)%off + 1 + (j-1)*ny : sfields(id%fieldA)%off + j*ny, member) = readfield(1:ny, j)
      END DO
 
      CLOSE(11)
@@ -85,7 +85,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
         READ (12, *) readfield(i, :)
      END DO
      DO j = 1, nx
-        ens_p(fields(id%fieldB)%off + 1 + (j-1)*ny : fields(id%fieldB)%off + j*ny, member) = readfield(1:ny, j)
+        ens_p(sfields(id%fieldB)%off + 1 + (j-1)*ny : sfields(id%fieldB)%off + j*ny, member) = readfield(1:ny, j)
      END DO
 
      CLOSE(12)

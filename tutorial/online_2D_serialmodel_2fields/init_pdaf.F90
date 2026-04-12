@@ -25,8 +25,9 @@ SUBROUTINE init_pdaf()
        type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
        type_trans, type_sqrt, &
-       observe_ens, type_obs_init, do_omi_obsstats, &
-       n_fields, id, fields
+       observe_ens, type_obs_init, do_omi_obsstats
+  USE mod_statevector_pdaf, &     ! Variables for statevector
+       ONLY: n_fields, id, sfields, setup_statevector
   USE mod_model, &                ! Model variables
        ONLY: nx, ny
   USE obs_A_pdafomi, &            ! Variables for observation type A
@@ -41,6 +42,7 @@ SUBROUTINE init_pdaf()
   INTEGER :: filter_param_i(2) ! Integer parameter array for filter
   REAL    :: filter_param_r(1) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
+  INTEGER :: dim_state         ! Global state dimension
 
 ! *** External subroutines ***
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
@@ -58,33 +60,12 @@ SUBROUTINE init_pdaf()
      WRITE (*,'(/1x,a)') 'INITIALIZE PDAF - ONLINE MODE'
   END IF
 
-  ! *** Define state dimension ***
-  dim_state_p = 2 * nx * ny
-
 
 ! ************************************
 ! *** Define setup of state vector ***
 ! ************************************
 
-  ! Number of model fields in state vector
-  n_fields = 2
-
-  ! Specify field IDs in state vector ('id' allows to give the field a name)
-  id%fieldA = 1
-  id%fieldB = 2
-
-  ! Define field dimensions 
-  ! (we use the array of type 'state_field', see mod_assimilation)
-  allocate(fields(n_fields))
-
-  fields(id%fieldA)%dim = nx * ny    ! Field
-  fields(id%fieldB)%dim = nx * ny    ! Field
-
-  ! This loop initialized the offset of each field - it is generic
-  fields(1)%off = 0
-  DO i = 2, n_fields
-     fields(i)%off = fields(i-1)%off + fields(i-1)%dim
-  END DO
+  CALL setup_statevector(dim_state, dim_state_p, screen)
 
 
 ! **********************************************************

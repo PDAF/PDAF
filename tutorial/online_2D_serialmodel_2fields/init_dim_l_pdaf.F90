@@ -21,7 +21,9 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   USE mod_model, &             ! Model variables
        ONLY: ny
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: coords_l, n_fields, fields
+       ONLY: coords_l
+  USE mod_statevector_pdaf, &  ! Statevector variables
+       ONLY: n_fields, sfields
 
   IMPLICIT NONE
 
@@ -62,7 +64,7 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   ! Here the local domain is a single grid point
   ! The variables given by DOMAIN_P + offsets
   DO i=1, n_fields
-     id_lstate_in_pstate(i) = domain_p + fields(i)%off
+     id_lstate_in_pstate(i) = domain_p + sfields(i)%off
   END DO
 
   ! Provide the index vector to PDAF
