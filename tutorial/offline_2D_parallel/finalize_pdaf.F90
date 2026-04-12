@@ -24,10 +24,7 @@ SUBROUTINE finalize_pdaf()
 ! *** Print PDAF timings onto screen ***
   IF (mype_world==0) CALL PDAF_print_info(3)
 
-! *** Deallocate PDAF arrays ***
+! *** Deallocate PDAF arrays and finalize MPI ***
   CALL PDAF_finalize()
-
-! *** Finalize parallel MPI region - if not done by model ***
-  CALL finalize_parallel()
 
 END SUBROUTINE finalize_pdaf

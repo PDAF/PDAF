@@ -1,261 +1,46 @@
-!>  Initialize communicators for PDAF
+!>  Interface routine to call initialization of parallelization for PDAF
 !!
-!! Parallelization routine for a model with attached PDAF. The subroutine is
-!! called in the main program subsequently to the initialization of MPI. It
-!! initializes MPI communicators for the model tasks, filter task and the
-!! coupling between model and filter tasks. In addition some other variables 
-!! for the parallelization are initialized.
-!! The communicators and variables are handed over to PDAF in the call to 
-!! PDAF_set_parallel toward the end of this routine.
+!! This routine calls the parallelization routine for PDAF, which 
+!! initializes the communicators for handling the analysis step
+!! of the data assimilation.
 !!
-!! 3 Communicators are generated:
-!! * _COMM_filter_: Communicator in which the filter itself operates
-!! * _COMM_model_: Communicators for parallel model forecasts
-!! * _COMM_couple_: Communicator for coupling between models and filter
+!! The parallelization variables returned from the PDAF initialization
+!! routines are stored in the module parallel_pdaf_mod so that they can
+!! be used in the different user-provided routines.
 !!
-!! In addition there is the main communicator
-!! * _COMM_ensemble_: The main communicator in which PDAF operates
-!! COMM_ensemble is set to the communicator in which all model integration 
-!! are computed. Typically, this is MPI_COMM_WORLD, but it can be defined
-!! differently if the model only operators on a subset to MPI_COMM_WORLD.
-!! This happens, e.g. if some processes are separated to operate an
-!! I/O server or a model coupler for coupled model systems.
-!!
-!! Other variables that have to be initialized are:
-!! * _filterpe_ - Logical: Does the PE execute the filter?
-!! * _task_id_ - Integer: Index identifying the model task
-!! * _my_ensemble_ - Integer: The index of the PE's model task
-!! * _local_npes_model_ - Integer array holding numbers of PEs per model task
-!!
-!! For COMM_filter and COMM_model also the size of the communicators
-!! (npes_filter and npes_model) and the rank of each process  (mype_filter,
-!! mype_model) are initialized. These variables can be used in the model part 
-!! of the program, but are not handed over to PDAF.
-!!
-!! TEMPLATE:
-!! This template should work for the offline model of PDAF without any changes.
-!!
-!! For the onlne mode, this template is expected to work with most models.
-!! Possible adaptions should only be done at those places marked with 'TEMPLATE'.
-!! Please note:
-!! * The routine requires that N_MODELTASKS is initialized. In the tutorial
-!!   codes we use the command line parser for this. However, one can also
-!!   initialize N_MODELTASKS as a different place in the program.
-!! * If the model itself is not parallelized, the routine should work right away.
-!! * For a parallelized model, the model communicator has to be set at the end
-!!   of this file.
-!! * If a model does not use MPI_COMM_WORLD one has to adapt the specification
-!!   COMM_ensemble = MPI_COMM_WORLD, with the model communicator in the code
-!!   below.
-!!
-!! Note: At the end of the routine, one sets the communicator used by the 
-!! model to COMM_model, which is initialized in this routine.  If one plans to
-!! run the ensemble forecast in parallel COMM_model cannot be MPI_COMM_WORLD!
-!! Thus, if the model code directly uses MPI_COMM_WORLD, it has to be replaced
-!! by a variable for an alternative communicator named, e.g., COMM_model.
+!! The routine is generic, but has to be part of the user code
+!! because it uses the module parallel_pdaf_mod.
 !!
 !! __Revision history:__
 !! * 2004-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * 2026-02 - Lars Nerger - Revision for using PDAF3_init_forecast
+!! * Other revisions - see repository log
 !!
-SUBROUTINE init_parallel_pdaf(dim_ens, screen)
+subroutine init_parallel_pdaf(screen)
 
-  USE mpi                         ! MPI
-  USE PDAF, &                     ! PDAF routines
-       ONLY: PDAF3_set_parallel
-  USE mod_parallel_pdaf, &        ! PDAF parallelization variables
-       ONLY: mype_world, npes_world, mype_model, npes_model, &
-       COMM_model, mype_filter, npes_filter, COMM_filter, filterpe, &
-       n_modeltasks, local_npes_model, task_id, COMM_couple, MPIerr
+  use mpi
+  use PDAF, &                     ! Command line parser
+       only: PDAF3_init_parallel
+  use mod_parallel_pdaf, &        ! PDAF parallelization variables
+       only: n_modeltasks, task_id, mype_world, npes_world, &
+       mype_model, npes_model, COMM_model, mype_filter, npes_filter, COMM_filter
 
-  IMPLICIT NONE    
-  
+  implicit none
+
 ! *** Arguments ***
-  INTEGER, INTENT(inout) :: dim_ens   !< Ensemble size or number of EOFs (only SEEK)
-  !< Often the routine is called with dim_ens=0, because the real ensemble size
-  !< is initialized later in the program. For dim_ens=0 no consistency check
-  !< for the ensemble size with the number of model tasks is performed.
-  INTEGER, INTENT(in)    :: screen    !< Whether screen information is shown
+  integer, intent(in)    :: screen           !< Whether screen information is shown
 
-! *** local variables ***
-  INTEGER :: i, j                     ! Counters
-  INTEGER :: COMM_ensemble            ! Communicator of all PEs doing model tasks
-  INTEGER :: mype_ens, npes_ens       ! rank and size in COMM_ensemble
-  INTEGER :: mype_couple, npes_couple ! Rank and size in COMM_couple
-  INTEGER :: pe_index                 ! Index of PE
-  INTEGER :: my_color, color_couple   ! Variables for communicator-splitting 
-  LOGICAL :: iniflag                  ! Flag whether MPI is initialized
-  INTEGER :: flag                     ! Status flag
+  ! Set number of model tasks for offline mode
+  n_modeltasks = 1
 
+  ! Initialize ensemble parallelization
+  call PDAF3_init_parallel(screen, 0, 0, 0, n_modeltasks, &
+     COMM_model, mype_model, npes_model, &
+     COMM_filter, mype_filter, npes_filter, &
+     task_id)
 
-  ! *** Initialize MPI if not yet initialized ***
-  CALL MPI_Initialized(iniflag, MPIerr)
-  IF (.not.iniflag) THEN
-     CALL MPI_Init(MPIerr)
-  END IF
+  ! Initialize variables for all processes as they are used in some routines
+  mype_world = mype_model
+  npes_world = npes_model
 
-  ! *** Initialize PE information on COMM_world ***
-  CALL MPI_Comm_size(MPI_COMM_WORLD, npes_world, MPIerr)
-  CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
-
-
-  ! *** Initialize communicators for ensemble evaluations ***
-  IF (mype_world == 0) &
-       WRITE (*, '(/1x, a)') 'Initialize communicators for assimilation with PDAF'
-
-
-  ! *** Check consistency of number of parallel ensemble tasks ***
-  consist1: IF (n_modeltasks > npes_world) THEN
-     ! *** # parallel tasks is set larger than available PEs ***
-     n_modeltasks = npes_world
-     IF (mype_world == 0) WRITE (*, '(3x, a)') &
-          '!!! Resetting number of parallel ensemble tasks to total number of PEs!'
-  END IF consist1
-  IF (dim_ens > 0) THEN
-     ! Check consistency with ensemble size
-     consist2: IF (n_modeltasks > dim_ens) THEN
-        ! # parallel ensemble tasks is set larger than ensemble size
-        n_modeltasks = dim_ens
-        IF (mype_world == 0) WRITE (*, '(5x, a)') &
-             '!!! Resetting number of parallel ensemble tasks to number of ensemble states!'
-     END IF consist2
-  END IF
-
-
-  ! ***              COMM_ENSEMBLE                ***
-  ! *** Generate communicator for ensemble runs   ***
-  ! *** only used to generate model communicators ***
-  COMM_ensemble = MPI_COMM_WORLD
-
-  npes_ens = npes_world
-  mype_ens = mype_world
-
-
-  ! *** Store # PEs per ensemble                 ***
-  ! *** used for info on PE 0 and for generation ***
-  ! *** of model communicators on other Pes      ***
-  ALLOCATE(local_npes_model(n_modeltasks))
-
-  local_npes_model = FLOOR(REAL(npes_world) / REAL(n_modeltasks))
-  DO i = 1, (npes_world - n_modeltasks * local_npes_model(1))
-     local_npes_model(i) = local_npes_model(i) + 1
-  END DO
-
-
-  ! ***              COMM_MODEL               ***
-  ! *** Generate communicators for model runs ***
-  ! *** (Split COMM_ENSEMBLE)                 ***
-  pe_index = 0
-  doens1: DO i = 1, n_modeltasks
-     DO j = 1, local_npes_model(i)
-        IF (mype_ens == pe_index) THEN
-           task_id = i
-           EXIT doens1
-        END IF
-        pe_index = pe_index + 1
-     END DO
-  END DO doens1
-
-
-  CALL MPI_Comm_split(COMM_ensemble, task_id, mype_ens, &
-       COMM_model, MPIerr)
-  
-  ! *** Re-initialize PE informations   ***
-  ! *** according to model communicator ***
-  CALL MPI_Comm_Size(COMM_model, npes_model, MPIerr)
-  CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
-
-  if (screen > 1) then
-    write (*,*) 'MODEL: mype(w)= ', mype_world, '; model task: ', task_id, &
-         '; mype(m)= ', mype_model, '; npes(m)= ', npes_model
-  end if
-
-
-  ! Init flag FILTERPE (all PEs of model task 1)
-  IF (task_id == 1) THEN
-     filterpe = .TRUE.
-  ELSE
-     filterpe = .FALSE.
-  END IF
-
-  ! ***         COMM_FILTER                 ***
-  ! *** Generate communicator for filter    ***
-  ! *** For simplicity equal to COMM_couple ***
-
-  IF (filterpe) THEN
-     my_color = task_id
-  ELSE
-     my_color = MPI_UNDEFINED
-  ENDIF
-
-  CALL MPI_Comm_split(MPI_COMM_WORLD, my_color, mype_world, &
-       COMM_filter, MPIerr)
-
-  ! *** Initialize PE informations         ***
-  ! *** according to coupling communicator ***
-  IF (filterpe) THEN
-     CALL MPI_Comm_Size(COMM_filter, npes_filter, MPIerr)
-     CALL MPI_Comm_Rank(COMM_filter, mype_filter, MPIerr)
-  ENDIF
-
-
-  ! ***              COMM_COUPLE                 ***
-  ! *** Generate communicators for communication ***
-  ! *** between model and filter PEs             ***
-  ! *** (Split COMM_ENSEMBLE)                    ***
-
-  color_couple = mype_model + 1
-
-  CALL MPI_Comm_split(MPI_COMM_WORLD, color_couple, mype_world, &
-       COMM_couple, MPIerr)
-
-  ! *** Initialize PE informations         ***
-  ! *** according to coupling communicator ***
-  CALL MPI_Comm_Size(COMM_couple, npes_couple, MPIerr)
-  CALL MPI_Comm_Rank(COMM_couple, mype_couple, MPIerr)
-
-  IF (screen > 0) THEN
-     IF (mype_world == 0) THEN
-        WRITE (*, '(/18x, a)') 'PE configuration:'
-        WRITE (*, '(2x, a6, a9, a10, a14, a13, /2x, a5, a9, a7, a7, a7, a7, a7, /2x, a)') &
-             'world', 'filter', 'model', 'couple', 'filterPE', &
-             'rank', 'rank', 'task', 'rank', 'task', 'rank', 'T/F', &
-             '----------------------------------------------------------'
-     END IF
-     CALL MPI_Barrier(MPI_COMM_WORLD, MPIerr)
-     IF (task_id == 1) THEN
-        WRITE (*, '(2x, i4, 4x, i4, 4x, i3, 4x, i3, 4x, i3, 4x, i3, 5x, l3)') &
-             mype_world, mype_filter, task_id, mype_model, color_couple, &
-             mype_couple, filterpe
-     ENDIF
-     IF (task_id > 1) THEN
-        WRITE (*,'(2x, i4, 12x, i3, 4x, i3, 4x, i3, 4x, i3, 5x, l3)') &
-         mype_world, task_id, mype_model, color_couple, mype_couple, filterpe
-     END IF
-     CALL MPI_Barrier(MPI_COMM_WORLD, MPIerr)
-
-     IF (mype_world == 0) WRITE (*, '(/a)') ''
-
-  END IF
-
-
-! ***************************************************
-! *** Provide parallelization information to PDAF ***
-! ***************************************************
-
-  CALL PDAF3_set_parallel(COMM_ensemble, COMM_model, COMM_filter, COMM_couple, &
-       task_id, n_modeltasks, filterpe, flag)
-
-
-! ******************************************************************************
-! *** Initialize model equivalents to COMM_model, npes_model, and mype_model ***
-! ******************************************************************************
-
-! +++ TEMPLATE: 
-! +++ If the names of the variables for COMM_model, npes_model,
-! +++ and mype_model are different in the model code, the 
-! +++ model-internal variables should be initialized at this point.
-
-  ! For the offline model there is usually nothing to do at this point
-
-END SUBROUTINE init_parallel_pdaf
+end subroutine init_parallel_pdaf

@@ -42,11 +42,11 @@ PROGRAM MAIN_OFFLINE
   IMPLICIT NONE
 
 
-! **********************
-! *** Initialize MPI ***
-! **********************
+! *************************************************
+! *** Initialize MPI and communicators for PDAF ***
+! *************************************************
 
-  CALL init_parallel() ! initializes MPI
+  CALL init_parallel_pdaf(0)
 
 
 ! ********************************
@@ -60,19 +60,13 @@ PROGRAM MAIN_OFFLINE
      WRITE (*, '(9x, a)') 'Data assimilation with PDAF'
 
      IF (npes_world > 1) THEN
-        WRITE (*, '(/21x, a, i3, a/)') 'Running on ', npes_world, ' PEs'
+        WRITE (*, '(/21x, a, i3, a/)') 'Running on ', npes_world, ' processes'
      ELSE
-        WRITE (*, '(/21x, a/)') 'Running on 1 PE'
+        WRITE (*, '(/21x, a/)') 'Running on 1 process'
      END IF
      WRITE (*, '(/)')
      
   END IF initscreen
-
-  
-! *** Initialize MPI communicators for PDAF (model and filter) ***
-! *** NOTE: It is always n_modeltasks=1 for offline mode       ***
-
-  CALL init_parallel_pdaf(0, 1)
 
 ! *** Initialize model information ***
 ! *** This should only be information on the model dimension

@@ -27,7 +27,4 @@ SUBROUTINE finalize_pdaf()
 ! *** Deallocate PDAF arrays ***
   CALL PDAF_finalize()
 
-! *** Finalize parallel MPI region - if not done by model ***
-!  CALL finalize_parallel()
-
 END SUBROUTINE finalize_pdaf
