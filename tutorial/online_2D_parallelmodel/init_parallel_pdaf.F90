@@ -40,13 +40,11 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
   USE mpi                         ! MPI
   USE PDAF, &                     ! PDAF routines
-       ONLY: PDAF3_set_parallel
+       ONLY: PDAF3_set_parallel, PDAF_parse
   USE mod_parallel_pdaf, &        ! PDAF parallelization variables
        ONLY: mype_world, npes_world, mype_model, npes_model, &
        COMM_model, mype_filter, npes_filter, COMM_filter, filterpe, &
        n_modeltasks, local_npes_model, task_id, COMM_couple, MPIerr
-  USE parser, &                   ! Command line parser
-       ONLY: parse
   USE mod_parallel_model, &       ! Model parallelization variables
        ONLY: mype_2Dmodel, npes_2Dmodel, COMM_2Dmodel
 
@@ -86,7 +84,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! *** The module variable is N_MODELTASKS. Since it has to be equal
   ! *** to the ensemble size we parse dim_ens from the command line.
   handle = 'dim_ens'
-  CALL parse(handle, n_modeltasks)
+  CALL PDAF_parse(handle, n_modeltasks)
 
 
   ! *** Initialize communicators for ensemble evaluations ***

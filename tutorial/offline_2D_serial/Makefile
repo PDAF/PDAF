@@ -34,8 +34,7 @@ EXE = PDAF_offline
 # Modules used for the model part
 MODULES =  	mod_parallel_pdaf.o \
 		timer.o \
-		mod_memcount.o \
-		parser_mpi.o
+		mod_memcount.o
 
 # Module required for assimilation
 MOD_ASSIM = 	mod_assimilation.o

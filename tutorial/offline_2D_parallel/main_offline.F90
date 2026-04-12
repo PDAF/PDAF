@@ -24,10 +24,10 @@
 !!
 !! Parameters can be set in the code, or - preferably -
 !! by command line arguments that are parsed by the 
-!! module PARSER. The format for this is
+!! routine PDAF_parse. The format for this is
 !! EXECUTABLE -HANDLE1 VALUE1 -HANDLE2 VALUE2 ...
 !! The handles are defined in the code before the calls
-!! to the routine PARSE.
+!! to the routine PDAF_parse.
 !!
 !! __Revision history:__
 !! * 2008-07 - Lars Nerger - Initial code
