@@ -32,8 +32,7 @@ EXE = PDAF_online
 
 # Modules used for the model part
 MODULES = 	mod_parallel_pdaf.o \
-		mod_model.o \
-		parser_mpi.o
+		mod_model.o
 
 # Model routines
 OBJ_MODEL =	main.o

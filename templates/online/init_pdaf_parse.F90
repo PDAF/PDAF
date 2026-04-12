@@ -13,8 +13,8 @@
 !!
 SUBROUTINE init_pdaf_parse()
 
-  USE parser, &           ! Parser function
-       ONLY: parse
+  USE PDAF, &             ! PDAF
+       ONLY: PDAF_parse
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, type_forget, forget, &
@@ -39,88 +39,88 @@ SUBROUTINE init_pdaf_parse()
 
   ! Observation settings - particular for the implemented observation modules
 !   handle = 'assim_OBSTYPE'           ! Whether to assimilation observation type OBSTYPE
-!   CALL parse(handle, assim_OBSTYPE)
+!   CALL PDAF_parse(handle, assim_OBSTYPE)
 !   handle = 'rms_obs_OBSTYPE'         ! Assumed uniform RMS error of observations OBSTYPE
-!   CALL parse(handle, rms_obs_OBSTYPE)
+!   CALL PDAF_parse(handle, rms_obs_OBSTYPE)
 
-! The remaining parse commands should be generic; usually no change necessary
+! The remaining PDAF_parse commands should be generic; usually no change necessary
 
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
-  CALL parse(handle, delt_obs)
+  CALL PDAF_parse(handle, delt_obs)
   handle = 'observe_ens'             ! (0) apply H also to ensemble mean; (1) apply H only to ensemble states
-  CALL parse(handle, observe_ens)
+  CALL PDAF_parse(handle, observe_ens)
   handle = 'type_obs_init'           ! init obs. (0) before or (1) after call to prepostsstep
-  CALL parse(handle, type_obs_init)
+  CALL PDAF_parse(handle, type_obs_init)
   handle = 'do_omi_obsstats'         ! Whether to let PDAF-OMI compute observation statistics
-  CALL parse(handle, do_omi_obsstats)
+  CALL PDAF_parse(handle, do_omi_obsstats)
 
   ! Settings for model and time stepping
   handle = 'model_error'             ! Control application of model error
-  CALL parse(handle, model_error)
+  CALL PDAF_parse(handle, model_error)
   handle = 'model_err_amp'           ! Amplitude of model error
-  CALL parse(handle, model_err_amp)
+  CALL PDAF_parse(handle, model_err_amp)
 
   ! General settings for PDAF
   handle = 'screen'                  ! set verbosity of PDAF
-  CALL parse(handle, screen)
+  CALL PDAF_parse(handle, screen)
   handle = 'dim_ens'                 ! set ensemble size/rank of covar matrix
-  CALL parse(handle, dim_ens)
+  CALL PDAF_parse(handle, dim_ens)
   handle = 'filtertype'              ! Choose filter algorithm
-  CALL parse(handle, filtertype)
+  CALL PDAF_parse(handle, filtertype)
   handle = 'subtype'                 ! Set subtype of filter
-  CALL parse(handle, subtype)
+  CALL PDAF_parse(handle, subtype)
 
   ! Control IAU
   handle = 'type_iau'                ! Set whether to use incremental updating
-  CALL parse(handle, type_iau)
+  CALL PDAF_parse(handle, type_iau)
   handle = 'steps_iau'               ! Number of time steps over which IAU is applied
-  CALL parse(handle, steps_iau)
+  CALL PDAF_parse(handle, steps_iau)
 
   ! Settings for smoother
   handle = 'dim_lag'                 ! Size of lag in smoother
-  CALL parse(handle, dim_lag)
+  CALL PDAF_parse(handle, dim_lag)
 
   ! Filter-specific settings
   handle = 'forget'                  ! Set forgetting factor
-  CALL parse(handle,forget)
+  CALL PDAF_parse(handle,forget)
   handle = 'type_forget'             ! Set type of forgetting factor
-  CALL parse(handle, type_forget)
+  CALL PDAF_parse(handle, type_forget)
   handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
-  CALL parse(handle, type_trans)
+  CALL PDAF_parse(handle, type_trans)
   handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
-  CALL parse(handle, type_sqrt)
+  CALL PDAF_parse(handle, type_sqrt)
   handle = 'rank_ana_enkf'           ! Set rank for pseudo inverse in EnKF
-  CALL parse(handle, rank_ana_enkf)
+  CALL PDAF_parse(handle, rank_ana_enkf)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
-  CALL parse(handle, cradius)
+  CALL PDAF_parse(handle, cradius)
   handle = 'locweight'               ! Set type of localizating weighting
-  CALL parse(handle, locweight)
+  CALL PDAF_parse(handle, locweight)
   sradius = cradius                  ! By default use cradius as support radius
   handle = 'sradius'                 ! Set support radius in grid points
              ! for 5th-order polynomial or radius for 1/e in exponential weighting
-  CALL parse(handle, sradius)
+  CALL PDAF_parse(handle, sradius)
 
   ! Settings for nonlinear filters
   handle = 'pf_res_type'             ! Resampling type for particle filter
-  CALL parse(handle, pf_res_type)        
+  CALL PDAF_parse(handle, pf_res_type)        
   handle = 'pf_noise_type'           ! Type of perturbing noise in PF
-  CALL parse(handle, pf_noise_type)        
+  CALL PDAF_parse(handle, pf_noise_type)        
   handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
-  CALL parse(handle, pf_noise_amp)        
+  CALL PDAF_parse(handle, pf_noise_amp)        
   handle = 'type_winf'               ! Set type of weights inflation in NETF/LNETF
-  CALL parse(handle, type_winf)
+  CALL PDAF_parse(handle, type_winf)
   handle = 'limit_winf'              ! Set limit for weights inflation
-  CALL parse(handle, limit_winf)
+  CALL PDAF_parse(handle, limit_winf)
 
   ! Hybrid weights for LKNETF
   handle = 'type_hyb'                ! Set type of hybrid weight
-  CALL parse(handle, type_hyb)
+  CALL PDAF_parse(handle, type_hyb)
   handle = 'hyb_gamma'               ! Set hybrid filter weight for state (1.0 LETKF, 0.0 LNETF)
-  CALL parse(handle, hyb_gamma)
+  CALL PDAF_parse(handle, hyb_gamma)
   handle = 'hyb_kappa'               ! Set hybrid norm (>1.0)
-  CALL parse(handle, hyb_kappa)
+  CALL PDAF_parse(handle, hyb_kappa)
 
 END SUBROUTINE init_pdaf_parse
