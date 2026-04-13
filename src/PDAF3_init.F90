@@ -435,7 +435,7 @@ CONTAINS
     USE PDAF_mod_parallel, &
          ONLY: COMM_pdaf, COMM_model_mod=>COMM_model, COMM_filter_mod=>COMM_filter, &
          COMM_couple, task_id_mod=>task_id, n_modeltasks_mod=>n_modeltasks, filterpe, &
-         isset_comm_pdaf, isset_parallel, mpi_init_by_pdaf
+         modelpe, isset_comm_pdaf, isset_parallel, mpi_init_by_pdaf
 
     IMPLICIT NONE
 
@@ -444,6 +444,8 @@ CONTAINS
 
     ! Model variables for parallelization
     INTEGER, INTENT(in) :: type_parallel        !< Type of parallelization
+                                                !< 0: common setup using task 1 for assimilation
+                                                !< 1: setup using separate task 0 for assimilation
     INTEGER, INTENT(in) :: online_coupling      !< 1: online DA coupling, 0: offline DA coupling
     INTEGER, INTENT(in) :: dim_ens              !< Ensemble size / number of model tasks
     INTEGER, INTENT(inout) :: n_modeltasks      !< Number of model tasks
@@ -467,6 +469,7 @@ CONTAINS
     INTEGER :: npes_pdaf                        ! Size of COMM_pdaf
     INTEGER :: dummy                            ! Dummy variable to avoid compiler warning
     LOGICAL :: iniflag                          ! Flag whether MPI is initialized
+    INTEGER :: t_id                             ! Variable for storing task id for communicator splitting
 
 
 ! ************************************************
@@ -479,126 +482,134 @@ CONTAINS
     ! *** Fix number or model tasks for offline DA ***
     IF (online_coupling==0) n_modeltasks = 1
 
+    partype: IF (type_parallel /= 1) THEN
+       
+! **************************************************
+! *** Common setup using task 1 for assimilation ***
+! **************************************************
+
+       ! All processes are model PEs
+       modelpe = .TRUE.
 
 ! *** Initialize MPI if not yet initialized ***
 
-    CALL MPI_Initialized(iniflag, MPIerr)
-    IF (.NOT.iniflag) THEN
-       CALL MPI_Init(MPIerr)
+       CALL MPI_Initialized(iniflag, MPIerr)
+       IF (.NOT.iniflag) THEN
+          CALL MPI_Init(MPIerr)
 
-       mpi_init_by_pdaf = .TRUE.
+          mpi_init_by_pdaf = .TRUE.
 
-       COMM_model = MPI_COMM_WORLD
+          COMM_model = MPI_COMM_WORLD
 
-       CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
-       IF (mype_model==0 .AND. screen>0) &
-            WRITE (*, '(/a, 2x, a)') 'PDAF', 'MPI-initialization by PDAF'
-    END IF
+          CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
+          IF (mype_model==0 .AND. screen>0) &
+               WRITE (*, '(/a, 2x, a)') 'PDAF', 'MPI-initialization by PDAF'
+       END IF
 
 ! ***                   COMM_PDAF                     ***
 ! *** This is the communicator in which PDAF operates ***
 
-    COMM_pdaf = COMM_model
+       COMM_pdaf = COMM_model
 
-    ! *** Get rank and size of COMM_pdaf
+       ! *** Get rank and size of COMM_pdaf
 
-    CALL MPI_Comm_Size(COMM_pdaf, npes_pdaf, MPIerr)
-    CALL MPI_Comm_Rank(COMM_pdaf, mype_pdaf, MPIerr)
+       CALL MPI_Comm_Size(COMM_pdaf, npes_pdaf, MPIerr)
+       CALL MPI_Comm_Rank(COMM_pdaf, mype_pdaf, MPIerr)
 
 
-    ! Initial screen output
-    IF (mype_pdaf == 0 .AND. screen>0) &
-         WRITE (*, '(/a, 2x, a)') 'PDAF', '*** Initialize MPI communicators for assimilation with PDAF ***'
+       ! Initial screen output
+       IF (mype_pdaf == 0 .AND. screen>0) &
+            WRITE (*, '(/a, 2x, a)') 'PDAF', '*** Initialize MPI communicators for assimilation with PDAF ***'
 
-    ! *** Check consistency of number of parallel ensemble tasks ***
-    IF (online_coupling==1) THEN
-       consist1: IF (n_modeltasks > npes_pdaf) THEN
-          ! *** # parallel tasks is set larger than available Processs ***
-          n_modeltasks = npes_pdaf
-          IF (mype_pdaf == 0) WRITE (*, '(a, 3x, a)') &
-               'PDAF', '!!! Resetting number of parallel ensemble tasks to total number of Processs!'
-       END IF consist1
-       IF (dim_ens > 0) THEN
-          ! Check consistency with ensemble size
-          consist2: IF (n_modeltasks > dim_ens) THEN
-             ! # parallel ensemble tasks is set larger than ensemble size
-             n_modeltasks = dim_ens
-             IF (mype_pdaf == 0) WRITE (*, '(a, 5x, a)') &
-                  'PDAF', '!!! Resetting number of parallel ensemble tasks to number of ensemble states!'
-          END IF consist2
+       ! *** Check consistency of number of parallel ensemble tasks ***
+       IF (online_coupling==1) THEN
+          consist1: IF (n_modeltasks > npes_pdaf) THEN
+             ! *** # parallel tasks is set larger than available Processs ***
+             n_modeltasks = npes_pdaf
+             IF (mype_pdaf == 0) WRITE (*, '(a, 3x, a)') &
+                  'PDAF', '!!! Resetting number of parallel ensemble tasks to total number of Processs!'
+          END IF consist1
+          IF (dim_ens > 0) THEN
+             ! Check consistency with ensemble size
+             consist2: IF (n_modeltasks > dim_ens) THEN
+                ! # parallel ensemble tasks is set larger than ensemble size
+                n_modeltasks = dim_ens
+                IF (mype_pdaf == 0) WRITE (*, '(a, 5x, a)') &
+                     'PDAF', '!!! Resetting number of parallel ensemble tasks to number of ensemble states!'
+             END IF consist2
+          END IF
        END IF
-    END IF
 
 
 ! *** Store # of processes per model task           ***
 ! *** used for info on Process 0 and for generation ***
 ! *** of model communicators on other Pes           ***
 
-    ALLOCATE(local_npes_model(n_modeltasks))
+       ALLOCATE(local_npes_model(n_modeltasks))
 
-    local_npes_model = FLOOR(REAL(npes_pdaf) / REAL(n_modeltasks))
-    DO i = 1, (npes_pdaf - n_modeltasks * local_npes_model(1))
-       local_npes_model(i) = local_npes_model(i) + 1
-    END DO
+       local_npes_model = FLOOR(REAL(npes_pdaf) / REAL(n_modeltasks))
+       DO i = 1, (npes_pdaf - n_modeltasks * local_npes_model(1))
+          local_npes_model(i) = local_npes_model(i) + 1
+       END DO
 
 
 ! ***              COMM_MODEL               ***
 ! *** Generate communicators for model runs ***
 ! *** (Split COMM_PDAF)                     ***
 
-    pe_index = 0
-    doens1: DO i = 1, n_modeltasks
-       DO j = 1, local_npes_model(i)
-          IF (mype_pdaf == pe_index) THEN
-             task_id = i
-             EXIT doens1
-          END IF
-          pe_index = pe_index + 1
-       END DO
-    END DO doens1
+       pe_index = 0
+       doens1: DO i = 1, n_modeltasks
+          DO j = 1, local_npes_model(i)
+             IF (mype_pdaf == pe_index) THEN
+                task_id = i
+                EXIT doens1
+             END IF
+             pe_index = pe_index + 1
+          END DO
+       END DO doens1
 
-    CALL MPI_Comm_split(COMM_pdaf, task_id, mype_pdaf, &
-         COMM_model, MPIerr)
+       CALL MPI_Comm_split(COMM_pdaf, task_id, mype_pdaf, &
+            COMM_model, MPIerr)
   
-    ! *** Re-initialize Process information for COMM_model
+       ! *** Re-initialize Process information for COMM_model
 
-    CALL MPI_Comm_Size(COMM_model, npes_model, MPIerr)
-    CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
+       CALL MPI_Comm_Size(COMM_model, npes_model, MPIerr)
+       CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
 
-    IF (screen > 1) THEN
-       WRITE (*,*) 'PDAF: mype(w)= ', mype_pdaf, '; model task: ', task_id, &
-            '; mype(m)= ', mype_model, '; npes(m)= ', npes_model
-    END IF
+       IF (screen > 1) THEN
+          WRITE (*,*) 'PDAF: mype(w)= ', mype_pdaf, '; model task: ', task_id, &
+               '; mype(m)= ', mype_model, '; npes(m)= ', npes_model
+       END IF
 
 
 ! *** Init flag for assim processes    ***
 ! *** (all processes of model task 1)  ***
 
-    IF (task_id == 1) THEN
-       filterpe = .TRUE.
-    ELSE
-       filterpe = .FALSE.
-    END IF
+       IF (task_id == 1) THEN
+          filterpe = .TRUE.
+       ELSE
+          filterpe = .FALSE.
+       END IF
 
 
 ! ***         COMM_ASSIM                  ***
 ! *** Generate communicator for analysis  ***
 
-    IF (filterpe) THEN
-       my_color = task_id
-    ELSE
-       my_color = MPI_UNDEFINED
-    ENDIF
+       IF (filterpe) THEN
+          my_color = task_id
+       ELSE
+          my_color = MPI_UNDEFINED
+       ENDIF
 
-    CALL MPI_Comm_split(COMM_pdaf, my_color, mype_pdaf, &
-         COMM_assim, MPIerr)
+       CALL MPI_Comm_split(COMM_pdaf, my_color, mype_pdaf, &
+            COMM_assim, MPIerr)
 
-    ! *** Initialize Process information for COMM_assim
+       ! *** Initialize Process information for COMM_assim
 
-    IF (filterpe) THEN
-       CALL MPI_Comm_Size(COMM_assim, npes_assim, MPIerr)
-       CALL MPI_Comm_Rank(COMM_assim, mype_assim, MPIerr)
-    ENDIF
+       IF (filterpe) THEN
+          CALL MPI_Comm_Size(COMM_assim, npes_assim, MPIerr)
+          CALL MPI_Comm_Rank(COMM_assim, mype_assim, MPIerr)
+       ENDIF
 
 
 ! ***              COMM_COUPLE                 ***
@@ -606,55 +617,256 @@ CONTAINS
 ! *** between model and assim processes        ***
 ! *** (Split COMM_pdaf)                        ***
 
-    color_couple = mype_model + 1
+       color_couple = mype_model + 1
 
-    CALL MPI_Comm_split(COMM_pdaf, color_couple, mype_pdaf, &
-         COMM_couple, MPIerr)
+       CALL MPI_Comm_split(COMM_pdaf, color_couple, mype_pdaf, &
+            COMM_couple, MPIerr)
 
-    ! *** Initialize Process information for COMM_couple
+       ! *** Initialize Process information for COMM_couple
 
-    CALL MPI_Comm_Size(COMM_couple, npes_couple, MPIerr)
-    CALL MPI_Comm_Rank(COMM_couple, mype_couple, MPIerr)
+       CALL MPI_Comm_Size(COMM_couple, npes_couple, MPIerr)
+       CALL MPI_Comm_Rank(COMM_couple, mype_couple, MPIerr)
 
 
 ! *** Display process configuration ***
 
-    IF (screen > 0) THEN
-       IF (mype_pdaf == 0) THEN
-          WRITE (*, '(a13, 2x, a)') 'PDAF    Pconf', 'Process configuration:'
-          WRITE (*, '(a13, 2x, a6, a9, a12, a17, a15, /a13, 2x, a5, a9, a8, a9, a8, a9, a9, /a13, 2x, a)') &
-               'PDAF    Pconf', 'world', 'assim', 'model', 'couple', 'assimPE', &
-               'PDAF    Pconf', 'rank', 'rank', 'task', 'rank', 'task', 'rank', 'T/F', &
-               'PDAF    Pconf', '------------------------------------------------------------'
+       IF (screen > 0) THEN
+          IF (mype_pdaf == 0) THEN
+             WRITE (*, '(a13, 2x, a)') 'PDAF    Pconf', 'Process configuration:'
+             WRITE (*, '(a13, 2x, a6, a9, a12, a17, a15, /a13, 2x, a5, a9, a8, a9, a8, a9, a9, /a13, 2x, a)') &
+                  'PDAF    Pconf', 'world', 'assim', 'model', 'couple', 'assimPE', &
+                  'PDAF    Pconf', 'rank', 'rank', 'task', 'rank', 'task', 'rank', 'T/F', &
+                  'PDAF    Pconf', '------------------------------------------------------------'
+          END IF
+          CALL MPI_Barrier(COMM_pdaf, MPIerr)
+          IF (task_id == 1) THEN
+             WRITE (*, '(a, 2x, i5, 4x, i5, 4x, i4, 4x, i5, 4x, i4, 4x, i5, 5x, l3)') &
+                  'PDAF    Pconf', mype_pdaf, mype_assim, task_id, mype_model, color_couple, &
+                  mype_couple, filterpe
+          ENDIF
+          IF (task_id > 1) THEN
+             WRITE (*,'(a, 2x, i5, 13x, i4, 4x, i5, 4x, i4, 4x, i5, 5x, l3)') &
+                  'PDAF    Pconf', mype_pdaf, task_id, mype_model, color_couple, mype_couple, filterpe
+          END IF
+          CALL MPI_Barrier(COMM_pdaf, MPIerr)
+
+          IF (mype_pdaf == 0) WRITE (*, '(/a)') ''
        END IF
-       CALL MPI_Barrier(COMM_pdaf, MPIerr)
-       IF (task_id == 1) THEN
-          WRITE (*, '(a, 2x, i5, 4x, i5, 4x, i4, 4x, i5, 4x, i4, 4x, i5, 5x, l3)') &
-               'PDAF    Pconf', mype_pdaf, mype_assim, task_id, mype_model, color_couple, &
-               mype_couple, filterpe
-       ENDIF
-       IF (task_id > 1) THEN
-          WRITE (*,'(a, 2x, i5, 13x, i4, 4x, i5, 4x, i4, 4x, i5, 5x, l3)') &
-               'PDAF    Pconf', mype_pdaf, task_id, mype_model, color_couple, mype_couple, filterpe
-       END IF
-       CALL MPI_Barrier(COMM_pdaf, MPIerr)
-
-       IF (mype_pdaf == 0) WRITE (*, '(/a)') ''
-    END IF
 
 
-! **********************************************************
 ! *** Store parallelization information for internal use ***
+
+       COMM_model_mod = COMM_model
+       COMM_filter_mod = COMM_assim
+       task_id_mod = task_id
+       n_modeltasks_mod = n_modeltasks
+
+       ! Set flags
+       isset_parallel = .TRUE.
+       IF (COMM_PDAF /= MPI_COMM_WORLD) isset_comm_pdaf = .TRUE.
+
+
+
+    ELSE partype
+
+! **********************************************************
+! *** Setup using a separate task 0 for the assimilation ***
 ! **********************************************************
 
-    COMM_model_mod = COMM_model
-    COMM_filter_mod = COMM_assim
-    task_id_mod = task_id
-    n_modeltasks_mod = n_modeltasks
+! *** Initialize MPI if not yet initialized ***
 
-    ! Set flags
-    isset_parallel = .TRUE.
-    IF (COMM_PDAF /= MPI_COMM_WORLD) isset_comm_pdaf = .TRUE.
+       CALL MPI_Initialized(iniflag, MPIerr)
+       IF (.NOT.iniflag) THEN
+          CALL MPI_Init(MPIerr)
+
+          mpi_init_by_pdaf = .TRUE.
+
+          COMM_model = MPI_COMM_WORLD
+
+          CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
+          IF (mype_model==0 .AND. screen>0) &
+               WRITE (*, '(/a, 2x, a)') 'PDAF', 'MPI-initialization by PDAF'
+       END IF
+
+! ***                   COMM_PDAF                     ***
+! *** This is the communicator in which PDAF operates ***
+
+       COMM_pdaf = COMM_model
+
+       ! *** Get rank and size of COMM_pdaf
+
+       CALL MPI_Comm_Size(COMM_pdaf, npes_pdaf, MPIerr)
+       CALL MPI_Comm_Rank(COMM_pdaf, mype_pdaf, MPIerr)
+
+
+       ! Initial screen output
+       IF (mype_pdaf == 0 .AND. screen>0) THEN
+          WRITE (*, '(/a, 2x, a)') 'PDAF', '*** Initialize MPI communicators for assimilation with PDAF ***'
+          WRITE (*, '(a, 2x, a)') 'PDAF', '***   configure separate tasks for models and assimilation  ***'
+       END IF
+
+       ! *** Check consistency of number of parallel ensemble tasks ***
+       IF (online_coupling==1) THEN
+          consist1a: IF (n_modeltasks > npes_pdaf) THEN
+             ! *** # parallel tasks is set larger than available Processs ***
+             n_modeltasks = npes_pdaf
+             IF (mype_pdaf == 0) WRITE (*, '(a, 3x, a)') &
+                  'PDAF', '!!! Resetting number of parallel ensemble tasks to total number of Processs!'
+          END IF consist1a
+          IF (dim_ens > 0) THEN
+             ! Check consistency with ensemble size
+             consist2a: IF (n_modeltasks > dim_ens) THEN
+                ! # parallel ensemble tasks is set larger than ensemble size
+                n_modeltasks = dim_ens
+                IF (mype_pdaf == 0) WRITE (*, '(a, 5x, a)') &
+                     'PDAF', '!!! Resetting number of parallel ensemble tasks to number of ensemble states!'
+             END IF consist2a
+          END IF
+       END IF
+
+
+       ! *** Store # PEs per ensemble                 ***
+       ! *** used for info on PE 0 and for generation ***
+       ! *** of model communicators on other Pes      ***
+       ALLOCATE(local_npes_model(n_modeltasks+1))
+
+       ! This step takes into account that we have a 'task 0' 
+       ! that computes the analysis step in PDAF.
+       local_npes_model = FLOOR(REAL(npes_pdaf) / REAL(n_modeltasks+1))
+       DO i = 1, (npes_pdaf - (n_modeltasks+1) * local_npes_model(1))
+          local_npes_model(i) = local_npes_model(i) + 1
+       END DO
+
+
+
+! ***              COMM_MODEL               ***
+! *** Generate communicators for model runs ***
+! *** (Split COMM_PDAF)                     ***
+
+       pe_index = 0
+       doens1a: DO i = 1, n_modeltasks+1
+          DO j = 1, local_npes_model(i)
+             IF (mype_pdaf == pe_index) THEN
+                task_id = i
+                EXIT doens1a
+             END IF
+             pe_index = pe_index + 1
+          END DO
+       END DO doens1a
+       IF (task_id==1) THEN
+          t_id = MPI_UNDEFINED
+       ELSE
+          t_id = task_id
+       END IF
+
+       CALL MPI_Comm_split(COMM_pdaf, t_id, mype_pdaf, &
+            COMM_model, MPIerr)
+
+       ! Init flag FILTERPE (all PEs of model task 1)
+       IF (task_id == 1) THEN
+          filterpe = .TRUE.
+          modelpe = .FALSE.
+       ELSE
+          filterpe = .FALSE.
+          modelpe = .TRUE.
+       END IF
+
+       ! *** Reset task IDs ***
+       task_id = task_id - 1
+
+       IF (modelpe) THEN
+       ! *** Re-initialize PE information   ***
+       ! *** according to model communicator ***
+          CALL MPI_Comm_Size(COMM_model, npes_model, MPIerr)
+          CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
+
+          IF (screen > 1) THEN
+             WRITE (*,*) 'PDAF: MODEL - mype(w)= ', mype_pdaf, '; model task: ', task_id, &
+                  '; mype(m)= ', mype_model, '; npes(m)= ', npes_model
+          END IF
+       END IF
+
+! ***            COMM_ASSIM               ***
+! *** Generate communicator for analysis  ***
+
+       IF (filterpe) THEN
+          my_color = task_id
+       ELSE
+          my_color = MPI_UNDEFINED
+       ENDIF
+
+       CALL MPI_Comm_split(COMM_pdaf, my_color, mype_pdaf, &
+            COMM_assim, MPIerr)
+
+       ! *** Initialize PE information          ***
+       ! *** according to coupling communicator ***
+       IF (filterpe) THEN
+          CALL MPI_Comm_Size(COMM_assim, npes_assim, MPIerr)
+          CALL MPI_Comm_Rank(COMM_assim, mype_assim, MPIerr)
+
+          IF (screen > 1) THEN
+             WRITE (*,*) 'PDAF: ASSIM - mype(w)= ', mype_pdaf, '; mype(f)= ', mype_assim, '; npes(f)= ', npes_assim
+          END IF
+       ENDIF
+
+
+       ! ***              COMM_COUPLE                 ***
+       ! *** Generate communicators for communication ***
+       ! *** between model and filter PEs             ***
+       ! *** (Split COMM_PDAF)                    ***
+
+       IF (modelpe) THEN
+          color_couple = mype_model + 1
+       ELSE
+          color_couple = mype_assim + 1
+       ENDIF
+
+       CALL MPI_Comm_split(COMM_pdaf, color_couple, mype_pdaf, &
+            COMM_couple, MPIerr)
+
+       ! *** Initialize PE information          ***
+       ! *** according to coupling communicator ***
+
+       CALL MPI_Comm_Size(COMM_couple, npes_couple, MPIerr)
+       CALL MPI_Comm_Rank(COMM_couple, mype_couple, MPIerr)
+
+! *** Display process configuration ***
+
+       IF (screen > 0) THEN
+          IF (mype_pdaf == 0) THEN
+             WRITE (*, '(a13, 2x, a)') 'PDAF    Pconf', 'Process configuration:'
+             WRITE (*, '(a13, 2x, a6, a9, a10, a14, 3x, a12, /a13, 2x, a5, a9, a7, a7, a7, a7, a8, /a13, 2x, a)') &
+                  'PDAF    Pconf', 'world', 'assim', 'model', 'couple', 'model/assim', &
+                  'PDAF    Pconf', 'rank', 'rank', 'task', 'rank', 'task', 'rank', 'M/A', &
+                  'PDAF    Pconf', '----------------------------------------------------------'
+          END IF
+          CALL MPI_Barrier(COMM_pdaf, MPIerr)
+          IF (filterpe) THEN
+             WRITE (*, '(a, 2x, i4, 4x, i4, 4x, 3x, 4x, 3x, 4x, i3, 4x, i3, 5x, 3x, a1)') &
+                  'PDAF    Pconf', mype_pdaf, mype_assim, color_couple, mype_couple, 'A'
+          ENDIF
+          IF (modelpe) THEN
+             WRITE (*,'(a, 2x, i4, 12x, i3, 4x, i3, 4x, i3, 4x, i3, 5x, 3x, a1)') &
+                  'PDAF    Pconf', mype_pdaf, task_id, mype_model, color_couple, mype_couple, 'M'
+          END IF
+          CALL MPI_Barrier(COMM_pdaf, MPIerr)
+
+          IF (mype_pdaf == 0) WRITE (*, '(/a)') ''
+
+       END IF
+
+! *** Store parallelization information for internal use ***
+
+       COMM_model_mod = COMM_model
+       COMM_filter_mod = COMM_assim
+       task_id_mod = task_id
+       n_modeltasks_mod = n_modeltasks
+
+       ! Set flags
+       isset_parallel = .TRUE.
+       IF (COMM_PDAF /= MPI_COMM_WORLD) isset_comm_pdaf = .TRUE.
+
+    END IF partype
 
   END SUBROUTINE PDAF3_init_parallel
 
