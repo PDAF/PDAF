@@ -16,7 +16,7 @@
 !! operations can be performed here. For example 
 !! the forecast and the analysis states and ensemble
 !! covariance matrix can be analyzed, e.g. by 
-!! computing the estimated variances. 
+!! computing the estimated variances.
 !!
 !! If a user considers to perform adjustments to the 
 !! estimates (e.g. for balances), this routine is 
@@ -34,10 +34,8 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_state, do_omi_obsstats
-  USE PDAF, &                  ! PDAF diagnostic routine
-       ONLY: PDAF_diag_stddev
-  USE PDAFomi, &               ! PDAF-OMI diagnostics
-       ONLY: PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
+  USE PDAF, &                  ! PDAF and PDAF-OMI diagnostic routines
+       ONLY: PDAF_diag_stddev, PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
 
   IMPLICIT NONE
 
@@ -58,19 +56,19 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** local variables ***
   INTEGER :: i, j, member, domain     ! Counters
   INTEGER :: pdaf_status              ! status flag
-  LOGICAL, SAVE :: firstio = .TRUE.   ! File output is peformed for first time?
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
   REAL :: ens_stddev                  ! ensemble STDDEV = estimated RMS error
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
-  INTEGER :: nobs                     ! Number of observations in diagnostics
-  REAL, POINTER :: obsRMSD(:)         ! Array of observation RMS deviations
-  REAL, POINTER :: obsstats(:,:)      ! Array of observation statistics
   ! Variables for parallelization - global fields
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
   REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
+  ! Variables for observation diagnostics
+  INTEGER :: nobs                     ! Number of active observation types
+  REAL, POINTER :: obsRMSD(:)         ! Pointer to array of observation RMSDs
+  REAL, POINTER :: obsstats(:,:)      ! Pointer to array  of observation statistics
 
 
 ! **********************
@@ -84,9 +82,13 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   IF (mype_filter == 0) THEN
      IF (firsttime) THEN
-        WRITE (*, '(8x, a)') 'Analyze forecasted state ensemble'
+        WRITE (*, '(8x, a)') 'Analyze initial state ensemble'
      ELSE
-        WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
+        IF (step<0) THEN
+           WRITE (*, '(8x, a)') 'Analyze and write forecasted state ensemble'
+        ELSE
+           WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
+        END IF
      END IF
   END IF
 
@@ -99,12 +101,12 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   CALL PDAF_diag_stddev(dim_p, dim_ens, state_p, ens_p, &
         ens_stddev, 1, COMM_filter, pdaf_status)
 
- 
-! **************************************
-! *** Compute observation statistics ***
-! **************************************
 
-!TEMPLATE: We include two statistics here, which are optional and partly redundant
+! ***************************************
+! *** Compute observation diagnostics ***
+! ***************************************
+
+!TEMPLATE: We include two statistics here, which are optional
   IF (do_omi_obsstats) THEN
      ! Compute RMS deviation between observation and observed ensemble mean
      CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1/(mype_filter+1))
@@ -121,10 +123,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ! Output RMS errors given by sampled covar matrix
   IF (mype_filter == 0) THEN
      WRITE (*, '(12x, a, es12.4)') &
-       'sampled ensemble standard deviation: ', ens_stddev
+          'ensemble standard deviation (estimated RMS error): ', ens_stddev
   END IF
 
- 
+
 ! *******************
 ! *** File output ***
 ! *******************

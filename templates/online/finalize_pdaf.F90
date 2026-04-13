@@ -2,7 +2,7 @@
 !!
 !! This routine calls routines for output on timing
 !! and memory use, to deallocate PDAF-internal arrays,
-!! and to finalize MPI of model is not parallelized.
+!! and to finalize MPI if the model is not parallelized.
 !!
 !! __Revision history:__
 !! * 2004-11 - Lars Nerger - Initial code
@@ -10,10 +10,10 @@
 !!
 SUBROUTINE finalize_pdaf()
 
-  USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF_print_info, PDAF_deallocate
+  USE PDAF, &                     ! PDAF
+       ONLY: PDAF_print_info, PDAF_finalize
   USE mod_parallel_pdaf, &        ! Parallelization
-       ONLY: mype_world, finalize_parallel
+       ONLY: mype_world
 
   IMPLICIT NONE
 
@@ -25,9 +25,6 @@ SUBROUTINE finalize_pdaf()
   IF (mype_world==0) CALL PDAF_print_info(3)
 
 ! *** Deallocate PDAF arrays ***
-  CALL PDAF_deallocate()
-
-! *** Finalize parallel MPI region - if not done by model ***
-!  CALL finalize_parallel()
+  CALL PDAF_finalize()
 
 END SUBROUTINE finalize_pdaf

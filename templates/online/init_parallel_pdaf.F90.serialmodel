@@ -1,7 +1,7 @@
 !>  Interface routine to call initialization of parallelization for PDAF
 !!
-!! This variant is for online coupling with a model that is parallelized,
-!! Thus MPI_init was called before calling this routine.
+!! This variant is for online coupling with a model that is not parallelized,
+!! Thus there are no MPI operations in the model code.
 !!
 !! This routine stores the parallelization information provided by the
 !! model. Afterwards, it calls the parallelization routine for PDAF, which 
@@ -21,12 +21,13 @@
 !! * 2026-02 - Lars Nerger - Revision for using PDAF3_init_forecast 
 !! * Later revisions - see repository log
 !!
-SUBROUTINE init_parallel_pdaf(screen, model_comm, model_comm_rank, model_comm_size)
+SUBROUTINE init_parallel_pdaf(screen)
 
   USE PDAF, &                     ! Command line parser
        ONLY: PDAF_parse, PDAF3_init_parallel
   USE mod_parallel_pdaf, &        ! PDAF parallelization variables
-       ONLY: n_modeltasks, task_id, mype_world, npes_world, &
+       ONLY: n_modeltasks, task_id, &
+       mype_world, npes_world, MPI_COMM_WORLD, &
        mype_model, npes_model, COMM_model, &
        mype_filter, npes_filter, COMM_filter
 
@@ -35,14 +36,10 @@ SUBROUTINE init_parallel_pdaf(screen, model_comm, model_comm_rank, model_comm_si
 ! *** Arguments ***
   INTEGER, INTENT(in)    :: screen           !< Whether screen information is shown
 
-  ! Model parallelization variables (one can keep these generic names)
-  INTEGER, INTENT(inout) :: model_comm       !< Model MPI communicator for model tasks
-  INTEGER, INTENT(inout) :: model_comm_size  !< Number of processes in model_comm
-  INTEGER, INTENT(inout) :: model_comm_rank  !< Process rank in model_comm
-
 ! *** Local variables ***
   INTEGER :: dim_ens                         ! Ensemble size
   CHARACTER(len=32) :: handle                ! Handle for command line parser
+  INTEGER :: MPIerr                          ! MPI error flag
 
 
   ! Parse ensemble size
@@ -52,21 +49,14 @@ SUBROUTINE init_parallel_pdaf(screen, model_comm, model_comm_rank, model_comm_si
   ! Set number of model tasks for fully-parallel mode
   n_modeltasks = dim_ens
 
-  ! For a parallelized model, MPI is initialized at this point
-  ! Thus, dtore the parallelization variables provided by the model
-  ! At this point, they describe all processes doing model integrations
-  mype_world = model_comm_rank
-  npes_world  = model_comm_size
-
   ! Initialize ensemble parallelization
   CALL PDAF3_init_parallel(screen, 0, 1, dim_ens, n_modeltasks, &
-     model_comm, model_comm_rank, model_comm_size, &
+     COMM_model, mype_model, npes_model, &
      COMM_filter, mype_filter, npes_filter, &
      task_id)
 
-  ! Initialize parallelization variables for parallel_pdaf_mod
-  COMM_model = model_comm
-  mype_model = model_comm_rank
-  npes_model = model_comm_size
+  ! *** Initialize PE information on COMM_world ***
+  CALL MPI_Comm_size(MPI_COMM_WORLD, npes_world, MPIerr)
+  CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
 
 END SUBROUTINE init_parallel_pdaf

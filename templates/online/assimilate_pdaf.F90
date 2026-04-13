@@ -1,9 +1,14 @@
-!>  Routine to call PDAF for analysis step in fully-parallel mode
+!>  Routine to call PDAF for analysis step
 !!
 !! This routine is called during the model integrations at each time 
-!! step. It calls the filter-specific assimilation routine of PDAF 
-!! (PDAFomi_assimilate_X), which checks whether the forecast phase
-!! is completed. If so, the analysis step is computed inside PDAF.
+!! step. It calls the routine of PDAF (PDAF3_assimilate), which checks
+!! whether the forecast phase is completed. If so, the analysis step
+!! is computed inside PDAF.
+!!
+!! The routine can be used for both the fully parallel and the
+!! flexible parallel implementation variants. The observation
+!! generation should, however, always be executed with a single
+!! ensemble member.
 !!
 !! In this routine, the real names of most of the 
 !! user-supplied routines for PDAF are specified (see below).
@@ -15,9 +20,10 @@
 SUBROUTINE assimilate_pdaf()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_assimilate, PDAF_DA_GENOBS, PDAF3_generate_obs
+       ONLY: PDAF3_assimilate, PDAF3_generate_obs, PDAF_abort, &
+       PDAF_DA_GENOBS
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, abort_parallel
+       ONLY: mype_world
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: filtertype
 
@@ -74,15 +80,15 @@ SUBROUTINE assimilate_pdaf()
   END IF
 
 
-! ************************
-! *** Check error flag ***
-! ************************
+! *************************
+! *** Check status flag ***
+! *************************
 
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in PDAF3_assimilate - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 END SUBROUTINE assimilate_pdaf

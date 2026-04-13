@@ -6,11 +6,11 @@
 !!
 !! This variant is for the flexible parallelization
 !! variant of PDAF using PDAF3_assimilate routines. 
-!! It shows the structure of the required outper loop
+!! It shows the structure of the required outer loop
 !! which enables to integrate an ensemble of model states.
 !! 
 !! In the online implementation with a real model
-!! The outer loop and control structure would be
+!! the outer loop and control structure would be
 !! inserted in the actual model code.
 !!
 !! __Revision history:__
@@ -20,8 +20,7 @@ PROGRAM MAIN
 
   USE mpi                      ! MPI
   USE mod_parallel_pdaf, &     ! Parallelization
-       ONLY: init_parallel, finalize_parallel, &
-       n_modeltasks, mype_world
+       ONLY: n_modeltasks, mype_world
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: time
   USE mod_model, &             ! Module provided by model code
@@ -38,14 +37,11 @@ PROGRAM MAIN
   INTEGER :: status_pdaf ! PDAF status flag      
   REAL :: timenow        ! Current model time
 
-! ! External subroutines 
-  EXTERNAL :: distribute_state_pdaf, &  ! Distribute a state vector to model fields
-       prepoststep_pdaf, &              ! User supplied pre/poststep routine
-       next_observation_pdaf            ! Provide time step of next observation
 
 ! *** Initialize MPI ***
 
   ! If the model itself is parallelized this step is done by the model
+  ! The initialization of ensemble-parallelization is added to this routine
 
   CALL init_parallel() ! initializes MPI
 
@@ -58,15 +54,12 @@ PROGRAM MAIN
      WRITE (*,*) '*                   Run this program with:                           *'
      WRITE (*,*) '*                ./PDAF_online -dim_ens NENS                         *'
      WRITE (*,*) '* with ensemble size NENS (=2 is good for testing, =1 does not work) *'
+     WRITE (*,*) '*           Alternatively run this program with:                     *'
+     WRITE (*,*) '*       mpirun -np NP ./PDAF_online -dim_ens NENS -n_tasks NTSK      *'
+     WRITE (*,*) '* with number of processes NP and number of model tasks NTSK         *'
+     WRITE (*,*) '* (required are NTSK<=NP, NTSK<=NENS)                                *' 
      WRITE (*,*) '**********************************************************************'
   END IF
-
-  
-! *** Initialize MPI communicators for PDAF (model, filter and coupling) ***
-
-  ! This step is always inserted directly after the MPI initialization
-
-  CALL init_parallel_pdaf(0, 1)
 
   
   ! MODEL: Here the model would perform its initialization
@@ -77,13 +70,8 @@ PROGRAM MAIN
   ! This step is always inserted after the model initialization
   ! is complete and just before the time stepping starts
 
-  CALL init_pdaf(nsteps, timenow, doexit)
+  CALL init_pdaf()
 
-
-! *** PDAF: Get state and forecast information (nsteps,time) at initial time ***
-
-!  CALL PDAF_init_forecast(nsteps, timenow, doexit, next_observation_pdaf, &
-!       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
 ! *** Ensemble forecasting and analysis steps ***
 
@@ -134,3 +122,55 @@ PROGRAM MAIN
   CALL finalize_parallel()
 
 END PROGRAM MAIN
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!! The two following subroutines are helpers to initialize
+!! and finalize MPI. With a real parallellized model, 
+!! this functionality would be in the model code.
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+SUBROUTINE init_parallel()
+
+  USE mod_parallel_pdaf, &     ! Parallelization
+       ONLY: MPI_COMM_WORLD, npes_world, mype_world, &
+       COMM_model, npes_model, mype_model
+       
+  IMPLICIT NONE
+
+  INTEGER :: MPIerr
+  
+  CALL MPI_INIT(MPIerr);
+  CALL MPI_Comm_Size(MPI_COMM_WORLD,npes_world,MPIerr)
+  CALL MPI_Comm_Rank(MPI_COMM_WORLD,mype_world,MPIerr)
+
+  ! Initialize model communicator, its size and the process rank
+  ! Here the same as for MPI_COMM_WORLD
+  Comm_model = MPI_COMM_WORLD
+  npes_model = npes_world
+  mype_model = mype_world
+
+  ! Initialize parallelization for PDAF
+  ! This step is always inserted directly after the MPI initialization
+
+  CALL init_parallel_pdaf(1, COMM_model, mype_model, npes_model)
+   
+END SUBROUTINE init_parallel
+!-------------------------------------------------------------------------------
+!> Finalize MPI
+!!
+!! Routine to finalize MPI
+!!
+SUBROUTINE finalize_parallel()
+
+  USE mod_parallel_pdaf, &     ! Parallelization
+       ONLY: MPI_COMM_WORLD
+
+  IMPLICIT NONE
+    
+  INTEGER :: MPIerr
+
+  CALL  MPI_Barrier(MPI_COMM_WORLD,MPIerr)
+  CALL  MPI_Finalize(MPIerr)
+
+END SUBROUTINE finalize_parallel

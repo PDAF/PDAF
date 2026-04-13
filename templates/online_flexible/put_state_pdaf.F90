@@ -18,10 +18,9 @@
 SUBROUTINE put_state_pdaf()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_put_state_local, PDAF3_put_state_global, &
-       PDAF_localfilter
+       ONLY: PDAF3_put_state, PDAF_abort
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, abort_parallel
+       ONLY: mype_world
 
   IMPLICIT NONE
 
@@ -52,19 +51,11 @@ SUBROUTINE put_state_pdaf()
 ! *** Call put_state routine    ***
 ! *********************************
 
-  ! Call put_state routine for global or local filter
-  IF (PDAF_localfilter() == 1) THEN
-     ! Call generic PDAF3 interface routine for domain-localized filters
-     CALL PDAF3_put_state_local(collect_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
-          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
-          prepoststep_pdaf, status_pdaf)
-  ELSE
-     ! Call generic PDAF3 interface routine for global filters
-     CALL PDAF3_put_state_global(collect_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, &
-          prepoststep_pdaf, status_pdaf)
-  END IF
+  ! Call universal PDAF3 interface routine
+  CALL PDAF3_put_state(collect_state_pdaf, &
+       init_dim_obs_pdafomi, obs_op_pdafomi, &
+       init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+       prepoststep_pdaf, status_pdaf)
 
 
 ! ************************
@@ -75,7 +66,7 @@ SUBROUTINE put_state_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in PDAF3_put_state - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 END SUBROUTINE put_state_pdaf

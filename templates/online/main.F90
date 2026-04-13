@@ -5,7 +5,8 @@
 !! their consistency.
 !!
 !! The program shows the setup for the fully-parallel
-!! implementation variant of PDAF.
+!! implementation variant of PDAF with a parallelized
+!! model.
 !! 
 !! In the online implementation with a real model
 !! this driver program is replaced by the actual
@@ -18,8 +19,7 @@ PROGRAM MAIN
 
   USE mpi                      ! MPI
   USE mod_parallel_pdaf, &     ! Parallelization
-       ONLY: init_parallel, finalize_parallel, &
-       n_modeltasks, npes_world, mype_world
+       ONLY: n_modeltasks, npes_world, mype_world
   USE mod_model, &             ! Module provided by model code
        ONLY: step_final        
 
@@ -32,6 +32,7 @@ PROGRAM MAIN
 ! *** Initialize MPI ***
 
   ! If the model itself is parallelized this step is done by the model
+  ! The initialization of ensemble-parallelization is added to this routine
 
   CALL init_parallel() ! initializes MPI
 
@@ -46,13 +47,6 @@ PROGRAM MAIN
      WRITE (*,*) '* with ensemble size NENS (=2 is good for testing, =1 does not work) *'
      WRITE (*,*) '**********************************************************************'
   END IF
-
-  
-! *** Initialize MPI communicators for PDAF (model, filter and coupling) ***
-
-  ! This step is always inserted directly after the MPI initialization
-
-  CALL init_parallel_pdaf(0, 1)
 
   
   ! MODEL: Here the model would perform its initialization
@@ -99,3 +93,55 @@ PROGRAM MAIN
   CALL finalize_parallel()
 
 END PROGRAM MAIN
+
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+!! The two following subroutines are helpers to initialize
+!! and finalize MPI. With a real parallellized model, 
+!! this functionality would be in the model code.
+!+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+SUBROUTINE init_parallel()
+
+  USE mod_parallel_pdaf, &     ! Parallelization
+       ONLY: MPI_COMM_WORLD, npes_world, mype_world, &
+       COMM_model, npes_model, mype_model
+       
+  IMPLICIT NONE
+
+  INTEGER :: MPIerr
+  
+  CALL MPI_INIT(MPIerr);
+  CALL MPI_Comm_Size(MPI_COMM_WORLD,npes_world,MPIerr)
+  CALL MPI_Comm_Rank(MPI_COMM_WORLD,mype_world,MPIerr)
+
+  ! Initialize model communicator, its size and the process rank
+  ! Here the same as for MPI_COMM_WORLD
+  Comm_model = MPI_COMM_WORLD
+  npes_model = npes_world
+  mype_model = mype_world
+
+  ! Initialize parallelization for PDAF
+  ! This step is always inserted directly after the MPI initialization
+
+  CALL init_parallel_pdaf(1, COMM_model, mype_model, npes_model)
+   
+END SUBROUTINE init_parallel
+!-------------------------------------------------------------------------------
+!> Finalize MPI
+!!
+!! Routine to finalize MPI
+!!
+SUBROUTINE finalize_parallel()
+
+  USE mod_parallel_pdaf, &     ! Parallelization
+       ONLY: MPI_COMM_WORLD
+
+  IMPLICIT NONE
+    
+  INTEGER :: MPIerr
+
+  CALL  MPI_Barrier(MPI_COMM_WORLD,MPIerr)
+  CALL  MPI_Finalize(MPIerr)
+
+END SUBROUTINE finalize_parallel

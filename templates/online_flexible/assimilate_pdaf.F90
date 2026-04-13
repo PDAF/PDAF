@@ -1,26 +1,31 @@
-!>  Routine to call PDAF for analysis step in flexible parallelization
+!>  Routine to call PDAF for analysis step
 !!
-!! This routine is used in the case of the flexible ensemble
-!! parallelization variant. It is called at each time step during
-!! the model integrations. It calls the filter-specific assimilation
-!! routine of PDAF (PDAF3_assimilate_X) which check whether the 
-!! forecast needs to be continued (more steps or another ensemble
-!! state). When the forecast phase is complete, the analysis step
+!! This routine is called during the model integrations at each time 
+!! step. It calls the routine of PDAF (PDAF3_assimilate), which checks
+!! whether the forecast phase is completed. If so, the analysis step
 !! is computed inside PDAF.
+!!
+!! The routine can be used for both the fully parallel and the
+!! flexible parallel implementation variants. The observation
+!! generation should, however, always be executed with a single
+!! ensemble member.
 !!
 !! In this routine, the real names of most of the 
 !! user-supplied routines for PDAF are specified (see below).
 !!
 !! __Revision history:__
-!! * 2025-03 - Lars Nerger - Initial code for PDAF3 using PDAF3_assimilate
-!! * Other revisions - see repository log
+!! * 2020-11 - Lars Nerger - Initial code for OMI
+!! * Later revisions - see repository log
 !!
 SUBROUTINE assimilate_pdaf()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_assimilate
+       ONLY: PDAF3_assimilate, PDAF3_generate_obs, PDAF_abort, &
+       PDAF_DA_GENOBS
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, abort_parallel
+       ONLY: mype_world
+  USE mod_assimilation, &         ! Variables for assimilation
+       ONLY: filtertype
 
   IMPLICIT NONE
 
@@ -34,17 +39,19 @@ SUBROUTINE assimilate_pdaf()
 ! The PDAF-internal name of a subroutine can be different from the external name!
 
   ! Interface between model and PDAF, and prepoststep
-  EXTERNAL :: distribute_state_pdaf, &  ! Distribute a state vector to model fields
-       collect_state_pdaf, &            ! Collect a state vector from model fields
-       prepoststep_pdaf, &              ! User supplied pre/poststep routine
-       next_observation_pdaf            ! Provide time step of next observation
+  EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
+       distribute_state_pdaf, &       ! Distribute a state vector to model fields
+       next_observation_pdaf, &       ! Provide time step of next observation
+       prepoststep_pdaf               ! User supplied pre/poststep routine
   ! Localization of state vector
-  EXTERNAL :: init_n_domains_pdaf, &    ! Provide number of local analysis domains
-       init_dim_l_pdaf                  ! Initialize state dimension for local analysis domain
+  EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
+       init_dim_l_pdaf                ! Initialize state dimension for local analysis domain
   ! Interface to PDAF-OMI for local and global filters
-  EXTERNAL :: init_dim_obs_pdafomi, &   ! Get dimension of full obs. vector for PE-local domain
-       obs_op_pdafomi, &                ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi           ! Get dimension of obs. vector for local analysis domain
+  EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
+       obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
+       init_dim_obs_l_pdafomi         ! Get dimension of obs. vector for local analysis domain
+  ! Subroutine used for generating observations
+  EXTERNAL :: get_obs_f_pdaf          ! Get vector of synthetic observations from PDAF
 
 
 ! *********************************
@@ -59,11 +66,18 @@ SUBROUTINE assimilate_pdaf()
 ! +++ arguments for localization. This would avoid to include routines
 ! +++ that are never called for global filters. 
 
-  ! Call universal PDAF3 interface routine
-  CALL PDAF3_assimilate(collect_state_pdaf, distribute_state_pdaf, &
+  IF (filtertype /= PDAF_DA_GENOBS) THEN
+     ! Call universal PDAF3 interface routine
+     CALL PDAF3_assimilate(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           prepoststep_pdaf, next_observation_pdaf, status_pdaf)
+  ELSE
+     ! Observation generation has its own OMI interface routine
+     CALL PDAF3_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, get_obs_f_pdaf, &
+          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
+  END IF
 
 
 ! *************************
@@ -74,7 +88,7 @@ SUBROUTINE assimilate_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in PDAF3_assimilate - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 END SUBROUTINE assimilate_pdaf

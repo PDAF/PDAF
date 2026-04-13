@@ -16,25 +16,25 @@
 !! * 2026-02 - Lars Nerger - Revision for using PDAF3_init_forecast 
 !! * Later revisions - see repository log
 !!
-subroutine init_parallel_pdaf(screen)
+SUBROUTINE init_parallel_pdaf(screen)
 
-  use mpi
-  use PDAF, &                     ! Command line parser
-       only: PDAF3_init_parallel
-  use mod_parallel_pdaf, &        ! PDAF parallelization variables
-       only: n_modeltasks, task_id, mype_world, npes_world, &
+  USE mpi
+  USE PDAF, &                     ! Command line parser
+       ONLY: PDAF3_init_parallel
+  USE mod_parallel_pdaf, &        ! PDAF parallelization variables
+       ONLY: n_modeltasks, task_id, mype_world, npes_world, &
        mype_model, npes_model, COMM_model, mype_filter, npes_filter, COMM_filter
 
-  implicit none
+  IMPLICIT NONE
 
 ! *** Arguments ***
-  integer, intent(in)    :: screen           !< Whether screen information is shown
+  INTEGER, INTENT(in)    :: screen           !< Whether screen information is shown
 
   ! Set number of model tasks for offline mode
   n_modeltasks = 1
 
   ! Initialize ensemble parallelization
-  call PDAF3_init_parallel(screen, 0, 0, 0, n_modeltasks, &
+  CALL PDAF3_init_parallel(screen, 0, 0, 0, n_modeltasks, &
      COMM_model, mype_model, npes_model, &
      COMM_filter, mype_filter, npes_filter, &
      task_id)
@@ -43,4 +43,4 @@ subroutine init_parallel_pdaf(screen)
   mype_world = mype_model
   npes_world = npes_model
 
-end subroutine init_parallel_pdaf
+END SUBROUTINE init_parallel_pdaf
