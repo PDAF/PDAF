@@ -15,9 +15,9 @@
 SUBROUTINE assimilate_pdaf_offline()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_assim_offline
+       ONLY: PDAF3_assim_offline, PDAF_abort
   USE mod_parallel_pdaf, &        ! Parallelization
-       ONLY: mype_world, abort_parallel
+       ONLY: mype_world
 
   IMPLICIT NONE
 
@@ -27,11 +27,10 @@ SUBROUTINE assimilate_pdaf_offline()
 
 ! *** External subroutines ***
 ! Subroutine names are passed over to PDAF in the call to 
-! PDAF3_assim_offline. This allows the user to specify the
-! actual name of a routine. The PDAF-internal name of a
-! subroutine might be different from the external name.
+! PDAF3_assim_offline. This allows the user to specify
+! the actual name of a routine.  
 
-  ! PDAF prepoststep
+  ! Interface between model and PDAF, and prepoststep
   EXTERNAL :: prepoststep_ens_offline ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
@@ -46,7 +45,7 @@ SUBROUTINE assimilate_pdaf_offline()
 ! *** Perform analysis step ***
 ! *****************************
 
-  ! Call universal PDAF3 interface routine
+  ! Call universal PDAF3 assim_offline routine
   CALL PDAF3_assim_offline(init_dim_obs_pdafomi, obs_op_pdafomi, &
        init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
        prepoststep_ens_offline, status_pdaf)
@@ -60,7 +59,7 @@ SUBROUTINE assimilate_pdaf_offline()
      WRITE (*,'(/1x,a6,i3,a47,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' during assimilation with PDAF - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 END SUBROUTINE assimilate_pdaf_offline

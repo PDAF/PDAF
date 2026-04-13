@@ -100,8 +100,8 @@ SUBROUTINE init_parallel_pdaf(screen, model_comm, model_comm_rank, model_comm_si
   LOGICAL :: iniflag                         ! Flag whether MPI is initialized
   INTEGER :: flag                            ! Status flag
   INTEGER, ALLOCATABLE :: local_npes_model(:) ! Array for npes per model task
-  LOGICAL :: filterpe = .true.               !< Whether we are on a process in a COMM_filter
-  INTEGER :: COMM_couple                     !< MPI communicator for coupling filter and model
+  LOGICAL :: filterpe = .true.               ! Whether we are on a process in a COMM_filter
+  INTEGER :: COMM_couple                     ! MPI communicator for coupling filter and model
   CHARACTER(len=32) :: handle                ! Handle for command line parser
 
   ! *** Initialize MPI if not yet initialized ***

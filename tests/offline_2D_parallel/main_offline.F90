@@ -24,10 +24,10 @@
 !!
 !! Parameters can be set in the code, or - preferably -
 !! by command line arguments that are parsed by the 
-!! module PARSER. The format for this is
+!! routine PDAF_parse. The format for this is
 !! EXECUTABLE -HANDLE1 VALUE1 -HANDLE2 VALUE2 ...
 !! The handles are defined in the code before the calls
-!! to the routine PARSE.
+!! to the routine PDAF_parse.
 !!
 !! __Revision history:__
 !! * 2008-07 - Lars Nerger - Initial code
@@ -37,17 +37,16 @@ PROGRAM MAIN_OFFLINE
 
   USE mpi                    ! MPI
   USE mod_parallel_pdaf, &   ! Parallelization
-       ONLY: MPIerr, npes_world, mype_world, &
-       init_parallel, finalize_parallel
+       ONLY: MPIerr, npes_world, mype_world
 
   IMPLICIT NONE
 
 
-! **********************
-! *** Initialize MPI ***
-! **********************
+! *************************************************
+! *** Initialize MPI and communicators for PDAF ***
+! *************************************************
 
-  CALL init_parallel() ! initializes MPI
+  CALL init_parallel_pdaf(0)
 
 
 ! ********************************
@@ -61,19 +60,14 @@ PROGRAM MAIN_OFFLINE
      WRITE (*, '(9x, a)') 'Data assimilation with PDAF'
 
      IF (npes_world > 1) THEN
-        WRITE (*, '(/21x, a, i3, a/)') 'Running on ', npes_world, ' PEs'
+        WRITE (*, '(/21x, a, i3, a/)') 'Running on ', npes_world, ' processes'
      ELSE
-        WRITE (*, '(/21x, a/)') 'Running on 1 PE'
+        WRITE (*, '(/21x, a/)') 'Running on 1 process'
      END IF
      WRITE (*, '(/)')
      
   END IF initscreen
 
-  
-! *** Initialize MPI communicators for PDAF (model and filter) ***
-! *** NOTE: It is always n_modeltasks=1 for offline mode       ***
-
-  CALL init_parallel_pdaf(0, 1)
 
 ! *** Initialize model information ***
 ! *** This should only be information on the model dimension
@@ -114,12 +108,5 @@ PROGRAM MAIN_OFFLINE
 
   ! *** Finalize PDAF - print memory and timing information
   CALL finalize_pdaf(0)
-
-  IF (mype_world == 0) &
-       WRITE (*, '(/1x, a)') 'PDAF offline mode: END'
-
-
-! *** Terminate MPI
-  CALL finalize_parallel()
 
 END PROGRAM MAIN_OFFLINE

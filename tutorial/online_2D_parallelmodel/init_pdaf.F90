@@ -102,8 +102,8 @@ SUBROUTINE init_pdaf()
   delt_obs = 2       ! This should be set according to the data availability
 
 ! *** Which observation type to assimilate
-  assim_A = .true.
-  assim_B = .false.
+  assim_A = .TRUE.
+  assim_B = .FALSE.
 
 ! *** specifications for observations ***
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A
@@ -123,12 +123,12 @@ SUBROUTINE init_pdaf()
 ! *** Parse command line options   ***
 ! *** This is optional, but useful ***
 
-  call init_pdaf_parse()
+  CALL init_pdaf_parse()
 
 ! *** Initial Screen output ***
 ! *** This is optional      ***
 
-  IF (mype_world == 0) call init_pdaf_info()
+  IF (mype_world == 0) CALL init_pdaf_info()
 
 
 ! *****************************************************

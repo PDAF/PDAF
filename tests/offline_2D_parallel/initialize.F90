@@ -17,9 +17,9 @@ SUBROUTINE initialize()
        ONLY: nx, ny, nx_p, ndim, dim_state, dim_state_p, local_dims, &
        type_coords, coords_origin, coords_scale
   USE mod_parallel_pdaf, &  ! Parallelization variables
-       ONLY: mype_world, mype_model, npes_model, task_id, abort_parallel
-  USE parser, &             ! Parser function
-       ONLY: parse
+       ONLY: mype_world, mype_model, npes_model, task_id
+  USE PDAF,   &             ! PDAF
+       ONLY: PDAF_parse, PDAF_abort
 
   IMPLICIT NONE
 
@@ -35,17 +35,17 @@ SUBROUTINE initialize()
 
   ! Parse grid size index
   handle='gridsize'
-  CALL parse(handle, gridsize)
+  CALL PDAF_parse(handle, gridsize)
 
   ! Parse settings for geographic coordinates
   handle = 'type_coords'             ! Type of coordinate system (analogous to OMI)
-  CALL parse(handle, type_coords)
+  CALL PDAF_parse(handle, type_coords)
   handle = 'coords_origin1'           ! Geographic coordinate offset - longitude
-  CALL parse(handle, coords_origin(1))
+  CALL PDAF_parse(handle, coords_origin(1))
   handle = 'coords_origin2'           ! Geographic coordinate offset - latitude
-  CALL parse(handle, coords_origin(2))
+  CALL PDAF_parse(handle, coords_origin(2))
   handle = 'coords_scale'             ! Scaling factor of coordinates from grid point indices
-  CALL parse(handle, coords_scale)
+  CALL PDAF_parse(handle, coords_scale)
 
 ! *** Model specifications ***
 
@@ -89,7 +89,7 @@ SUBROUTINE initialize()
      nx_p = nx / npes_model
   ELSE
      WRITE (*,*) 'ERROR: Invalid number of processes'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 ! *** Determine dimensions of local process domains ***

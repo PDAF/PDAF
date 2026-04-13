@@ -36,8 +36,7 @@ MODULES =  	mod_model.o \
 
 # Moduls used for PDAF
 MOD_ASSIM = 	mod_parallel_pdaf.o \
-		mod_assimilation.o \
-		parser_mpi.o
+		mod_assimilation.o
 
 # Model routines used with PDAF
 OBJ_MODEL_PDAF = main_pdaf.o\

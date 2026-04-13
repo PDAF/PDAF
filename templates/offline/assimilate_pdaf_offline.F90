@@ -29,8 +29,6 @@ SUBROUTINE assimilate_pdaf_offline()
 ! Subroutine names are passed over to PDAF in the call to 
 ! PDAF3_assim_offline. This allows the user to specify
 ! the actual name of a routine.  
-! The PDAF-internal name of a subroutine might be different
-! from the external name!
 
   ! Interface between model and PDAF, and prepoststep
   EXTERNAL :: prepoststep_ens_offline ! User supplied pre/poststep routine

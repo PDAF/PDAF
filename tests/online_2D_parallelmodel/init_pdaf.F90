@@ -16,22 +16,19 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE PDAF, &                     ! PDAF interfaces and parameters
-       ONLY: PDAF3_init, PDAF_init_forecast, PDAF_iau_init, PDAF_set_iparam, &
-       PDAF_set_rparam, PDAF_DA_ENKF, PDAF_DA_PF, &
-       PDAFomi_set_domain_limits, PDAFomi_set_obs_diag, PDAFomi_set_domain_limits, &
-       PDAFomi_set_searchtype
+  USE PDAF                        ! PDAF interfaces and parameters
   USE mod_parallel_model, &       ! Parallelization variables for model
-       ONLY: mype_world, abort_parallel
+       ONLY: mype_world
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
        ONLY: n_modeltasks, mype_filter
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
-       dim_ens, type_iau, type_forget, forget, coords_p, &
+       ONLY: dim_state_p, dim_state, screen, filtertype, subtype, dim_ens, &
+       delt_obs, type_iau, steps_iau, &
+       type_forget, forget, coords_p, &
        rank_ana_enkf, locweight, cradius, sradius, &
-       type_trans, type_sqrt, delt_obs, steps_iau, &
-       pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_trans, type_sqrt, &
        observe_ens, type_obs_init, do_omi_obsstats, dim_lag, &
+       pf_res_type, pf_noise_type, pf_noise_amp, &
        omi_search_type, omi_sort_dir
   USE mod_model, &                ! Model variables
        ONLY: nx, ny, nx_p, ndim
@@ -125,12 +122,7 @@ SUBROUTINE init_pdaf()
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
-                    !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
-                    !   (2) use 5th-order polynomial
-                    !   (3) regulated localization of R with mean error variance
-                    !   (4) regulated localization of R with single-point error variance
-  cradius = 0.0     ! Cut-off radius for observation domain in local filters
+  cradius = 0.0     ! Cut-off radius in grid points for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
 
@@ -170,8 +162,8 @@ SUBROUTINE init_pdaf()
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************
 
-  ! Here we specify only the required integer and real parameters
-  ! Other parameters are set using calls to PDAF_set_iparam/PDAF_set_rparam
+  ! *** Here we specify only the required integer and real parameters
+  ! *** Other parameters are set using calls to PDAF_set_iparam/PDAF_set_rparam
   filter_param_i(1) = dim_state_p ! State dimension
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_r(1) = forget      ! Forgetting factor
@@ -204,7 +196,7 @@ SUBROUTINE init_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 

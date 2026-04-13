@@ -6,11 +6,6 @@
 !! variables that are only used, if data assimilation with PDAF
 !! is performed.
 !!
-!! In addition methods to initialize and finalize MPI are provided.
-!! The initialization routine is only for the model itself, the 
-!! more complex initialization of communicators for execution with
-!! PDAF is peformed in init_parallel_pdaf.
-!!
 !! __Revision history:__
 !! * 2004-10 - Lars Nerger - Initial code
 !! * Later revisions - see repository log

@@ -15,9 +15,9 @@ SUBROUTINE initialize()
   USE mod_model, &              ! Model variables
        ONLY: nx, ny, nx_p, ndim, field_p, total_steps
   USE mod_parallel_model, &     ! Model parallelzation variables
-       ONLY: mype_world, mype_model, npes_model, abort_parallel
-  USE parser, &                 ! Parser function
-       ONLY: parse
+       ONLY: mype_world, mype_2Dmodel, npes_2Dmodel
+  USE PDAF, &                 ! Parser function
+       ONLY: PDAF_parse, PDAF_abort
 
   IMPLICIT NONE
 
@@ -34,7 +34,7 @@ SUBROUTINE initialize()
 
   ! Parse grid size index
   handle='gridsize'
-  CALL parse(handle, gridsize)
+  CALL PDAF_parse(handle, gridsize)
 
 ! *** Model specifications ***
 
@@ -67,18 +67,18 @@ SUBROUTINE initialize()
   END IF
 
 ! *** Initialize size of local nx for parallelization ***
-  IF (npes_model==1 .OR. npes_model==2 .OR. npes_model==3 .OR. npes_model==4 .OR. &
-       npes_model==6 .OR. npes_model==9 .OR. npes_model==12 .OR. npes_model==18) THEN
+  IF (npes_2Dmodel==1 .OR. npes_2Dmodel==2 .OR. npes_2Dmodel==3 .OR. npes_2Dmodel==4 .OR. &
+       npes_2Dmodel==6 .OR. npes_2Dmodel==9 .OR. npes_2Dmodel==12 .OR. npes_2Dmodel==18) THEN
      ! Split x-direction in chunks of equal size
-     nx_p = nx / npes_model
+     nx_p = nx / npes_2Dmodel
   ELSE
      WRITE (*,*) 'ERROR: Invalid number of processes'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
   IF (mype_world == 0) THEN
      WRITE (*, '(/2x, a, i3, a)') &
-          '-- Domain decomposition over', npes_model, ' PEs'
+          '-- Domain decomposition over', npes_2Dmodel, ' PEs'
      WRITE (*, '(2x,a,i3,a,i3)') &
           '-- local domain sizes (nx_p x ny): ', nx_p, ' x', ny
   END IF
@@ -111,10 +111,15 @@ SUBROUTINE initialize()
   ! Initialize local part of model field
   DO j = 1, nx_p
      DO i = 1, ny
-        field_p(i,j) = field(i, nx_p*mype_model + j)
+        field_p(i,j) = field(i, nx_p*mype_2Dmodel + j)
      END DO
   END DO
 
   DEALLOCATE(field)
+
+#ifdef USE_PDAF
+  ! Initialize PDAF
+  CALL init_pdaf()
+#endif
 
 END SUBROUTINE initialize

@@ -16,12 +16,9 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE PDAF, &                     ! PDAF interfaces and parameters
-       ONLY: PDAF3_init, PDAF_set_iparam, PDAF_set_rparam, &
-       PDAF_set_offline_mode, PDAF_DA_ENKF, PDAF_DA_PF, &
-       PDAFomi_set_domain_limits, PDAFomi_set_obs_diag, PDAFomi_set_searchtype
+  USE PDAF                        ! PDAF
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, mype_filter, abort_parallel
+       ONLY: mype_world, mype_filter
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: nx_p, nx, ny, ndim, dim_state_p, local_dims, coords_p, &
        screen, filtertype, subtype, dim_ens, &
@@ -105,11 +102,6 @@ SUBROUTINE init_pdaf()
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
-                    !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
-                    !   (2) use 5th-order polynomial
-                    !   (3) regulated localization of R with mean error variance
-                    !   (4) regulated localization of R with single-point error variance
   cradius = 0.0     ! Cut-off radius in grid points for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
@@ -143,15 +135,16 @@ SUBROUTINE init_pdaf()
 ! ***                                               ***
 ! *** Here, the full selection of filters is        ***
 ! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
+! *** reduces this to selected filters.             ***
 ! ***                                               ***
-! *** For all filters, first the arrays of integer  ***
-! *** and real number parameters are initialized.   ***
-! *** Subsequently, PDAF_init is called.            ***
+! *** For all filters, PDAF_init is first called    ***
+! *** specifying only the required parameters.      ***
+! *** Further settings are done afterwards using    ***
+! *** calls to PDAF_set_iparam & PDAF_set_rparam.   ***
 ! *****************************************************
 
-  ! Here we specify only the required integer and real parameters
-  ! Other parameters are set using calls to PDAF_set_iparam/PDAF_set_rparam
+  ! *** Here we specify only the required integer and real parameters
+  ! *** Other parameters are set using calls to PDAF_set_iparam/PDAF_set_rparam
   filter_param_i(1) = dim_state_p ! State dimension
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_r(1) = forget      ! Forgetting factor
@@ -180,7 +173,7 @@ SUBROUTINE init_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 

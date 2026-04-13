@@ -72,6 +72,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER :: lastlag                   ! Number initialized lags in sens_pointer
   INTEGER :: status                    ! Status flag for PDAF_get_smootherens
   CHARACTER(len=2) :: lagstr           ! String for smoother lag
+  CHARACTER(len=120) :: filename       ! File name
   ! Variables for parallelization - global fields
   INTEGER :: off_p   ! Row-offset according to domain decomposition
   REAL, ALLOCATABLE :: ens(:,:)        ! global ensemble
@@ -356,7 +357,8 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
            WRITE (ensstr, '(i2.2)') member
 
-           OPEN(11, file = 'sens_'//TRIM(ensstr)//'_lag'//TRIM(lagstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
+           filename = 'sens_'//TRIM(ensstr)//'_lag'//TRIM(lagstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt'
+           OPEN(11, file = filename, status = 'replace')
  
            DO i = 1, ny
               WRITE (11, *) field(i, :)
@@ -406,7 +408,8 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
            field(1:ny, j) = state(1 + (j-1)*ny : j*ny)
         END DO
 
-        OPEN(11, file = 'sstate_lag'//TRIM(lagstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
+        filename = 'sstate_lag'//TRIM(lagstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt'
+        OPEN(11, file = filename, status = 'replace')
  
         DO i = 1, ny
            WRITE (11, *) field(i, :)
