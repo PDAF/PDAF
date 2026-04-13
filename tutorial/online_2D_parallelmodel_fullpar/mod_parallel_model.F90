@@ -17,13 +17,13 @@ MODULE mod_parallel_model
   SAVE 
 
   ! Basic variables for model state integrations
-  INTEGER :: COMM_model  !< MPI communicator for model tasks
-  INTEGER :: npes_model  !< Number of PEs in COMM_model
-  INTEGER :: mype_model  !< PE rank in COMM_model
-  INTEGER :: npes_world  !< Number of PEs in MPI_COMM_WORLD
-  INTEGER :: mype_world  !< PE rank in MPI_COMM_WORLD
-  INTEGER :: MPIerr      !< Error flag for MPI
-  LOGICAL :: modelpe     !< Indicate whether the PE runs the model
+  INTEGER :: COMM_2dmodel  !< MPI communicator for model tasks
+  INTEGER :: npes_2dmodel  !< Number of processes in COMM_model
+  INTEGER :: mype_2dmodel  !< Process rank in COMM_model
+  INTEGER :: npes_world    !< Number of processes in MPI_COMM_WORLD
+  INTEGER :: mype_world    !< Process rank in MPI_COMM_WORLD
+  INTEGER :: MPIerr        !< Error flag for MPI
+  LOGICAL :: modelproc     !< Indicate whether the process runs the model
   
 CONTAINS
 !-------------------------------------------------------------------------------
@@ -48,9 +48,12 @@ CONTAINS
 
     ! Initialize model communicator, its size and the process rank
     ! Here the same as for MPI_COMM_WORLD
-    Comm_model = MPI_COMM_WORLD
-    npes_model = npes_world
-    mype_model = mype_world
+    Comm_2dmodel = MPI_COMM_WORLD
+    npes_2dmodel = npes_world
+    mype_2dmodel = mype_world
+
+  ! Revise parallelization for ensemble assimilation
+    CALL init_parallel_pdaf(1)
    
   END SUBROUTINE init_parallel
 !-------------------------------------------------------------------------------

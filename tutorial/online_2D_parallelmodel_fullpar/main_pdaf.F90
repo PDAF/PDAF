@@ -19,7 +19,7 @@
 PROGRAM MAIN
 
   USE mod_parallel_model, &      ! Model parallelization variables
-       ONLY: mype_world, init_parallel, finalize_parallel, modelpe
+       ONLY: mype_world, init_parallel, finalize_parallel, modelproc
 
   IMPLICIT NONE
 
@@ -31,9 +31,6 @@ PROGRAM MAIN
   ! Initialize parallelization
   CALL init_parallel()
 
-  ! Revise parallelization for ensemble assimilation
-  CALL init_parallel_pdaf(0, 1)
-
 ! *** Initial Screen output ***
   IF (mype_world==0) THEN
      WRITE (*, '(/17x, a/)') '+++++ PDAF tutorial - online mode +++++'
@@ -42,13 +39,10 @@ PROGRAM MAIN
   END IF
 
   ! *** Distinguish between model processes and filter processes
-  modelpes: IF (modelpe) THEN
+  modelpes: IF (modelproc) THEN
 
      ! Initialize model
      CALL initialize()
-
-     ! Initialize PDAF
-     CALL init_pdaf()
 
      ! Perform integration
      CALL integrate_pdaf()

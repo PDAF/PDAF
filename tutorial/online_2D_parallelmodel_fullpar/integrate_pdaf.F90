@@ -18,7 +18,7 @@ SUBROUTINE integrate_pdaf()
   USE mod_model, &            ! Model variables
        ONLY: nx, ny, nx_p, field_p, total_steps
   USE mod_parallel_model, &   ! Model parallelization variables
-       ONLY: mype_model, MPIErr, COMM_model
+       ONLY: mype_2dmodel, MPIErr, COMM_2dmodel
   USE mod_parallel_pdaf, &    ! PDAF parallelization variables
        ONLY: task_id
 
@@ -35,11 +35,11 @@ SUBROUTINE integrate_pdaf()
 ! *** STEPPING ***
 ! ****************
 
-  IF (task_id==1 .AND. mype_model==0) WRITE (*, '(1x, a)') 'MODEL: START INTEGRATION'
+  IF (task_id==1 .AND. mype_2dmodel==0) WRITE (*, '(1x, a)') 'MODEL: START INTEGRATION'
 
   stepping: DO step = 1 , total_steps
 
-     IF (task_id==1 .AND. mype_model==0) WRITE (*,*) 'step', step
+     IF (task_id==1 .AND. mype_2dmodel==0) WRITE (*,*) 'step', step
 
 ! *** Time step: Shift field vertically ***
      DO j = 1, nx_p
@@ -60,10 +60,10 @@ SUBROUTINE integrate_pdaf()
      ALLOCATE(field(ny, nx))
 
      CALL MPI_Gather(field_p, nx_p*ny, MPI_DOUBLE_PRECISION, field, nx_p*ny, &
-          MPI_DOUBLE_PRECISION, 0, COMM_model, MPIerr)
+          MPI_DOUBLE_PRECISION, 0, COMM_2dmodel, MPIerr)
 
      ! Write file from process 0
-     IF (task_id==1 .AND. mype_model==0) THEN
+     IF (task_id==1 .AND. mype_2dmodel==0) THEN
         WRITE (stepstr, '(i2.2)') step
         OPEN(11, file = 'true_step'//TRIM(stepstr)//'.txt', status = 'replace')
 
