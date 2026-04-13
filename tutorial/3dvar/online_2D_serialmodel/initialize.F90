@@ -50,5 +50,10 @@ SUBROUTINE initialize()
   END DO
 
   CLOSE(11)
+
+#ifdef USE_PDAF
+  ! Initialize PDAF
+  CALL init_pdaf()
+#endif
   
 END SUBROUTINE initialize

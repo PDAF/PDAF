@@ -19,9 +19,9 @@ SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_model, &       ! Parallelization variables for model
-       ONLY: mype_world, mype_model, npes_model, abort_parallel
+       ONLY: mype_world, mype_2dmodel, npes_2dmodel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
-       ONLY: n_modeltasks, task_id, filterpe
+       ONLY: n_modeltasks, task_id
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, dim_ens, &
        type_forget, forget, &
@@ -156,23 +156,23 @@ SUBROUTINE init_pdaf()
   IF (filtertype==200 .AND. subtype>0 .AND. (type_opt==12 .OR. type_opt==13)) THEN
 
      ! split control vector
-     ALLOCATE (dims_cv_ens_p(npes_model))
-     ALLOCATE (off_cv_ens_p(npes_model))
+     ALLOCATE (dims_cv_ens_p(npes_2dmodel))
+     ALLOCATE (off_cv_ens_p(npes_2dmodel))
 
-     dims_cv_ens_p = FLOOR(REAL(dim_cvec_ens) / REAL(npes_model))
-     DO i = 1, (dim_cvec_ens - npes_model * dims_cv_ens_p(1))
+     dims_cv_ens_p = FLOOR(REAL(dim_cvec_ens) / REAL(npes_2dmodel))
+     DO i = 1, (dim_cvec_ens - npes_2dmodel * dims_cv_ens_p(1))
         dims_cv_ens_p(i) = dims_cv_ens_p(i) + 1
      END DO
 
      off_cv_ens_p(1) = 0
-     DO i = 2, npes_model
+     DO i = 2, npes_2dmodel
         off_cv_ens_p(i) = off_cv_ens_p(i-1) + dims_cv_ens_p(i-1)
      END DO
 
      IF (mype_world == 0) THEN
         WRITE (*, '(/2x, a, i3, a)') &
-             '-- Decomposition of control vector over', npes_model, ' PEs'
-        DO i = 1, npes_model
+             '-- Decomposition of control vector over', npes_2dmodel, ' PEs'
+        DO i = 1, npes_2dmodel
            WRITE (*, '(5x, a, i3, a, i3, a, 2i5)') &
                 'task ', task_id, ' PE(model) ', i-1, &
                 ' dims_cv_ens_p, off_cv_ens_p: ', dims_cv_ens_p(i), off_cv_ens_p(i)
@@ -180,7 +180,7 @@ SUBROUTINE init_pdaf()
      END IF
 
      ! Set dimension of control vector for my PE-local domain
-     dim_cvec_ens_p = dims_cv_ens_p(mype_model + 1)
+     dim_cvec_ens_p = dims_cv_ens_p(mype_2dmodel + 1)
   ELSE
      dim_cvec_ens_p = dim_cvec_ens
   END IF
@@ -191,23 +191,23 @@ SUBROUTINE init_pdaf()
        .AND. (type_opt==12 .OR. type_opt==13)) THEN
 
      ! split control vector
-     ALLOCATE (dims_cv_p(npes_model))
-     ALLOCATE (off_cv_p(npes_model))
+     ALLOCATE (dims_cv_p(npes_2dmodel))
+     ALLOCATE (off_cv_p(npes_2dmodel))
 
-     dims_cv_p = FLOOR(REAL(dim_cvec) / REAL(npes_model))
-     DO i = 1, (dim_cvec - npes_model * dims_cv_p(1))
+     dims_cv_p = FLOOR(REAL(dim_cvec) / REAL(npes_2dmodel))
+     DO i = 1, (dim_cvec - npes_2dmodel * dims_cv_p(1))
         dims_cv_p(i) = dims_cv_p(i) + 1
      END DO
 
      off_cv_p(1) = 0
-     DO i = 2, npes_model
+     DO i = 2, npes_2dmodel
         off_cv_p(i) = off_cv_p(i-1) + dims_cv_p(i-1)
      END DO
 
      IF (mype_world == 0) THEN
         WRITE (*, '(/2x, a, i3, a)') &
-             '-- Decomposition of control vector over', npes_model, ' PEs'
-        DO i = 1, npes_model
+             '-- Decomposition of control vector over', npes_2dmodel, ' PEs'
+        DO i = 1, npes_2dmodel
            WRITE (*, '(5x, a, i3, a, i3, a, 2i5)') &
                 'task ', task_id, ' PE(model) ', i-1, &
                 ' dims_cv_p, off_cv_p: ', dims_cv_p(i), off_cv_p(i)
@@ -215,7 +215,7 @@ SUBROUTINE init_pdaf()
      END IF
 
      ! Set dimension of control vector for my PE-local domain
-     dim_cvec_p = dims_cv_p(mype_model + 1)
+     dim_cvec_p = dims_cv_p(mype_2dmodel + 1)
   ELSE
      dim_cvec_p = dim_cvec
   END IF
@@ -267,7 +267,7 @@ SUBROUTINE init_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 

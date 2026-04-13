@@ -1,29 +1,28 @@
-  PARSER: dim_ens=         9
+  PDAF_PARSE: dim_ens=         9
 
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     7              4      1      2      3       F
-    11              6      1      2      5       F
-    13              7      1      2      6       F
-     6              4      0      1      3       F
-    10              6      0      1      5       F
-    12              7      0      1      6       F
-     9              5      1      2      4       F
-     5              3      1      2      2       F
-     3              2      1      2      1       F
-    15              8      1      2      7       F
-     8              5      0      1      4       F
-     4              3      0      1      2       F
-    14              8      0      1      7       F
-     2              2      0      1      1       F
-    17              9      1      2      8       F
-     1       1      1      1      2      0       T
-    16              9      0      1      8       F
-     0       0      1      0      1      0       T
+PDAF  *** Initialize MPI communicators for assimilation with PDAF ***
+PDAF    Pconf  Process configuration:
+PDAF    Pconf   world    assim       model           couple        assimPE
+PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
+PDAF    Pconf  ------------------------------------------------------------
+PDAF    Pconf     11                6        1       2        5       F
+PDAF    Pconf     13                7        1       2        6       F
+PDAF    Pconf      7                4        1       2        3       F
+PDAF    Pconf      6                4        0       1        3       F
+PDAF    Pconf      5                3        1       2        2       F
+PDAF    Pconf      3                2        1       2        1       F
+PDAF    Pconf     12                7        0       1        6       F
+PDAF    Pconf     10                6        0       1        5       F
+PDAF    Pconf      4                3        0       1        2       F
+PDAF    Pconf     15                8        1       2        7       F
+PDAF    Pconf      2                2        0       1        1       F
+PDAF    Pconf      8                5        0       1        4       F
+PDAF    Pconf      9                5        1       2        4       F
+PDAF    Pconf     14                8        0       1        7       F
+PDAF    Pconf      0        0       1        0       1        0       T
+PDAF    Pconf     17                9        1       2        8       F
+PDAF    Pconf      1        1       1        1       2        0       T
+PDAF    Pconf     16                9        0       1        8       F
 
 
 
@@ -40,9 +39,9 @@
   -- local domain sizes (nx_p x ny):  18 x 18
 
  INITIALIZE PDAF - ONLINE MODE
-  PARSER: screen=         1
-  PARSER: dim_ens=         9
-  PARSER: filtertype=         6
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         9
+  PDAF_PARSE: filtertype=         6
                      Filter: ESTKF
       -- Standard mode
               ensemble size:    9
@@ -52,7 +51,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -102,7 +101,7 @@ PDAF          param_int(6) type_trans=  0
 PDAF            --> Deterministic ensemble transformation (default)
 PDAF          param_int(7) type_sqrt=  0
 PDAF            --> symmetric square root (default)
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -400,16 +399,16 @@ PDAF                 PDAF-OMI:        0.004 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.008 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          Ensemble forecast:                   0.041 s
-PDAF            MPI communication in PDAF:           0.041 s
+PDAF          Initialize PDAF:                     0.006 s
+PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Ensemble forecast:                   0.004 s
+PDAF            MPI communication in PDAF:           0.004 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.014 s
-PDAF            PDAF-internal operations:            0.108 s
+PDAF          ESTKF analysis:                      0.007 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.008 s
+PDAF              init_dim_obs_pdafomi:              0.005 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.096 s
+PDAF          prepoststep_pdaf:                    0.094 s

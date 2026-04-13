@@ -6,6 +6,11 @@
 !! variables that are only used, if data assimilation with PDAF
 !! is performed.
 !!
+!! In addition methods to initialize and finalize MPI are provided.
+!! The initialization routine is only for the model itself, the 
+!! more complex initialization of communicators for execution with
+!! PDAF is peformed in init_parallel_pdaf.
+!!
 !! __Revision history:__
 !! * 2004-10 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
@@ -17,18 +22,27 @@ MODULE mod_parallel_pdaf
   IMPLICIT NONE
   SAVE 
 
+  ! Parallelization variables that can be used in the user code
+
+  ! Variables for each model task
+  INTEGER :: COMM_model=0               !< MPI communicator for model tasks
+  INTEGER :: mype_model=0               !< PE rank in COMM_model
+  INTEGER :: npes_model=1               !< Number of PEs in COMM_model
+
+  ! Variables describing all processes involved in model integrations
+  INTEGER :: mype_world=0               !< Process rank in MPI_COMM_WORLD
+  INTEGER :: npes_world=1               !< Number of processes in MPI_COMM_WORLD
+
+  ! Variables describing the processes involved in the analysis step
+  integer :: COMM_filter=0              !< MPI communicator processes in analysis step
+  integer :: mype_filter=1              !< Process rank in COMM_da
+  integer :: npes_filter=0              !< Number of processes in COMM_da
+
   ! Additional variables for use with PDAF
-  INTEGER :: n_modeltasks = 1         !< Number of parallel model tasks
-  INTEGER :: n_filterpes  = 1         !< Number of PEs for filter analysis
-  INTEGER :: COMM_filter              !< MPI communicator for filter PEs
-  INTEGER :: npes_filter              !< Number of processes in COMM_filter
-  INTEGER :: mype_filter              !< Process rank in COMM_filter
-  INTEGER :: COMM_couple              !< MPI communicator for coupling filter and model
-  LOGICAL :: modelpe                  !< Whether we are on a PE in a COMM_model
-  LOGICAL :: filterpe                 !< Whether we are on a PE in a COMM_filter
-  INTEGER :: task_id                  !< Index of my model task (1,...,n_modeltasks)
-  INTEGER :: MPIerr                   !< Error flag for MPI
-  INTEGER :: MPIstatus(MPI_STATUS_SIZE)       !< Status array for MPI
-  INTEGER, ALLOCATABLE :: local_npes_model(:) !< Number of processes per ensemble
+  INTEGER :: n_modeltasks=1             !< Number of parallel model tasks
+  INTEGER :: task_id=1                  !< Index of my model task (1,...,n_modeltasks)
+
+  INTEGER :: MPIerr                     !< Error flag for MPI
+  INTEGER :: MPIstatus(MPI_STATUS_SIZE) !< Status array for MPI
 
 END MODULE mod_parallel_pdaf

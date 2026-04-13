@@ -13,9 +13,9 @@ SUBROUTINE assimilate_pdaf()
 
   USE PDAF, &   ! Interface definitions to PDAF core routines
        ONLY: PDAF3_assimilate_3dvar, PDAF3_assimilate_en3dvar, &
-       PDAF3_assimilate_3dvar_all
+       PDAF3_assimilate_3dvar_all, PDAF_abort
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, abort_parallel
+       ONLY: mype_world
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: subtype
 
@@ -89,7 +89,7 @@ SUBROUTINE assimilate_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in PDAF3_assimilate - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 END SUBROUTINE assimilate_pdaf

@@ -15,9 +15,9 @@
 SUBROUTINE assimilate_pdaf_offline()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAF3_assim_offline
+       ONLY: PDAF3_assim_offline, PDAF_abort
   USE mod_parallel_pdaf, &        ! Parallelization
-       ONLY: mype_world, abort_parallel
+       ONLY: mype_world
 
   IMPLICIT NONE
 
@@ -61,7 +61,7 @@ SUBROUTINE assimilate_pdaf_offline()
      WRITE (*,'(/1x,a6,i3,a47,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' during assimilation with PDAF - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 END SUBROUTINE assimilate_pdaf_offline

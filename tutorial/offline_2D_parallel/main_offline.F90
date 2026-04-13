@@ -37,7 +37,7 @@ PROGRAM MAIN_OFFLINE
 
   USE mpi                    ! MPI
   USE mod_parallel_pdaf, &   ! Parallelization
-       ONLY: MPIerr, npes_world, mype_world, init_parallel
+       ONLY: MPIerr, npes_world, mype_world
 
   IMPLICIT NONE
 

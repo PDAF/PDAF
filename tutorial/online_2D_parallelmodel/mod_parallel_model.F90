@@ -50,6 +50,11 @@ CONTAINS
     Comm_2Dmodel = MPI_COMM_WORLD
     npes_2Dmodel = npes_world
     mype_2Dmodel = mype_world
+
+#ifdef USE_PDAF
+  ! Revise parallelization for ensemble assimilation
+    CALL init_parallel_pdaf(1, Comm_2Dmodel, mype_2Dmodel, npes_2Dmodel)
+#endif
    
   END SUBROUTINE init_parallel
 !-------------------------------------------------------------------------------

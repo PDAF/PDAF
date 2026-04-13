@@ -37,7 +37,7 @@ PROGRAM MAIN_OFFLINE
 
   USE mpi                    ! MPI
   USE mod_parallel_pdaf, &   ! Parallelization
-       ONLY: MPIerr, npes_world, mype_world, init_parallel
+       ONLY: MPIerr, npes_world, mype_world
 
   IMPLICIT NONE
 
@@ -46,6 +46,7 @@ PROGRAM MAIN_OFFLINE
 ! *** Initialize MPI and communicators for PDAF ***
 ! *************************************************
 
+  ! For the serial offline case, this call could be omitted
   CALL init_parallel_pdaf(0)
 
 
@@ -60,9 +61,9 @@ PROGRAM MAIN_OFFLINE
      WRITE (*, '(9x, a)') 'Data assimilation with PDAF'
 
      IF (npes_world > 1) THEN
-        WRITE (*, '(/21x, a, i3, a/)') 'Running on ', npes_world, ' processes'
+        WRITE (*, '(/10x, a, i3, a/)') 'Running on ', npes_world, ' processes'
      ELSE
-        WRITE (*, '(/21x, a/)') 'Running on 1 process'
+        WRITE (*, '(/12x, a/)') 'Running on 1 process'
      END IF
      WRITE (*, '(/)')
      

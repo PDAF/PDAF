@@ -30,7 +30,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   USE mod_model, &           ! Model variables
        ONLY: nx, ny, nx_p
   USE mod_parallel_model, &  ! Model parallelization variables
-       ONLY: mype_model
+       ONLY: mype_2dmodel
   USE mod_parallel_pdaf, &   ! PDAF parallelization variables
        ONLY: mype_filter
   USE mod_assimilation, &    ! Assimilation variables
@@ -94,7 +94,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
      ! Initialize process-local part of ensemble
      DO j = 1, nx_p
-        Vmat_p(1 + (j-1)*ny : j*ny, member) = field(1:ny, nx_p*mype_model + j)
+        Vmat_p(1 + (j-1)*ny : j*ny, member) = field(1:ny, nx_p*mype_2dmodel + j)
      END DO
 
      CLOSE(11)

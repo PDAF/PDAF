@@ -30,7 +30,7 @@ PROGRAM MAIN
 
 #ifdef USE_PDAF
   ! Add parallelization for ensemble integration
-  CALL init_parallel_pdaf(0, 1)
+  CALL init_parallel_pdaf(1)
 #endif
 
   ! *** Initial Screen output ***
@@ -42,11 +42,6 @@ PROGRAM MAIN
 
   ! *** Initialize model ***
   CALL initialize()  
-
-#ifdef USE_PDAF
-  ! Initialize PDAF
-  CALL init_pdaf()
-#endif
 
 
 ! *****************************

@@ -31,11 +31,6 @@ PROGRAM MAIN
   ! Initialize parallelization
   CALL init_parallel()
 
-#ifdef USE_PDAF
-  ! Revise parallelization for ensemble assimilation
-  CALL init_parallel_pdaf(0, 1)
-#endif
-
 ! *** Initial Screen output ***
   IF (mype_world==0) THEN
      WRITE (*, '(/17x, a/)') '+++++ PDAF tutorial - online mode +++++'
@@ -45,11 +40,6 @@ PROGRAM MAIN
 
   ! Initialize model
   CALL initialize()
-
-#ifdef USE_PDAF
-  ! Initialize PDAF
-  CALL init_pdaf()
-#endif
 
 
 ! *****************************

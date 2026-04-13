@@ -7,27 +7,17 @@
 
 
 
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
-
-
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
                       MODEL: 2D Offline Example for Tutorial
                         Grid size:  36 x   18
      Global model state dimension:    648
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: dim_ens=         1
-  PARSER: filtertype=       200
-  PARSER: subtype=         0
-  PARSER: type_opt=         2
-  PARSER: dim_cvec=         9
+  PDAF_PARSE: dim_ens=         1
+  PDAF_PARSE: filtertype=       200
+  PDAF_PARSE: subtype=         0
+  PDAF_PARSE: type_opt=         2
+  PDAF_PARSE: dim_cvec=         9
                      Assimilation using 3D-Var
       -- Incremental 3D-Var with parameterized covariance matrix
 
@@ -35,7 +25,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -129,14 +119,13 @@ INITIAL VALUES:
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
-PDAF     --- update duration:     0.000 s
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- update duration:     0.001 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to modes Vmat_p:   3.2465E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.001 s
+PDAF     --- duration of poststep:     0.000 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -155,10 +144,10 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          3DVAR analysis:                      0.000 s
-PDAF            PDAF-internal operations:            0.000 s
+PDAF          3DVAR analysis:                      0.001 s
+PDAF            PDAF-internal operations:       101532.634 s
 PDAF            OMI-internal routines:               0.000 s
-PDAF            Solver:                              0.000 s
+PDAF            Solver:                              0.001 s
 PDAF            cvt_pdaf:                            0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 
@@ -166,6 +155,5 @@ PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF          Prepoststep (5):                     0.001 s
-
- PDAF offline mode: END
+PDAF          Prepoststep (5):                     0.000 s
+PDAF  MPI_finalize called by PDAF

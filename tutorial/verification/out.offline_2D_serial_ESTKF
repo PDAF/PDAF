@@ -3,18 +3,8 @@
 
          Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on 1 process
 
-
-
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
 
 
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
@@ -23,8 +13,8 @@
      Global model state dimension:    648
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: screen=         1
-  PARSER: filtertype=         6
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: filtertype=         6
                      Filter: ESTKF
       -- Standard mode
               ensemble size:    9
@@ -34,7 +24,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -86,7 +76,7 @@ PDAF          param_int(6) type_trans=  0
 PDAF            --> Deterministic ensemble transformation (default)
 PDAF          param_int(7) type_sqrt=  0
 PDAF            --> symmetric square root (default)
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -137,11 +127,10 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.003 s
 PDAF          ESTKF analysis:                      0.001 s
-PDAF            PDAF-internal operations:            0.005 s
+PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.000 s
+PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.005 s
-
- PDAF offline mode: END
+PDAF          prepoststep_pdaf:                    0.004 s
+PDAF  MPI_finalize called by PDAF

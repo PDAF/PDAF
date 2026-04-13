@@ -15,7 +15,7 @@ SUBROUTINE initialize()
   USE mod_model, &              ! Model variables
        ONLY: nx, ny, nx_p, field_p, total_steps
   USE mod_parallel_model, &     ! Model parallelzation variables
-       ONLY: mype_world, mype_model, npes_model, abort_parallel
+       ONLY: mype_world, mype_2dmodel, npes_2dmodel, abort_parallel
 
   IMPLICIT NONE
 
@@ -41,10 +41,10 @@ SUBROUTINE initialize()
   END IF
 
 ! *** Initialize size of local nx for parallelization ***
-  IF (npes_model==1 .OR. npes_model==2 .OR. npes_model==3 .OR. npes_model==4 .OR. &
-       npes_model==6 .OR. npes_model==9 .OR. npes_model==12 .OR. npes_model==18) THEN
+  IF (npes_2dmodel==1 .OR. npes_2dmodel==2 .OR. npes_2dmodel==3 .OR. npes_2dmodel==4 .OR. &
+       npes_2dmodel==6 .OR. npes_2dmodel==9 .OR. npes_2dmodel==12 .OR. npes_2dmodel==18) THEN
      ! Split x-direction in chunks of equal size
-     nx_p = nx / npes_model
+     nx_p = nx / npes_2dmodel
   ELSE
      WRITE (*,*) 'ERROR: Invalid number of processes'
      CALL abort_parallel()
@@ -52,7 +52,7 @@ SUBROUTINE initialize()
 
   IF (mype_world == 0) THEN
      WRITE (*, '(/2x, a, i3, a)') &
-          '-- Domain decomposition over', npes_model, ' PEs'
+          '-- Domain decomposition over', npes_2dmodel, ' PEs'
      WRITE (*, '(2x,a,i3,a,i3)') &
           '-- local domain sizes (nx_p x ny): ', nx_p, ' x', ny
   END IF
@@ -79,10 +79,15 @@ SUBROUTINE initialize()
   ! Initialize local part of model field
   DO j = 1, nx_p
      DO i = 1, ny
-        field_p(i,j) = field(i, nx_p*mype_model + j)
+        field_p(i,j) = field(i, nx_p*mype_2dmodel + j)
      END DO
   END DO
 
   DEALLOCATE(field)
+
+#ifdef USE_PDAF
+  ! Initialize PDAF
+  CALL init_pdaf()
+#endif
 
 END SUBROUTINE initialize

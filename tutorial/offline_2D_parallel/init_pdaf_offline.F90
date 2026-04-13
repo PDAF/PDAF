@@ -18,7 +18,7 @@ SUBROUTINE init_pdaf()
 
   USE PDAF                        ! PDAF interface definitions
   USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_world, abort_parallel
+       ONLY: mype_world
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        type_forget, forget, &
@@ -148,7 +148,7 @@ SUBROUTINE init_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
-     CALL abort_parallel()
+     CALL PDAF_abort(1)
   END IF
 
 END SUBROUTINE init_pdaf
