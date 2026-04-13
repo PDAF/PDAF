@@ -3,18 +3,8 @@
 
          Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on 1 process
 
-
-
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
 
 
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
@@ -27,12 +17,12 @@
      task   1 PE(model)   0 dim_local(state):       648
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: screen=         1
-  PARSER: dim_ens=         8
-  PARSER: filtertype=         2
-  PARSER: subtype=         0
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+00
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         8
+  PDAF_PARSE: filtertype=         2
+  PDAF_PARSE: subtype=         0
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+00
                      Filter: EnKF
               ensemble size:    8
       Assimilation interval:    0
@@ -42,7 +32,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -94,7 +84,7 @@ PDAF              --> EnKF with analysis for large observation dimension
 PDAF          param_int(4) rank_ana_enkf=  0
 PDAF            ---> analysis with direct inversion
 PDAF          Use fixed forgetting factor: 0.80
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -143,11 +133,11 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          EnKF analysis:                       0.001 s
+PDAF          EnKF analysis:                       0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF          prepoststep_pdaf:                    0.004 s
 
@@ -155,9 +145,9 @@ PDAF          prepoststep_pdaf:                    0.004 s
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                     Initialize PDAF (1):      0.002 s
-PDAF                       EnKF analysis (3):      0.001 s
+PDAF                       EnKF analysis (3):      0.000 s
 PDAF                        get mean state (9):      0.000 s
-PDAF                  prepare observations (6):      0.001 s
+PDAF                  prepare observations (6):      0.000 s
 PDAF                        compute HPH+R (10):      0.000 s
 PDAF                                 HXpert (30):      0.000 s
 PDAF                                    HPH (32):      0.000 s
@@ -169,5 +159,4 @@ PDAF                 solve for representers (33):      0.000 s
 PDAF                         HX*representer (34):      0.000 s
 PDAF              ensemble transformation (14):      0.000 s
 PDAF                         Prepoststep (5):      0.004 s
-
- PDAF offline mode: END
+PDAF  MPI_finalize called by PDAF

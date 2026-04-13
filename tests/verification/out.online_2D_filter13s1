@@ -1,15 +1,14 @@
-  PARSER: dim_ens=         4
+  PDAF_PARSE: dim_ens=         4
 
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1              2      0      1      1       F
-     2              3      0      1      2       F
-     3              4      0      1      3       F
+PDAF  *** Initialize MPI communicators for assimilation with PDAF ***
+PDAF    Pconf  Process configuration:
+PDAF    Pconf   world    assim       model           couple        assimPE
+PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
+PDAF    Pconf  ------------------------------------------------------------
+PDAF    Pconf      0        0       1        0       1        0       T
+PDAF    Pconf      2                3        0       1        2       F
+PDAF    Pconf      1                2        0       1        1       F
+PDAF    Pconf      3                4        0       1        3       F
 
 
 
@@ -26,20 +25,20 @@
   -- local domain sizes (nx_p x ny):  36 x 18
 
  INITIALIZE PDAF - ONLINE MODE
-  PARSER: delt_obs=         9
-  PARSER: screen=         1
-  PARSER: dim_ens=         4
-  PARSER: filtertype=        13
-  PARSER: subtype=         1
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+00
-  PARSER: locweight=         2
+  PDAF_PARSE: delt_obs=         9
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         4
+  PDAF_PARSE: filtertype=        13
+  PDAF_PARSE: subtype=         1
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+00
+  PDAF_PARSE: locweight=         2
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -89,7 +88,7 @@ PDAF          ensemble size:     4
 PDAF          filter sub-type=   1
 PDAF              --> 2-step local least squares EAKF cf. Anderson (2003)
 PDAF          Use fixed forgetting factor: 0.80
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -189,17 +188,17 @@ PDAF                 PDAF-OMI:        0.003 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
+PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.003 s
-PDAF            MPI communication in PDAF:           0.003 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ENSRF analysis:                        0.003 s
+PDAF          ENSRF analysis:                        0.002 s
 PDAF            PDAF-internal operations:             0.000 s
 PDAF            OMI-internal routines:                0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:               0.001 s
 PDAF              obs_op_pdafomi:                     0.000 s
-PDAF              localize_covar_serial_pdafomi:      0.002 s
-PDAF          prepoststep_pdaf:                     0.008 s
+PDAF              localize_covar_serial_pdafomi:      0.001 s
+PDAF          prepoststep_pdaf:                     0.009 s

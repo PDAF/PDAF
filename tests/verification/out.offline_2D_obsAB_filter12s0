@@ -3,18 +3,8 @@
 
          Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on 1 process
 
-
-
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
 
 
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
@@ -27,14 +17,14 @@
      task   1 PE(model)   0 dim_local(state):       648
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: assim_B=T
-  PARSER: screen=         1
-  PARSER: dim_ens=         8
-  PARSER: filtertype=        12
-  PARSER: subtype=         0
-  PARSER: forget=  1.0000E+00
-  PARSER: cradius=  5.0000E+00
-  PARSER: pf_noise_amp=  8.0000E-01
+  PDAF_PARSE: assim_B=T
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         8
+  PDAF_PARSE: filtertype=        12
+  PDAF_PARSE: subtype=         0
+  PDAF_PARSE: forget=  1.0000E+00
+  PDAF_PARSE: cradius=  5.0000E+00
+  PDAF_PARSE: pf_noise_amp=  8.0000E-01
                      Filter: PF with resampling
       -- Standard mode
               ensemble size:    8
@@ -47,7 +37,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -98,7 +88,7 @@ PDAF          param_int(5) type_forget=  0
 PDAF            --> prior inflation, forgetting factor: 1.00
 PDAF          param_int(7) type_winf=  0
 PDAF            --> no inflation of particle weights relating to N_eff (default)
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -173,5 +163,4 @@ PDAF                 get resampling indices (21):      0.000 s
 PDAF                      resample ensemble (22):      0.000 s
 PDAF                       perturb ensemble (23):      0.000 s
 PDAF                         Prepoststep (5):      0.004 s
-
- PDAF offline mode: END
+PDAF  MPI_finalize called by PDAF

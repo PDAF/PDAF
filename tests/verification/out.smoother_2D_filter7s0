@@ -1,15 +1,14 @@
-  PARSER: dim_ens=         4
+  PDAF_PARSE: dim_ens=         4
 
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1              2      0      1      1       F
-     2              3      0      1      2       F
-     3              4      0      1      3       F
+PDAF  *** Initialize MPI communicators for assimilation with PDAF ***
+PDAF    Pconf  Process configuration:
+PDAF    Pconf   world    assim       model           couple        assimPE
+PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
+PDAF    Pconf  ------------------------------------------------------------
+PDAF    Pconf      0        0       1        0       1        0       T
+PDAF    Pconf      2                3        0       1        2       F
+PDAF    Pconf      1                2        0       1        1       F
+PDAF    Pconf      3                4        0       1        3       F
 
 
 
@@ -26,15 +25,15 @@
   -- local domain sizes (nx_p x ny):  36 x 18
 
  INITIALIZE PDAF - ONLINE MODE
-  PARSER: delt_obs=         2
-  PARSER: screen=         1
-  PARSER: dim_ens=         4
-  PARSER: filtertype=         7
-  PARSER: subtype=         0
-  PARSER: dim_lag=        10
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+00
-  PARSER: locweight=         2
+  PDAF_PARSE: delt_obs=         2
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         4
+  PDAF_PARSE: filtertype=         7
+  PDAF_PARSE: subtype=         0
+  PDAF_PARSE: dim_lag=        10
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+00
+  PDAF_PARSE: locweight=         2
                      Filter: LESTKF
       -- Standard mode
               ensemble size:    4
@@ -46,7 +45,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -99,7 +98,7 @@ PDAF          param_int(6) type_trans=  0
 PDAF            --> Transform ensemble with deterministic Omega (default)
 PDAF          param_int(7) type_sqrt=  0
 PDAF            --> symmetric square root (default)
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -131,6 +130,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -139,8 +140,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -152,6 +154,7 @@ PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -176,6 +179,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -184,8 +189,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -193,11 +199,11 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     Perform smoothing up to lag        1
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -222,6 +228,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -230,8 +238,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -239,11 +248,11 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     Perform smoothing up to lag        2
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -268,6 +277,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -276,8 +287,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -285,11 +297,11 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     Perform smoothing up to lag        3
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -314,6 +326,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -322,8 +336,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -331,11 +346,11 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     Perform smoothing up to lag        4
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -360,6 +375,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -368,8 +385,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -377,11 +395,11 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     Perform smoothing up to lag        5
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -406,6 +424,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -414,8 +434,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -428,6 +449,7 @@ PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -452,6 +474,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -460,8 +484,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -469,11 +494,11 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     Perform smoothing up to lag        7
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -498,6 +523,8 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -506,8 +533,9 @@ PDAF     --- Compute deterministic Omega
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization for obs. type ID   1
 PDAFomi        --- isotropic localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- localization cut-off radius   5.000E+00
+PDAFomi        --- support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
@@ -515,11 +543,11 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     Perform smoothing up to lag        8
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -542,17 +570,17 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.017 s
-PDAF            MPI communication in PDAF:           0.016 s
+PDAF          Ensemble forecast:                   0.001 s
+PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.018 s
-PDAF            PDAF-internal operations:            0.048 s
-PDAF            OMI-internal routines:               0.001 s
+PDAF          LESTKF analysis:                     0.020 s
+PDAF            PDAF-internal operations:            0.005 s
+PDAF            OMI-internal routines:               0.004 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.002 s
-PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.002 s
-PDAF          prepoststep_pdaf:                    0.043 s
+PDAF              init_dim_obs_pdafomi:              0.005 s
+PDAF              obs_op_pdafomi:                    0.001 s
+PDAF              init_dim_obs_l_pdafomi:            0.001 s
+PDAF          prepoststep_pdaf:                    0.053 s

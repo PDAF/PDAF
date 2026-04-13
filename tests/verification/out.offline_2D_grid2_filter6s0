@@ -3,21 +3,11 @@
 
          Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on 1 process
 
 
 
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
-
-
-  PARSER: gridsize=         3
+  PDAF_PARSE: gridsize=         3
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
                       2D Offline Test case for verification
                         Grid size:  2048 x    512
@@ -28,12 +18,12 @@
      task   1 PE(model)   0 dim_local(state):   1048576
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: screen=         1
-  PARSER: dim_ens=         8
-  PARSER: filtertype=         6
-  PARSER: subtype=         0
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+02
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         8
+  PDAF_PARSE: filtertype=         6
+  PDAF_PARSE: subtype=         0
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+02
                      Filter: ESTKF
       -- Standard mode
               ensemble size:    8
@@ -44,7 +34,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -143,32 +133,31 @@ PDAF                 PDAF-OMI:      1.395 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     2.605 s
-PDAF            init_ens_pdaf:                       2.605 s
-PDAF          ESTKF analysis:                      0.346 s
-PDAF            PDAF-internal operations:            0.020 s
+PDAF          Initialize PDAF:                     2.969 s
+PDAF            init_ens_pdaf:                       2.969 s
+PDAF          ESTKF analysis:                      0.388 s
+PDAF            PDAF-internal operations:            0.019 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.328 s
+PDAF              init_dim_obs_pdafomi:              0.370 s
 PDAF              obs_op_pdafomi:                    0.002 s
-PDAF          prepoststep_pdaf:                    4.331 s
+PDAF          prepoststep_pdaf:                    4.556 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      2.605 s
-PDAF                      ESTKF analysis (3):      0.346 s
-PDAF                        get mean state (9):      0.006 s
-PDAF                  prepare observations (6):      0.330 s
+PDAF                     Initialize PDAF (1):      2.969 s
+PDAF                      ESTKF analysis (3):      0.388 s
+PDAF                        get mean state (9):      0.004 s
+PDAF                  prepare observations (6):      0.372 s
 PDAF                        init residual (10):      0.000 s
 PDAF                         compute Ainv (11):      0.000 s
-PDAF              get state weight vector (12):      0.000 s
+PDAF              get state weight vector (12):      0.002 s
 PDAF             prepare ensemble weights (20):      0.000 s
 PDAF                             SQRT(Ainv) (32):      0.000 s
 PDAF                             init Omega (33):      0.000 s
 PDAF                     compute C^T OmegaT (34):      0.000 s
 PDAF                       complete weights (35):      0.000 s
-PDAF                   transform ensemble (21):      0.014 s
-PDAF                         Prepoststep (5):      4.331 s
-
- PDAF offline mode: END
+PDAF                   transform ensemble (21):      0.013 s
+PDAF                         Prepoststep (5):      4.556 s
+PDAF  MPI_finalize called by PDAF

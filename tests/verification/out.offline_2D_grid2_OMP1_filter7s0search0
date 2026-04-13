@@ -3,21 +3,11 @@
 
          Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on 1 process
 
 
 
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
-
-
-  PARSER: gridsize=         3
+  PDAF_PARSE: gridsize=         3
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
                       2D Offline Test case for verification
                         Grid size:  2048 x    512
@@ -28,13 +18,13 @@
      task   1 PE(model)   0 dim_local(state):   1048576
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: omi_search_type=         0
-  PARSER: screen=         1
-  PARSER: dim_ens=         8
-  PARSER: filtertype=         7
-  PARSER: subtype=         0
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+02
+  PDAF_PARSE: omi_search_type=         0
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         8
+  PDAF_PARSE: filtertype=         7
+  PDAF_PARSE: subtype=         0
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+02
                      Filter: LESTKF
       -- Standard mode
               ensemble size:    8
@@ -45,7 +35,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -119,8 +109,8 @@ PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use limited full observations
 PDAFomi        --- global observation dimension   11424
 PDAFomi        --- process-local min/max full obs. dimensions  11424   11424
-PDAFomi     --- Search type for local observations:
-PDAFomi        --- 0: search function of PDAF 3.0
+PDAFomi     --- Search type for local observations:   0
+PDAFomi        --- original search function of PDAF 3.0
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Local ESTKF analysis
 PDAF     --- local analysis domains:  1048576
@@ -164,47 +154,46 @@ PDAF                 PDAF-OMI:      1.830 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     2.657 s
-PDAF            init_ens_pdaf:                       2.657 s
-PDAF          LESTKF analysis:                   195.857 s
-PDAF            PDAF-internal operations:           75.566 s
-PDAF            OMI-internal routines:              56.144 s
+PDAF          Initialize PDAF:                     2.629 s
+PDAF            init_ens_pdaf:                       2.629 s
+PDAF          LESTKF analysis:                   195.196 s
+PDAF            PDAF-internal operations:           74.633 s
+PDAF            OMI-internal routines:              56.123 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.081 s
+PDAF            init_dim_l_pdaf:                     0.099 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.333 s
+PDAF              init_dim_obs_pdafomi:              0.330 s
 PDAF              obs_op_pdafomi:                    0.001 s
-PDAF              init_dim_obs_l_pdafomi:           62.174 s
-PDAF          prepoststep_pdaf:                    4.265 s
+PDAF              init_dim_obs_l_pdafomi:           62.415 s
+PDAF          prepoststep_pdaf:                    4.106 s
 
 
 PDAF                       PDAF Timing information
 PDAF        ----------------------------------------------------
-PDAF                     Initialize PDAF (1):      2.657 s
-PDAF                     LESTKF analysis (3):    195.857 s
-PDAF                  prepare observations (6):      0.334 s
-PDAF                      init_dim_obs_pdaf (43):      0.333 s
+PDAF                     Initialize PDAF (1):      2.629 s
+PDAF                     LESTKF analysis (3):    195.196 s
+PDAF                  prepare observations (6):      0.331 s
+PDAF                      init_dim_obs_pdaf (43):      0.330 s
 PDAF                            obs_op_pdaf (44):      0.001 s
 PDAF                          init_obs_pdaf (50):      0.000 s
-PDAF                 compute ensemble mean (9):      0.006 s
-PDAF                   global preparations (7):      0.000 s
+PDAF                 compute ensemble mean (9):      0.005 s
+PDAF                   global preparations (7):      0.001 s
 PDAF                             init Omega (33):      0.000 s
-PDAF                   local analysis loop (8):    195.520 s
-PDAF                        global to local (10):      0.122 s
-PDAF                  localize observations (11):     79.705 s
-PDAF                      init_dim_obs_l_pdaf (38):     62.174 s
-PDAF                             g2l_obs_pdaf (46):     14.032 s
-PDAF                               init_obs_l (47):      3.233 s
-PDAF                         local analysis (12):    114.958 s
-PDAF                             compute Ainv (16):    103.696 s
-PDAF                            init innovation (20):      1.742 s
-PDAF                             prodRinvA_pdaf (48):     38.879 s
-PDAF                              complete Ainv (21):     62.901 s
-PDAF                 compute ensemble weights (17):     10.643 s
-PDAF                    get state weight vector (22):      9.928 s
-PDAF                  complete transform matrix (23):      0.535 s
-PDAF                       transform ensemble (18):      0.230 s
-PDAF                        local to global (14):      0.114 s
-PDAF                         Prepoststep (5):      4.265 s
-
- PDAF offline mode: END
+PDAF                   local analysis loop (8):    194.862 s
+PDAF                        global to local (10):      0.105 s
+PDAF                  localize observations (11):     80.018 s
+PDAF                      init_dim_obs_l_pdaf (38):     62.415 s
+PDAF                             g2l_obs_pdaf (46):     14.132 s
+PDAF                               init_obs_l (47):      3.166 s
+PDAF                         local analysis (12):    114.024 s
+PDAF                             compute Ainv (16):    103.246 s
+PDAF                            init innovation (20):      1.756 s
+PDAF                             prodRinvA_pdaf (48):     38.825 s
+PDAF                              complete Ainv (21):     62.502 s
+PDAF                 compute ensemble weights (17):     10.221 s
+PDAF                    get state weight vector (22):      9.568 s
+PDAF                  complete transform matrix (23):      0.477 s
+PDAF                       transform ensemble (18):      0.200 s
+PDAF                        local to global (14):      0.104 s
+PDAF                         Prepoststep (5):      4.106 s
+PDAF  MPI_finalize called by PDAF

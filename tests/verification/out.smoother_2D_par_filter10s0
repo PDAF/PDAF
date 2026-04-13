@@ -1,19 +1,18 @@
-  PARSER: dim_ens=         4
+  PDAF_PARSE: dim_ens=         4
 
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     7              4      1      2      3       F
-     6              4      0      1      3       F
-     5              3      1      2      2       F
-     3              2      1      2      1       F
-     4              3      0      1      2       F
-     2              2      0      1      1       F
-     1       1      1      1      2      0       T
-     0       0      1      0      1      0       T
+PDAF  *** Initialize MPI communicators for assimilation with PDAF ***
+PDAF    Pconf  Process configuration:
+PDAF    Pconf   world    assim       model           couple        assimPE
+PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
+PDAF    Pconf  ------------------------------------------------------------
+PDAF    Pconf      0        0       1        0       1        0       T
+PDAF    Pconf      6                4        0       1        3       F
+PDAF    Pconf      1        1       1        1       2        0       T
+PDAF    Pconf      4                3        0       1        2       F
+PDAF    Pconf      5                3        1       2        2       F
+PDAF    Pconf      2                2        0       1        1       F
+PDAF    Pconf      3                2        1       2        1       F
+PDAF    Pconf      7                4        1       2        3       F
 
 
 
@@ -30,15 +29,15 @@
   -- local domain sizes (nx_p x ny):  18 x 18
 
  INITIALIZE PDAF - ONLINE MODE
-  PARSER: delt_obs=         2
-  PARSER: screen=         1
-  PARSER: dim_ens=         4
-  PARSER: filtertype=        10
-  PARSER: subtype=         0
-  PARSER: dim_lag=        10
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+00
-  PARSER: locweight=         2
+  PDAF_PARSE: delt_obs=         2
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         4
+  PDAF_PARSE: filtertype=        10
+  PDAF_PARSE: subtype=         0
+  PDAF_PARSE: dim_lag=        10
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+00
+  PDAF_PARSE: locweight=         2
                      Filter: LNETF
       -- Standard mode
               ensemble size:    4
@@ -50,7 +49,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                 Version 3.0beta                    +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -103,7 +102,7 @@ PDAF          param_int(6) type_trans=  0
 PDAF            --> Transform ensemble including product with random matrix (default)
 PDAF          param_int(7) type_winf=  0
 PDAF            --> no inflation of particle weights relating to N_eff (default)
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -137,28 +136,29 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF       2   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAF     --- Use OpenMP parallelization with     4 threads
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
-PDAF     --- use blocking with size   200
-PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
-PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             1.1
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.3
@@ -187,27 +187,17 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF       4   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAFomi     --- Assume Gaussian observation errors
-PDAFomi     --- Domain localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
-PDAFomi        --- Use distance-dependent weight for observation errors
-PDAF     Set localization weights
-PDAF     --- Initialize weights by 5th-order polynomial
-PDAF     --- Support radius   5.0000E+00
-PDAF     Compute transform matrix for smoother without inflation
-PDAF     Perform smoothing up to lag        1
-PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             1.6
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.4
@@ -236,26 +226,33 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF       6   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
+PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        2
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- use blocking with size   200
+PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             1.6
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.5
@@ -284,27 +281,31 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF       8   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        3
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             1.1
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.6
@@ -333,27 +334,32 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      10   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
-PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        4
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- use blocking with size   200
+PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             2.4
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.7
@@ -382,26 +388,17 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      12   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAFomi     --- Assume Gaussian observation errors
-PDAFomi     --- Domain localization
-PDAFomi        --- Localization cut-off radius   5.000E+00
-PDAFomi        --- Support radius   5.000E+00
-PDAFomi        --- Use distance-dependent weight for observation errors
-PDAF     Set localization weights
-PDAF     --- Initialize weights by 5th-order polynomial
-PDAF     --- Support radius   5.0000E+00
-PDAF     Compute transform matrix for smoother without inflation
-PDAF     Perform smoothing up to lag        5
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             1.7
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.7
@@ -430,26 +427,32 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      14   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
+PDAF     --- use blocking with size   200
+PDAF     --- use blocking with size   200
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
+PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        6
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             1.5
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.7
@@ -478,26 +481,31 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      16   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- use blocking with size   200
+PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        7
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             1.6
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.6
@@ -526,28 +534,30 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
+PDAFomi     --- Search type for local observations:   2
+PDAFomi        --- optimized search function, single loop
 PDAF Analysis -------------------------------------------------------
 PDAF      18   LNETF analysis using T-matrix
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Assume Gaussian observation errors
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
-PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        8
-PDAF     --- use blocking with size   200
+PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
 PDAF        Maximum local observation dimension:            6
+PDAF        Total avg. local observation dimension:      3.1
 PDAF        Minimal  effective ensemble size:             1.7
 PDAF        Maximal  effective ensemble size:             4.0
 PDAF        Average  effective ensemble size:             3.7
@@ -557,7 +567,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
             RMS error according to sampled variance:   4.7041E-01
         --- write ensemble and state estimate
-        --- write smoother state estimate at lag   8
+        --- write smoother ensemble and state estimate at lag   8
 PDAF Forecast -------------------------------------------------------
      18   No more observations - end assimilation
 
@@ -572,19 +582,19 @@ PDAF                 PDAF-OMI:        0.004 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.011 s
+PDAF          Initialize PDAF:                     0.004 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          Ensemble forecast:                   0.036 s
-PDAF            MPI communication in PDAF:          0.036 s
+PDAF          Ensemble forecast:                   0.003 s
+PDAF            MPI communication in PDAF:          0.003 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LNETF analysis:                      0.282 s
-PDAF            PDAF-internal operations:            0.122 s
-PDAF            OMI-internal routines:               0.005 s
+PDAF          LNETF analysis:                      0.050 s
+PDAF            PDAF-internal operations:            0.006 s
+PDAF            OMI-internal routines:               0.002 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.072 s
-PDAF              obs_op_pdafomi:                    0.262 s
-PDAF              init_dim_obs_l_pdafomi:            0.004 s
-PDAF          prepoststep_pdaf:                    0.108 s
+PDAF              init_dim_obs_pdafomi:              0.006 s
+PDAF              obs_op_pdafomi:                    0.007 s
+PDAF              init_dim_obs_l_pdafomi:            0.001 s
+PDAF          prepoststep_pdaf:                    0.081 s

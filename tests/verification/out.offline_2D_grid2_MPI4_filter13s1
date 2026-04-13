@@ -3,24 +3,11 @@
 
          Data assimilation with PDAF
 
-                     Running on   4 PEs
+                     Running on   4 processes
 
 
 
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     2       2      1      2      3      0       T
-     3       3      1      3      4      0       T
-     1       1      1      1      2      0       T
-
-
-  PARSER: gridsize=         3
+  PDAF_PARSE: gridsize=         3
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
                       2D Offline Test case for verification
                         Grid size:  2048 x    512
@@ -34,18 +21,18 @@
      task   1 PE(model)   3 dim_local(state):    262144
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: screen=         1
-  PARSER: dim_ens=         8
-  PARSER: filtertype=        13
-  PARSER: subtype=         1
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+02
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         8
+  PDAF_PARSE: filtertype=        13
+  PDAF_PARSE: subtype=         1
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+02
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -132,11 +119,11 @@ PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
  PDAF offline mode: EXITED ASSIMILATION
- model PE exited: mype            2
- model PE exited: mype            3
- model PE exited: mype            1
 
+ model PE exited: mype            3
 PDAF                       PDAF Memory overview
+ model PE exited: mype            1
+ model PE exited: mype            2
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      2.000 MiB (persistent)
@@ -147,30 +134,29 @@ PDAF                 PDAF-OMI:      0.805 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     3.450 s
-PDAF            init_ens_pdaf:                       3.450 s
-PDAF          ENSRF analysis:                       54.705 s
-PDAF            PDAF-internal operations:             8.621 s
+PDAF          Initialize PDAF:                     2.823 s
+PDAF            init_ens_pdaf:                       2.823 s
+PDAF          ENSRF analysis:                       54.104 s
+PDAF            PDAF-internal operations:             8.407 s
 PDAF            OMI-internal routines:                0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:               1.438 s
-PDAF              obs_op_pdafomi:                    26.490 s
-PDAF              localize_covar_serial_pdafomi:     44.644 s
-PDAF          prepoststep_pdaf:                     4.469 s
+PDAF              init_dim_obs_pdafomi:               0.450 s
+PDAF              obs_op_pdafomi:                    23.240 s
+PDAF              localize_covar_serial_pdafomi:     45.248 s
+PDAF          prepoststep_pdaf:                     4.322 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      3.450 s
-PDAF                      EnSRF analysis (3):     54.705 s
-PDAF                  prepare observations (6):     27.928 s
+PDAF                     Initialize PDAF (1):      2.823 s
+PDAF                      EnSRF analysis (3):     54.104 s
+PDAF                  prepare observations (6):     23.690 s
 PDAF                 compute ensemble mean (9):      0.001 s
-PDAF              HXpert, var(hx), covars (10):     48.637 s
+PDAF              HXpert, var(hx), covars (10):     49.150 s
 PDAF                 HXpert, HXbar, var(hx) (30):      0.000 s
-PDAF              covariances X(HX), HX(HX) (31):      3.991 s
-PDAF                     Apply localization (45):     44.644 s
-PDAF              transform obs. ensemble (13):      0.170 s
-PDAF              ensemble transformation (14):      4.455 s
-PDAF                         Prepoststep (5):      4.469 s
-
- PDAF offline mode: END
+PDAF              covariances X(HX), HX(HX) (31):      3.900 s
+PDAF                     Apply localization (45):     45.248 s
+PDAF              transform obs. ensemble (13):      0.165 s
+PDAF              ensemble transformation (14):      4.332 s
+PDAF                         Prepoststep (5):      4.322 s
+PDAF  MPI_finalize called by PDAF

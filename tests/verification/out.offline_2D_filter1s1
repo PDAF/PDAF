@@ -3,18 +3,8 @@
 
          Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on 1 process
 
-
-
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
 
 
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
@@ -27,12 +17,12 @@
      task   1 PE(model)   0 dim_local(state):       648
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: screen=         1
-  PARSER: dim_ens=         8
-  PARSER: filtertype=         1
-  PARSER: subtype=         1
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+00
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         8
+  PDAF_PARSE: filtertype=         1
+  PDAF_PARSE: subtype=         1
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+00
                      Filter: SEIK
               ensemble size:    8
       Assimilation interval:    0
@@ -42,7 +32,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -96,7 +86,7 @@ PDAF          param_int(6) type_trans=  0
 PDAF            --> Transform ensemble with deterministic Omega (default)
 PDAF          param_int(7) type_sqrt=  0
 PDAF            --> symmetric square root (default)
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -144,20 +134,20 @@ PDAF                 PDAF-OMI:      0.004 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          SEIK analysis/transform:             0.000 s
-PDAF            PDAF-internal operations:            0.003 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.004 s
+PDAF          prepoststep_pdaf:                    0.003 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.002 s
+PDAF                     Initialize PDAF (1):      0.003 s
 PDAF                       SEIK analysis (3):      0.000 s
 PDAF                        get mean state (9):      0.000 s
 PDAF                  prepare observations (6):      0.000 s
@@ -171,7 +161,6 @@ PDAF                             SQRT(Ainv) (32):      0.000 s
 PDAF                             init Omega (33):      0.000 s
 PDAF                      compute Ct OmegaT (34):      0.000 s
 PDAF                       complete weights (35):      0.000 s
-PDAF                      update ensemble (21):      0.001 s
-PDAF                         Prepoststep (5):      0.004 s
-
- PDAF offline mode: END
+PDAF                      update ensemble (21):      0.000 s
+PDAF                         Prepoststep (5):      0.003 s
+PDAF  MPI_finalize called by PDAF

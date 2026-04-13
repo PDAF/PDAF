@@ -3,18 +3,8 @@
 
          Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on 1 process
 
-
-
-
- Initialize communicators for assimilation with PDAF
-
-                  PE configuration:
-   world   filter     model        couple     filterPE
-   rank     rank   task   rank   task   rank    T/F
-  ----------------------------------------------------------
-     0       0      1      0      1      0       T
 
 
  INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
@@ -27,19 +17,19 @@
      task   1 PE(model)   0 dim_local(state):       648
 
  INITIALIZE PDAF - OFFLINE MODE
-  PARSER: assim_B=T
-  PARSER: screen=         1
-  PARSER: dim_ens=         8
-  PARSER: filtertype=        13
-  PARSER: subtype=         1
-  PARSER: forget=  8.0000E-01
-  PARSER: cradius=  5.0000E+00
+  PDAF_PARSE: assim_B=T
+  PDAF_PARSE: screen=         1
+  PDAF_PARSE: dim_ens=         8
+  PDAF_PARSE: filtertype=        13
+  PDAF_PARSE: subtype=         1
+  PDAF_PARSE: forget=  8.0000E-01
+  PDAF_PARSE: cradius=  5.0000E+00
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.0                      +++
+PDAF    +++                   Version 3.1                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -91,7 +81,7 @@ PDAF          ensemble size:     8
 PDAF          filter sub-type=   1
 PDAF              --> 2-step local least squares EAKF cf. Anderson (2003)
 PDAF          Use fixed forgetting factor: 0.80
-PDAF          param_int(8) observe_ens
+PDAF          param_int(8) observe_ens= F
 PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
@@ -146,7 +136,7 @@ PDAF                 PDAF-OMI:      0.008 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
+PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          ENSRF analysis:                        0.002 s
 PDAF            PDAF-internal operations:             0.000 s
@@ -160,16 +150,15 @@ PDAF          prepoststep_pdaf:                     0.004 s
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF          Initialize PDAF (1):                 0.003 s
-PDAF          EnSRF analysis (3):                  0.002 s
-PDAF            prepare observations (6):            0.001 s
-PDAF            compute ensemble mean (9):           0.000 s
+PDAF                     Initialize PDAF (1):      0.002 s
+PDAF                      EnSRF analysis (3):      0.002 s
+PDAF                  prepare observations (6):      0.001 s
+PDAF                 compute ensemble mean (9):      0.000 s
 PDAF              HXpert, var(hx), covars (10):      0.001 s
-PDAF              HXpert, HXbar, var(hx) (30):         0.000 s
+PDAF                 HXpert, HXbar, var(hx) (30):      0.000 s
 PDAF              covariances X(HX), HX(HX) (31):      0.000 s
-PDAF              Apply localization (45):             0.001 s
-PDAF            transform obs. ensemble (13):        0.000 s
-PDAF            ensemble transformation (14):        0.000 s
-PDAF          Prepoststep (5):                     0.004 s
-
- PDAF offline mode: END
+PDAF                     Apply localization (45):      0.001 s
+PDAF              transform obs. ensemble (13):      0.000 s
+PDAF              ensemble transformation (14):      0.000 s
+PDAF                         Prepoststep (5):      0.004 s
+PDAF  MPI_finalize called by PDAF
