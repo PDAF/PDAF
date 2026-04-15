@@ -114,19 +114,16 @@ CONTAINS
 
     ! fieldA
     sfields(id%fieldA)%name = 'A'
+    sfields(id%fieldA)%dim = nx * ny
 
     ! fieldB
     sfields(id%fieldB)%name = 'B'
+    sfields(id%fieldB)%dim = nx * ny
 
 
 ! **************************************
-! ***   Set dimensions and offsets   ***
+! ***   Set offsets                  ***
 ! **************************************
-
-    ! Set field dimensions
-    DO i = 1, n_fields
-       sfields(i)%dim = nx * ny
-    END DO
 
 ! +++ The following is generic
 

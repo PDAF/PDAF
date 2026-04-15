@@ -27,7 +27,7 @@ SUBROUTINE init_pdaf()
        type_trans, type_sqrt, &
        observe_ens, type_obs_init, do_omi_obsstats
   USE mod_statevector_pdaf, &     ! Variables for statevector
-       ONLY: n_fields, id, sfields, setup_statevector
+       ONLY: setup_statevector
   USE mod_model, &                ! Model variables
        ONLY: nx, ny
   USE obs_A_pdafomi, &            ! Variables for observation type A
@@ -38,7 +38,6 @@ SUBROUTINE init_pdaf()
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: i                 ! Counter
   INTEGER :: filter_param_i(2) ! Integer parameter array for filter
   REAL    :: filter_param_r(1) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
@@ -125,11 +124,6 @@ SUBROUTINE init_pdaf()
 ! *** This is optional, but useful ***
 
   call init_pdaf_parse()
-
-! *** Initial Screen output ***
-! *** This is optional      ***
-
-  IF (mype_world == 0) call init_pdaf_info()
 
 
 ! *****************************************************

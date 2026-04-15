@@ -58,11 +58,11 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 
 ! *** local variables ***
-  INTEGER :: i, j, member             ! Counters
+  INTEGER :: i, j, member, fid        ! Counters
   INTEGER :: istart, iend             ! stard and end index of a field in state vector
   INTEGER :: pdaf_status              ! status flag
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
-  REAL, ALLOCATABLE :: ens_stddev(:) ! estimated RMS errors
+  REAL, ALLOCATABLE :: ens_stddev(:)  ! estimated RMS errors
   REAL, ALLOCATABLE :: field_tmp(:,:) ! global model field for file output
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   CHARACTER(len=2) :: stepstr         ! String for time step
@@ -140,66 +140,42 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      END IF
 
      ! Write analysis ensemble fields
-     DO member = 1, dim_ens
 
-        ! Field
+     DO fid = 1, n_fields
+
+        DO member = 1, dim_ens
+
+           DO j = 1, nx
+              field_tmp(1:ny, j) = ens_p(sfields(fid)%off + 1 + (j-1)*ny : sfields(fid)%off + j*ny, member)
+           END DO
+
+           WRITE (ensstr, '(i2.2)') member
+           OPEN(11, file = 'ens'//TRIM(sfields(fid)%name)//'_'//TRIM(ensstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', &
+                status = 'replace')
+
+           DO i = 1, ny
+              WRITE (11, *) field_tmp(i, :)
+           END DO
+
+           CLOSE(11)
+        END DO
+     END DO
+
+     ! Write analysis state fields
+
+     DO fid = 1, n_fields
         DO j = 1, nx
-           field_tmp(1:ny, j) = ens_p(sfields(id%fieldA)%off + 1 + (j-1)*ny : sfields(id%fieldA)%off + j*ny, member)
+           field_tmp(1:ny, j) = state_p(sfields(fid)%off + 1 + (j-1)*ny : sfields(fid)%off + j*ny)
         END DO
 
-        WRITE (ensstr, '(i2.2)') member
+        OPEN(11, file = 'state'//TRIM(sfields(fid)%name)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
 
-        OPEN(11, file = 'ens_'//TRIM(ensstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
- 
         DO i = 1, ny
            WRITE (11, *) field_tmp(i, :)
         END DO
 
         CLOSE(11)
-
-        ! FieldB
-        DO j = 1, nx
-           field_tmp(1:ny, j) = ens_p(sfields(id%fieldB)%off + 1 + (j-1)*ny : sfields(id%fieldB)%off + j*ny, member)
-        END DO
-
-        WRITE (ensstr, '(i2.2)') member
-
-        OPEN(12, file = 'ensB_'//TRIM(ensstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
- 
-        DO i = 1, ny
-           WRITE (12, *) field_tmp(i, :)
-        END DO
-
-        CLOSE(12)
      END DO
-
-     ! Write analysis state fields
-
-     ! Field
-     DO j = 1, nx
-        field_tmp(1:ny, j) = state_p(sfields(id%fieldA)%off + 1 + (j-1)*ny : sfields(id%fieldA)%off + j*ny)
-     END DO
-
-     OPEN(11, file = 'state_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
- 
-     DO i = 1, ny
-        WRITE (11, *) field_tmp(i, :)
-     END DO
-
-     CLOSE(11)
-
-     ! FieldB
-     DO j = 1, nx
-        field_tmp(1:ny, j) = state_p(sfields(id%fieldB)%off + 1 + (j-1)*ny : sfields(id%fieldB)%off + j*ny)
-     END DO
-
-     OPEN(12, file = 'stateB_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
- 
-     DO i = 1, ny
-        WRITE (12, *) field_tmp(i, :)
-     END DO
-
-     CLOSE(12)
 
      DEALLOCATE(field_tmp)
   END IF

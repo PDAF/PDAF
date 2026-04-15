@@ -56,7 +56,6 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		finalize_pdaf.o \
 		init_pdaf.o \
 		init_pdaf_parse.o \
-		init_pdaf_info.o \
 		assimilate_pdaf.o
 
 # Generic user-supplied routines
@@ -131,7 +130,7 @@ cleanpdaf:
 	cd $(BASEDIR); make clean
 
 cleandata:
-	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt stateB_*txt ensB*.txt
+	rm -f ens*ana.txt ens*for.txt state*ana.txt state*for.txt
 
 cleandataq:
 	@rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt stateB_*txt ensB*.txt
