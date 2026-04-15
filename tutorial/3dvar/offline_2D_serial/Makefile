@@ -53,7 +53,6 @@ OBJ_USER_PDAFOMI = obs_A_pdafomi.o \
 OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		init_pdaf_offline.o \
 		init_pdaf_parse.o \
-		init_pdaf_info.o \
 		assimilate_pdaf_offline.o \
 		finalize_pdaf.o
 

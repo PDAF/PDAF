@@ -141,12 +141,6 @@ SUBROUTINE init_pdaf()
   dim_cvec_ens = dim_ens * mcols_cvec_ens
 
 
-! *** Initial Screen output ***
-! *** This is optional      ***
-
-  IF (mype_world == 0) call init_pdaf_info()
-
-
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
