@@ -38,7 +38,8 @@ MODULES = 	mod_parallel_pdaf.o \
 OBJ_MODEL =	main.o
 
 # Moduls used for PDAF
-MOD_ASSIM = 	mod_assimilation.o
+MOD_ASSIM = 	mod_assimilation.o \
+ 		mod_statevector_pdaf.o
 
 # Routines of observation handling (PDAF-OMI)
 OBJ_USER_PDAFOMI = obs_OBSTYPE_pdafomi_TEMPLATE.o \
@@ -49,7 +50,6 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		finalize_pdaf.o \
 		init_pdaf.o \
 		init_pdaf_parse.o \
-		init_pdaf_info.o \
 		assimilate_pdaf.o 
 
 # Generic user-supplied routines
