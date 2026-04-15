@@ -98,7 +98,7 @@ SUBROUTINE init_pdaf()
   ensgroup = 1       ! (1) for ensemble from true state; (2) rotated ensemble by 90 degrees
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs = 2       ! This should be set according to the data availability
+  delt_obs = 2       ! Number of time steps between analysis/assimilation steps
 
 ! *** Which observation type to assimilate
   assim_A = .true.
@@ -125,11 +125,6 @@ SUBROUTINE init_pdaf()
 ! *** This is optional, but useful ***
 
   call init_pdaf_parse()
-
-! *** Initial Screen output ***
-! *** This is optional      ***
-
-  IF (mype_world == 0) call init_pdaf_info()
 
 
 ! *****************************************************
@@ -158,8 +153,6 @@ SUBROUTINE init_pdaf()
 
   ! *** Additional parameter specifications ***
   ! *** -- These are all optional --        ***
-
-  ! Generic settings
   CALL PDAF_set_iparam(5, type_forget, status_pdaf)      ! Type of forgetting factor
   CALL PDAF_set_iparam(6, type_trans, status_pdaf)       ! Type of ensemble transformation
   CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)        ! Type of transform square-root (SEIK-sub4/ESTKF)
