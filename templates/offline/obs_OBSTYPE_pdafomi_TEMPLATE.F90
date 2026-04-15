@@ -155,6 +155,8 @@ CONTAINS
          ONLY: PDAF_local_type, PDAFomi_gather_obs, PDAFomi_set_localize_covar
     USE mod_assimilation, &    
          ONLY: filtertype, cradius, sradius, locweight !, coords_p
+!   USE mod_model_pdaf, &       ! Variables for model grid
+!        ONLY: ...
 
     IMPLICIT NONE
 

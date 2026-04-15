@@ -40,7 +40,9 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
-       ONLY: nx, ny, dim_state, local_dims
+       ONLY: dim_state
+  USE mod_model_pdaf, &        ! Variables for model grid
+       ONLY: nx, ny, local_dims
   USE PDAF, &                  ! PDAF diagnostic routine
        ONLY: PDAF_diag_stddev
 

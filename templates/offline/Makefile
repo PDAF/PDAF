@@ -40,6 +40,7 @@ MOD_ASSIM = 	mod_assimilation.o
 
 # Model routines
 OBJ_MODEL =	main_offline.o\
+		mod_model_pdaf.o \
 		initialize.o
 
 # Routines of observation handling (PDAF-OMI)
@@ -50,13 +51,11 @@ OBJ_USER_PDAFOMI = obs_OBSTYPE_pdafomi_TEMPLATE.o \
 OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		init_pdaf_offline.o \
 		init_pdaf_parse.o \
-		init_pdaf_info.o \
 		assimilate_pdaf_offline.o \
 		finalize_pdaf.o
 
 # Generic user-supplied routines
 OBJ_USER_GEN  = init_ens_offline.o \
-		collect_state_pdaf_offline.o \
 		prepoststep_ens_offline.o
 
 # User-supplied routines for localized analysis

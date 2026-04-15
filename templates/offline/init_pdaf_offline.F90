@@ -123,11 +123,6 @@ SUBROUTINE init_pdaf()
 
   IF (do_omi_obsstats) CALL PDAFomi_set_obs_diag(1)
 
-! *** Initial Screen output ***
-! *** This is optional      ***
-
-  IF (mype_world == 0) call init_pdaf_info()
-
 
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***

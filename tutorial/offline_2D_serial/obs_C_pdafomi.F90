@@ -148,7 +148,9 @@ CONTAINS
          ONLY: PDAFomi_gather_obs, &
          PDAFomi_get_interp_coeff_lin
     USE mod_assimilation, &
-         ONLY: ny, filtertype, cradius
+         ONLY: filtertype, cradius
+    USE mod_model_pdaf, &
+         ONLY: ny
 
     IMPLICIT NONE
 

@@ -21,7 +21,7 @@
 SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_assimilation, &    ! Model variables
+  USE mod_model_pdaf, &      ! Variables for model grid
        ONLY: nx, ny
 
   IMPLICIT NONE

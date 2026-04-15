@@ -25,7 +25,9 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
   USE mod_parallel_pdaf, &   ! Parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &    ! Assimilation variables
-       ONLY: nx, ny, dim_state, local_dims
+       ONLY: dim_state
+  USE mod_model_pdaf, &      ! Variables for model grid
+       ONLY: nx, ny, local_dims
 
   IMPLICIT NONE
 

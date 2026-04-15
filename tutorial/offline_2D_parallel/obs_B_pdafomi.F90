@@ -146,7 +146,9 @@ CONTAINS
     USE PDAF, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: nx, ny, local_dims, filtertype, cradius
+         ONLY: filtertype, cradius
+    USE mod_model_pdaf, &
+         ONLY: nx, ny, local_dims
 
     IMPLICIT NONE
 

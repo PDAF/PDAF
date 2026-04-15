@@ -15,8 +15,10 @@
 !!
 SUBROUTINE initialize()
 
-  USE mod_assimilation, &   ! Variables for state vector dimension and model grid
-       ONLY: dim_state_p, nx, ny, dim_state, local_dims
+  USE mod_assimilation, &   ! Variables for state vector dimension
+       ONLY: dim_state_p, dim_state
+  USE mod_model_pdaf, &     ! Variables for model grid
+       ONLY: nx, ny, local_dims
   USE mod_parallel_pdaf, &  ! Parallelization variables
        ONLY: mype_world, mype_model, npes_model, task_id
 

@@ -19,6 +19,8 @@ SUBROUTINE initialize()
         ONLY: dim_state_p !, dim_state, local_dims
   USE mod_parallel_pdaf, &  ! Parallelization variables
        ONLY: mype_world, mype_model, npes_model, task_id
+!   USE mod_model_pdaf, &     ! Variables for model grid
+!        ONLY: ...
 
   IMPLICIT NONE
 

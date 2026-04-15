@@ -97,8 +97,8 @@ CONTAINS
   SUBROUTINE init_sfields()
 
     ! Specific for model
-!     USE mod_model, &       ! Model variables
-!          ONLY: nx, ny
+!    USE mod_model_pdaf, &     ! Variables for model grid
+!         ONLY: nx, ny
 
     IMPLICIT NONE
 

@@ -19,7 +19,9 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   USE PDAF, &                  ! Routine to provide local indices to PDAF
        ONLY: PDAFlocal_set_indices
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: coords_l, ny, local_dims
+       ONLY: coords_l
+  USE mod_model_pdaf, &        ! Variables for model grid
+       ONLY: ny, local_dims
   USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: mype_filter
 

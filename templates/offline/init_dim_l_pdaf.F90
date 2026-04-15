@@ -20,6 +20,8 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
        ONLY: PDAFlocal_set_indices
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: coords_l
+!   USE mod_model_pdaf, &     ! Variables for model grid
+!        ONLY: ...
 
   IMPLICIT NONE
 

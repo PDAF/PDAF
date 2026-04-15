@@ -41,6 +41,7 @@ MOD_ASSIM = 	mod_assimilation.o
 
 # Model routines
 OBJ_MODEL =	main_offline.o\
+		mod_model_pdaf.o \
 		initialize.o
 
 # Routines of observation handling (PDAF-OMI)
