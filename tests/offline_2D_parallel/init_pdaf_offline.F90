@@ -124,11 +124,6 @@ SUBROUTINE init_pdaf()
 
   CALL PDAFomi_set_searchtype(omi_search_type, omi_sort_dir)
 
-! *** Initial Screen output ***
-! *** This is optional      ***
-
-  IF (mype_world == 0) call init_pdaf_info()
-
 
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
