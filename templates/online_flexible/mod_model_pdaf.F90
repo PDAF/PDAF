@@ -1,7 +1,8 @@
 !> Interface module between the model and PDAF
 !!
 !! This module includes the model module(s) to access
-!! the modl variables
+!! the model variables and make them accessible for
+!! the PDAF user routines in a uniform way.
 !!
 !! __Revision history:__
 !! * 2026-04 - Lars Nerger - Initial code

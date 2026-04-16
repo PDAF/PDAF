@@ -28,9 +28,8 @@ MODULE mod_statevector_pdaf
   !< Fortran type holding the indices of model fields in the state vector
   !< This should be adapted to the fields in the state vector - it serves to give each field a name
   TYPE field_ids
-!+++ TEMPLATE: Adapt to the fields stored in particular model
-     INTEGER :: NAME_OF_FIELD_1
-!     INTEGER :: NAME_OF_FIELD_2
+     INTEGER :: NAME_OF_FIELD_1 
+!     INTEGER :: NAME_OF_FIELD_1 
 !     INTEGER :: ...
   END TYPE field_ids
 
@@ -72,17 +71,19 @@ CONTAINS
     INTEGER, INTENT(out) :: n_fields
 
   ! Template reminder - delete when implementing functionality
-  write (*,*) 'TEMPLATE statevector_pdaf_mod.F90: Define IDs of fields in state vector!'
+  write (*,*) 'TEMPLATE mod_statevector_pdaf.F90: Define n_fields and IDs of fields in state vector!'
+
 
 ! Set total number of fields
-!    n_fields = ??
+!    n_fields = ?
 
   ! Dummy setting to ensure that code can be run
-  n_fields = 1
+    n_fields = 1
 
 ! Set field IDs
-    id%NAME_FIELD_1 = 1
-!    id%NAME_FIELD_1 = ...
+    id%NAME_OF_FIELD_1 = 1
+!    id%NAME_OF_FIELD_2 = 2
+
 
   END SUBROUTINE init_id
 
@@ -97,7 +98,7 @@ CONTAINS
   SUBROUTINE init_sfields()
 
     ! Specific for model
-!    USE mod_model_pdaf, &     ! Variables for model grid
+!    USE mod_model_pdaf, &       ! Model variables
 !         ONLY: nx, ny
 
     IMPLICIT NONE
@@ -115,26 +116,23 @@ CONTAINS
 ! *****************************************************
 
     ! Template reminder - delete when implementing functionality
-    write (*,*) 'TEMPLATE statevector_pdaf_mod.F90: define field properties in variables SFIELDS!'
+    write (*,*) 'TEMPLATE mod_statevector_pdaf.F90: define field properties in variables SFIELDS!'
 
-    ! Dummy initialization - adapt to actual model fields
-    sfields(id%NAME_FIELD_1)%ndims = 2
-    sfields(id%NAME_FIELD_1)%name = 'NAME_FLD_1'
+    ! field NAME_OF_FIELD_1
+    sfields(id%NAME_OF_FIELD_1)%name = 'A'
+!    sfields(id%NAME_OF_FIELD_1)%dim = ??
+
+!+++ TEMPLATE: Dummy initialization for compilation
+    sfields(id%NAME_OF_FIELD_1)%dim = 10
+
+    ! field NAME_OF_FIELD_2
+!    sfields(id%NAME_OF_FIELD_2)%name = ??
+!    sfields(id%NAME_OF_FIELD_2)%dim = ??
 
 
 ! **************************************
-! ***   Set dimensions and offsets   ***
+! ***   Set offsets                  ***
 ! **************************************
-
-! +++ This needs to be adapted according to the grid size variables
-
-    ! Template reminder - delete when implementing functionality
-    write (*,*) 'TEMPLATE statevector_pdaf_mod.F90: set field dimensions in variables SFIELDS!'
-
-    ! Set field dimensions
-    DO i = 1, n_fields
-!        sfields(i)%dim = nx * ny
-    END DO
 
 ! +++ The following is generic
 

@@ -6,9 +6,6 @@
 !! we have to declare the variables explicitly of the 
 !! offline coupling.
 !!
-!! Implementation for the 2D offline example
-!! with or without parallelization.
-!!
 !! __Revision history:__
 !! * 2026-02 - Lars Nerger - Initial code extracting from mod_assimilation
 !! * Later revisions - see repository log

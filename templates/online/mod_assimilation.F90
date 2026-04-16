@@ -17,7 +17,6 @@ MODULE mod_assimilation
   IMPLICIT NONE
   SAVE
 
-
 ! *** Variables specific for model setup ***
 
 ! +++ TEMPLATE The dimension of coords_l should be adapted to the model
