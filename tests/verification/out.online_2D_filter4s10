@@ -31,10 +31,6 @@ PDAF    Pconf      0        0       1        0       1        0       T
   PDAF_PARSE: forget=  8.0000E-01
   PDAF_PARSE: cradius=  5.0000E+00
   PDAF_PARSE: locweight=         2
-                     Filter: ETKF
-              ensemble size:    4
-      Assimilation interval:    9
-          forgetting factor: 0.80
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++

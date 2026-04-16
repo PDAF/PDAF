@@ -24,11 +24,6 @@
   PDAF_PARSE: subtype=         0
   PDAF_PARSE: forget=  8.0000E-01
   PDAF_PARSE: cradius=  5.0000E+00
-                     Filter: NETF
-      -- Standard mode
-              ensemble size:    8
-      Assimilation interval:    0
-          forgetting factor: 0.80
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -145,12 +140,12 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          NETF analysis:                       0.002 s
-PDAF            PDAF-internal operations:            0.000 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.004 s
+PDAF          prepoststep_pdaf:                    0.003 s
 
 
 PDAF                     PDAF Timing information
@@ -160,7 +155,7 @@ PDAF                       NETF analysis (3):      0.002 s
 PDAF                  prepare observations (6):      0.001 s
 PDAF             compute particle weights (10):      0.000 s
 PDAF                     compute matrix A (11):      0.000 s
-PDAF             compute transform matrix (20):      0.000 s
+PDAF             compute transform matrix (20):      0.001 s
 PDAF                   transform ensemble (21):      0.000 s
-PDAF                         Prepoststep (5):      0.004 s
+PDAF                         Prepoststep (5):      0.003 s
 PDAF  MPI_finalize called by PDAF

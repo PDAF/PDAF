@@ -25,10 +25,6 @@
   PDAF_PARSE: subtype=         1
   PDAF_PARSE: forget=  8.0000E-01
   PDAF_PARSE: cradius=  5.0000E+00
-                     Filter: EnKF
-              ensemble size:    8
-      Assimilation interval:    0
-          forgetting factor: 0.80
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -119,9 +115,9 @@ PDAF     Call pre-post routine after analysis step
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            1
  model PE exited: mype            0
- model PE exited: mype            2
 
  PDAF offline mode: EXITED ASSIMILATION
+ model PE exited: mype            2
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
@@ -134,10 +130,10 @@ PDAF                 PDAF-OMI:      0.003 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
 PDAF          EnKF analysis:                       0.002 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF            PDAF-internal operations:            0.002 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.001 s
@@ -147,7 +143,7 @@ PDAF          prepoststep_pdaf:                    0.005 s
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.003 s
+PDAF                     Initialize PDAF (1):      0.002 s
 PDAF                       EnKF analysis (3):      0.002 s
 PDAF                        get mean state (9):      0.000 s
 PDAF                  prepare observations (6):      0.001 s
@@ -156,8 +152,8 @@ PDAF                                 HXpert (30):      0.000 s
 PDAF                          complete HP_p (31):      0.000 s
 PDAF                                    HPH (32):      0.000 s
 PDAF                           add matrix R (46):      0.000 s
-PDAF                 sample obs. ensemble (11):      0.000 s
-PDAF             init innovation ensemble (12):      0.001 s
+PDAF                 sample obs. ensemble (11):      0.001 s
+PDAF             init innovation ensemble (12):      0.000 s
 PDAF             compute transform matrix (13):      0.000 s
 PDAF                 solve for representers (33):      0.000 s
 PDAF                         HX*representer (34):      0.000 s

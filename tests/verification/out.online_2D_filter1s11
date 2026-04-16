@@ -31,10 +31,6 @@ PDAF    Pconf      0        0       1        0       1        0       T
   PDAF_PARSE: forget=  8.0000E-01
   PDAF_PARSE: cradius=  5.0000E+00
   PDAF_PARSE: locweight=         2
-                     Filter: SEIK
-              ensemble size:    4
-      Assimilation interval:    9
-          forgetting factor: 0.80
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -196,10 +192,10 @@ PDAF          State forecast:                       0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          SEIK analysis/transform:             0.001 s
+PDAF          SEIK analysis/transform:             0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
-PDAF              obs_op_pdafomi:                    0.001 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.010 s

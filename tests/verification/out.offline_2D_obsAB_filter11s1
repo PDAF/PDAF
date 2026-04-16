@@ -24,13 +24,6 @@
   PDAF_PARSE: subtype=         1
   PDAF_PARSE: forget=  8.0000E-01
   PDAF_PARSE: cradius=  5.0000E+00
-                     Filter: LKNETF
-      -- HKN: 2-step LKNETF with LETKF before NETF
-              ensemble size:    8
-      Assimilation interval:    0
-          forgetting factor:   0.80
-        hybrid weight gamma:   0.00
-          hybrid norm kappa:   0.00
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -204,7 +197,7 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.005 MiB (persistent)
 PDAF           ensemble array:      0.040 MiB (persistent)
-PDAF            analysis step:      0.123 MiB (temporary)
+PDAF            analysis step:      0.122 MiB (temporary)
 PDAF                 PDAF-OMI:      0.008 MiB (temporary)
 
 
@@ -230,8 +223,8 @@ PDAF                     Initialize PDAF (1):      0.002 s
 PDAF                     LKNETF analysis (3):      0.006 s
 PDAF                  prepare observations (6):      0.001 s
 PDAF                    compute mean state (9):      0.000 s
-PDAF                   global preparations (7):      0.000 s
-PDAF                   local analysis loop (8):      0.005 s
+PDAF                   global preparations (7):      0.001 s
+PDAF                   local analysis loop (8):      0.004 s
 PDAF                        global to local (10):      0.000 s
 PDAF                  localize observations (11):      0.000 s
 PDAF                         local analysis (12):      0.003 s

@@ -6,12 +6,12 @@ PDAF    Pconf   world    assim       model           couple        assimPE
 PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
 PDAF    Pconf  ------------------------------------------------------------
 PDAF    Pconf      0        0       1        0       1        0       T
-PDAF    Pconf      1        1       1        1       2        0       T
-PDAF    Pconf      4                3        0       1        2       F
-PDAF    Pconf      5                3        1       2        2       F
-PDAF    Pconf      7                4        1       2        3       F
 PDAF    Pconf      2                2        0       1        1       F
+PDAF    Pconf      4                3        0       1        2       F
+PDAF    Pconf      1        1       1        1       2        0       T
+PDAF    Pconf      5                3        1       2        2       F
 PDAF    Pconf      6                4        0       1        3       F
+PDAF    Pconf      7                4        1       2        3       F
 PDAF    Pconf      3                2        1       2        1       F
 
 
@@ -38,10 +38,6 @@ PDAF    Pconf      3                2        1       2        1       F
   PDAF_PARSE: forget=  8.0000E-01
   PDAF_PARSE: cradius=  5.0000E+00
   PDAF_PARSE: locweight=         2
-                     Filter: EnKF
-              ensemble size:    4
-      Assimilation interval:    9
-          forgetting factor: 0.80
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -207,10 +203,10 @@ PDAF                 PDAF-OMI:        0.004 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.004 s
-PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Initialize PDAF:                     0.005 s
+PDAF            init_ens_pdaf:                       0.002 s
 PDAF          Ensemble forecast:                   0.003 s
-PDAF            MPI communication in PDAF:           0.003 s
+PDAF            MPI communication in PDAF:           0.002 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
 PDAF          EnKF analysis:                       0.005 s

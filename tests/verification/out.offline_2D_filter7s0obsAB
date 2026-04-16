@@ -25,11 +25,6 @@
   PDAF_PARSE: subtype=         0
   PDAF_PARSE: forget=  8.0000E-01
   PDAF_PARSE: cradius=  5.0000E+00
-                     Filter: LESTKF
-      -- Standard mode
-              ensemble size:    8
-      Assimilation interval:    0
-          forgetting factor: 0.80
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -169,27 +164,27 @@ PDAF                 PDAF-OMI:      0.008 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
+PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          LESTKF analysis:                     0.002 s
+PDAF          LESTKF analysis:                     0.003 s
 PDAF            PDAF-internal operations:            0.001 s
-PDAF            OMI-internal routines:               0.000 s
+PDAF            OMI-internal routines:               0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.000 s
-PDAF              obs_op_pdafomi:                    0.001 s
-PDAF              init_dim_obs_l_pdafomi:            0.001 s
+PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF              init_dim_obs_l_pdafomi:            0.000 s
 PDAF          prepoststep_pdaf:                    0.004 s
 
 
 PDAF                       PDAF Timing information
 PDAF        ----------------------------------------------------
-PDAF                     Initialize PDAF (1):      0.002 s
-PDAF                     LESTKF analysis (3):      0.002 s
+PDAF                     Initialize PDAF (1):      0.003 s
+PDAF                     LESTKF analysis (3):      0.003 s
 PDAF                  prepare observations (6):      0.001 s
-PDAF                      init_dim_obs_pdaf (43):      0.000 s
-PDAF                            obs_op_pdaf (44):      0.001 s
+PDAF                      init_dim_obs_pdaf (43):      0.001 s
+PDAF                            obs_op_pdaf (44):      0.000 s
 PDAF                          init_obs_pdaf (50):      0.000 s
 PDAF                 compute ensemble mean (9):      0.000 s
 PDAF                   global preparations (7):      0.000 s
@@ -197,8 +192,8 @@ PDAF                             init Omega (33):      0.000 s
 PDAF                   local analysis loop (8):      0.002 s
 PDAF                        global to local (10):      0.000 s
 PDAF                  localize observations (11):      0.001 s
-PDAF                      init_dim_obs_l_pdaf (38):      0.001 s
-PDAF                             g2l_obs_pdaf (46):      0.000 s
+PDAF                      init_dim_obs_l_pdaf (38):      0.000 s
+PDAF                             g2l_obs_pdaf (46):      0.001 s
 PDAF                               init_obs_l (47):      0.000 s
 PDAF                         local analysis (12):      0.001 s
 PDAF                             compute Ainv (16):      0.000 s

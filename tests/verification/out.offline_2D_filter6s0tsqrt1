@@ -24,11 +24,6 @@
   PDAF_PARSE: forget=  8.0000E-01
   PDAF_PARSE: type_sqrt=         1
   PDAF_PARSE: cradius=  5.0000E+00
-                     Filter: ESTKF
-      -- Standard mode
-              ensemble size:    8
-      Assimilation interval:    0
-          forgetting factor: 0.80
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++

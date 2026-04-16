@@ -24,13 +24,6 @@
   PDAF_PARSE: forget=  1.0000E+00
   PDAF_PARSE: cradius=  5.0000E+00
   PDAF_PARSE: pf_noise_amp=  8.0000E-01
-                     Filter: PF with resampling
-      -- Standard mode
-              ensemble size:    8
-      Assimilation interval:    0
-             reampling type:    1
-                 noise type:    0
-            noise amplitude:   0.800
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
