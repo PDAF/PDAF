@@ -22,7 +22,7 @@
 !!
 SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
-  USE mod_model, &             ! Model variables
+  USE mod_model_pdaf, &             ! Model variables
        ONLY: nx, ny, field, fieldB
   USE mod_statevector_pdaf, &  ! Statevector variables
        ONLY: id, sfields

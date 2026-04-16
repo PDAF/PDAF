@@ -17,7 +17,7 @@
 !!
 SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 
-  USE mod_model, &      ! Assimilation variables
+  USE mod_model_pdaf, &      ! Assimilation variables
        ONLY: nx, ny
 
   IMPLICIT NONE

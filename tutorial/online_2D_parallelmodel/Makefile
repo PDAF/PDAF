@@ -38,7 +38,8 @@ OBJ_MODEL =	main.o\
 		integrate.o
 
 # Moduls used for PDAF
-MOD_ASSIM = 	mod_parallel_pdaf.o \
+MOD_ASSIM = 	mod_model_pdaf.o \
+		mod_parallel_pdaf.o \
 		mod_assimilation.o
 
 # Model routines used with PDAF

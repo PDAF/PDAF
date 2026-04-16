@@ -147,7 +147,7 @@ CONTAINS
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
          ONLY: filtertype, cradius
-    USE mod_model, &
+    USE mod_model_pdaf, &
          ONLY: nx, ny, nx_p
 
     IMPLICIT NONE

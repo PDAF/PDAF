@@ -35,7 +35,7 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
   USE mpi                  ! MPI
-  USE mod_model, &         ! Model variables
+  USE mod_model_pdaf, &         ! Model variables
        ONLY: nx, ny, nx_p
   USE mod_assimilation, &  ! Assimilation variables
        ONLY: dim_state, Vmat_p, dim_cvec

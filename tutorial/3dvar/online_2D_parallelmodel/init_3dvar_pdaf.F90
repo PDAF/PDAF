@@ -27,7 +27,7 @@
 SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_model, &           ! Model variables
+  USE mod_model_pdaf, &           ! Model variables
        ONLY: nx, ny, nx_p
   USE mod_parallel_model, &  ! Model parallelization variables
        ONLY: mype_2dmodel

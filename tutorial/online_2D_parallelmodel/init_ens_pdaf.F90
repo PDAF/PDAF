@@ -22,7 +22,7 @@
 SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_model, &           ! Model variables
+  USE mod_model_pdaf, &           ! Model variables
        ONLY: nx, ny, nx_p
   USE mod_assimilation, &  ! Assimilation variables
        ONLY: ensgroup

@@ -149,7 +149,7 @@ CONTAINS
          PDAFomi_get_interp_coeff_lin
     USE mod_assimilation, &
          ONLY: filtertype, cradius
-    USE mod_model, &
+    USE mod_model_pdaf, &
          ONLY: ny
 
     IMPLICIT NONE

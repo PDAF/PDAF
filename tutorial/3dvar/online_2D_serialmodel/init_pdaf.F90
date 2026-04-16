@@ -27,7 +27,7 @@ SUBROUTINE init_pdaf()
        type_trans, type_sqrt, delt_obs, ensgroup, &
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar, &
        observe_ens, type_obs_init, do_omi_obsstats
-  USE mod_model, &                ! Model variables
+  USE mod_model_pdaf, &                ! Model variables
        ONLY: nx, ny
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A

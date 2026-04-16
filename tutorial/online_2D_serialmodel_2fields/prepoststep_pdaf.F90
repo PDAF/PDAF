@@ -32,7 +32,7 @@
 SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
-  USE mod_model, &             ! Model variables
+  USE mod_model_pdaf, &             ! Model variables
        ONLY: nx, ny
   USE mod_statevector_pdaf, &  ! Statevector variables
        ONLY: n_fields, sfields, id

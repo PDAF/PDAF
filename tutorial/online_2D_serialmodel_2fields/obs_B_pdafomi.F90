@@ -152,7 +152,7 @@ CONTAINS
          ONLY: filtertype, cradius
     USE mod_statevector_pdaf, &
          ONLY: id, sfields
-    USE mod_model, &
+    USE mod_model_pdaf, &
          ONLY: nx, ny
 
     IMPLICIT NONE

@@ -20,7 +20,7 @@
 !!
 SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
-  USE mod_model, &             ! Model variables
+  USE mod_model_pdaf, &             ! Model variables
        ONLY: nx, ny, field
 
   IMPLICIT NONE

@@ -27,7 +27,7 @@
 SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
   USE mpi                      ! MPI
-  USE mod_model, &             ! Model variables
+  USE mod_model_pdaf, &             ! Model variables
        ONLY: nx_p, ny, field_p
   USE mod_parallel_model, &    ! Model parallelization variables
        ONLY: COMM_model, mype_model, npes_model

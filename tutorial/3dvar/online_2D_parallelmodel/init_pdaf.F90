@@ -30,7 +30,7 @@ SUBROUTINE init_pdaf()
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar, &
        dims_cv_ens_p, off_cv_ens_p, dims_cv_p, off_cv_p, &
        observe_ens, type_obs_init, do_omi_obsstats
-  USE mod_model, &                ! Model variables
+  USE mod_model_pdaf, &                ! Model variables
        ONLY: nx, ny, nx_p
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
