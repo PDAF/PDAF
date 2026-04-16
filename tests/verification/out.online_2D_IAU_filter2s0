@@ -6,8 +6,8 @@ PDAF    Pconf   world    assim       model           couple        assimPE
 PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
 PDAF    Pconf  ------------------------------------------------------------
 PDAF    Pconf      0        0       1        0       1        0       T
-PDAF    Pconf      2                3        0       1        2       F
 PDAF    Pconf      1                2        0       1        1       F
+PDAF    Pconf      2                3        0       1        2       F
 PDAF    Pconf      3                4        0       1        3       F
 
 

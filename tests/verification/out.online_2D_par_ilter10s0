@@ -7,8 +7,8 @@ PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
 PDAF    Pconf  ------------------------------------------------------------
 PDAF    Pconf      0        0       1        0       1        0       T
 PDAF    Pconf      2                3        0       1        2       F
-PDAF    Pconf      3                4        0       1        3       F
 PDAF    Pconf      1                2        0       1        1       F
+PDAF    Pconf      3                4        0       1        3       F
 
 
 
@@ -148,6 +148,7 @@ PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAF     --- use blocking with size   200
 PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
@@ -200,6 +201,7 @@ PDAF      18   LNETF analysis using T-matrix
 PDAF     --- local analysis domains:      648
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- use blocking with size   200
 PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
@@ -237,19 +239,19 @@ PDAF                 PDAF-OMI:        0.003 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
 PDAF          Ensemble forecast:                   0.000 s
 PDAF            MPI communication in PDAF:          0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
 PDAF          LNETF analysis:                      0.006 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF            PDAF-internal operations:            0.002 s
 PDAF            OMI-internal routines:               0.003 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.009 s
+PDAF              init_dim_obs_l_pdafomi:            0.001 s
+PDAF          prepoststep_pdaf:                    0.011 s

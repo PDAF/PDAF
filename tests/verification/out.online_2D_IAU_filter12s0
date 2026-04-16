@@ -210,7 +210,7 @@ PDAF                 PDAF-OMI:        0.003 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
+PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
 PDAF          Ensemble forecast:                   0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
