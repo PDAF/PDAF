@@ -8,15 +8,16 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import numpy.ma as ma
 import argparse as ap
 
 def read_and_plot(filename):
     field = np.loadtxt(filename)
     field = field.reshape(18,36)
-    plt.imshow(field, origin='lower',interpolation='none')
+    field_m = ma.masked_outside(field,-10.0,10.0)
+    plt.imshow(field_m, origin='lower',interpolation='none')
     plt.title(filename)
     plt.colorbar()
-    plt.clim([-1.5, 1.5])
     plt.show()
 
 if __name__ == "__main__":
