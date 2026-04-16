@@ -39,7 +39,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_state, do_omi_obsstats
   USE PDAF, &                  ! PDAF diagnostic routine
-       ONLY: PDAF_diag_stddev, PDAFomi_diag_obs_rmsd, PDAFomi_diag_stats
+       ONLY: PDAF_diag_stddev, PDAFomi_diag_obs_rmsd, PDAFomi_diag_diffstats
 
   IMPLICIT NONE
 
@@ -102,7 +102,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      CALL PDAFomi_diag_obs_rmsd(nobs, obsrmsd, 1/(mype_filter+1))
 
      ! Compute statistics on deviation between observation and observed ensemble
-     CALL PDAFomi_diag_stats(nobs, obsstats, 1/(mype_filter+1))
+     CALL PDAFomi_diag_diffstats(nobs, obsstats, 1/(mype_filter+1))
   END IF
 
 
