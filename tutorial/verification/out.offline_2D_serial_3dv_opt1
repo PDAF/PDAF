@@ -18,8 +18,6 @@
   PDAF_PARSE: subtype=         0
   PDAF_PARSE: type_opt=         1
   PDAF_PARSE: dim_cvec=         9
-                     Assimilation using 3D-Var
-      -- Incremental 3D-Var with parameterized covariance matrix
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -66,7 +64,7 @@ PDAF: Call ensemble initialization
          Initialize B^1/2
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 
   PDAF offline mode: START ASSIMILATION
 
@@ -98,7 +96,7 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- duration of observation preparation:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -128,10 +126,10 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 2.890E-04 seconds.
+ Total User time 3.450E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
-PDAF     --- update duration:     0.000 s
+PDAF     --- update duration:     0.001 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
@@ -154,12 +152,12 @@ PDAF                 PDAF-OMI:      0.002 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          3DVAR analysis:                      0.000 s
-PDAF            PDAF-internal operations:       101532.428 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
+PDAF          3DVAR analysis:                      0.001 s
+PDAF            PDAF-internal operations:       349692.090 s
 PDAF            OMI-internal routines:               0.000 s
-PDAF            Solver:                              0.000 s
+PDAF            Solver:                              0.001 s
 PDAF            cvt_pdaf:                            0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 

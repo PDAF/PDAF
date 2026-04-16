@@ -28,8 +28,6 @@ PDAF    Pconf      1        1       1        1       2        0       T
   PDAF_PARSE: subtype=         0
   PDAF_PARSE: type_opt=        12
   PDAF_PARSE: dim_cvec=         9
-                     Assimilation using 3D-Var
-      -- Incremental 3D-Var with parameterized covariance matrix
 
   -- Decomposition of control vector over  2 PEs
      task   1 PE(model)   0 dims_cv_p, off_cv_p:     5    0
@@ -80,6 +78,7 @@ PDAF: Call ensemble initialization
          Initialize B^1/2
 
 PDAF: Initialization completed
+         Initialize B^1/2
 PDAF     --- duration of PDAF initialization:     0.002 s
 
 PDAF    3DVAR configuration
@@ -93,7 +92,6 @@ PDAF          param_int(6) solver-specific parameter: CG method=  2
 PDAF            --> Polak-Ribiere
 PDAF          param_int(7) solver-specific parameter: number of restarts=      1
 PDAF          param_int(9) type_obs_init=  1
-         Initialize B^1/2
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(3) solver-specific parameter: eps= 1.000E-05
 
@@ -214,7 +212,7 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- duration of observation preparation:     0.001 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: CG+ parallelized
@@ -234,7 +232,7 @@ INITIAL VALUES:
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
-PDAF     --- update duration:     0.000 s
+PDAF     --- update duration:     0.001 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
@@ -259,7 +257,7 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- duration of observation preparation:     0.001 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: CG+ parallelized
@@ -394,7 +392,7 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- duration of observation preparation:     0.001 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: CG+ parallelized
@@ -414,7 +412,7 @@ INITIAL VALUES:
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
-PDAF     --- update duration:     0.000 s
+PDAF     --- update duration:     0.001 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
@@ -439,7 +437,7 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- duration of observation preparation:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: CG+ parallelized
@@ -459,7 +457,7 @@ INITIAL VALUES:
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
-PDAF     --- update duration:     0.001 s
+PDAF     --- update duration:     0.000 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
@@ -484,7 +482,7 @@ PDAF Prepare observations -------------------------------------------
 PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- duration of observation preparation:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: CG+ parallelized
@@ -531,14 +529,14 @@ PDAF          State forecast:                      0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          3DVAR analysis:                      0.007 s
-PDAF            PDAF-internal operations:       101539.968 s
+PDAF          3DVAR analysis:                      0.008 s
+PDAF            PDAF-internal operations:       349699.253 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Solver:                              0.002 s
-PDAF            cvt_pdaf:                            0.000 s
-PDAF            cvt_adj_pdaf:                        0.002 s
+PDAF            cvt_pdaf:                            0.002 s
+PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.004 s
+PDAF              init_dim_obs_pdafomi:              0.003 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s

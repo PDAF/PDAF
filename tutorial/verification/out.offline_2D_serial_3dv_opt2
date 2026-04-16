@@ -18,8 +18,6 @@
   PDAF_PARSE: subtype=         0
   PDAF_PARSE: type_opt=         2
   PDAF_PARSE: dim_cvec=         9
-                     Assimilation using 3D-Var
-      -- Incremental 3D-Var with parameterized covariance matrix
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
@@ -125,7 +123,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to modes Vmat_p:   3.2465E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.000 s
+PDAF     --- duration of poststep:     0.001 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -145,9 +143,9 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          3DVAR analysis:                      0.001 s
-PDAF            PDAF-internal operations:       101532.634 s
+PDAF            PDAF-internal operations:       349692.315 s
 PDAF            OMI-internal routines:               0.000 s
-PDAF            Solver:                              0.001 s
+PDAF            Solver:                              0.000 s
 PDAF            cvt_pdaf:                            0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 
@@ -155,5 +153,5 @@ PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF          Prepoststep (5):                     0.000 s
+PDAF          Prepoststep (5):                     0.001 s
 PDAF  MPI_finalize called by PDAF
