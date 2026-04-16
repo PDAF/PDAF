@@ -7,7 +7,7 @@ export DA_SPECS2="-filtertype 6 -screen 1"
 export DA_SPECS3="-filtertype 7 screen 1 -assim_A .false. -assim_B .true"
 
 COMPILEPDAF=0
-COMPILE=1
+COMPILE=0
 RUN_OFFLINE=1
 RUN_ONLINE_SERIAL=1
 RUN_ONLINE_PARALLEL=1
@@ -159,7 +159,7 @@ then
     make cleandataq
     mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_2fields
     cd ..
-    python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel
+    python verification/check_online2_2fields.py online_2D_serialmodel_2fields online_2D_serialmodel
 
     echo "------------ online_2D_serialmodel_2fields LESTKF obs-type B ---------------"
     export OMP_NUM_THREADS=1
@@ -183,7 +183,7 @@ then
     make cleandataq
     mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_2fields_ESTKF
     cd ..
-    python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel_ESTKF
+    python verification/check_online2_2fields.py online_2D_serialmodel_2fields online_2D_serialmodel_ESTKF
 fi
 
 #--------- ONLINE PARALLEL -------------

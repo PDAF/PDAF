@@ -1,4 +1,3 @@
-!$Id: initialize.F90 870 2021-11-22 14:02:55Z lnerger $
 !>  Initialize model
 !!
 !! Initialization routine for the simple 2D model without

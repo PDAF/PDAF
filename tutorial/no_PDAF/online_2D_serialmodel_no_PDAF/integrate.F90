@@ -1,4 +1,3 @@
-!$Id: integrate.F90 870 2021-11-22 14:02:55Z lnerger $
 !>  Time stepping loop of tutorial model
 !!
 !! Time integration for simple 2D tutorial model
@@ -35,6 +34,7 @@ SUBROUTINE integrate()
      WRITE (*,*) 'step', step
 
 ! *** Time step: Shift field vertically ***
+
      DO j = 1, nx
         store = field(ny, j)
 
@@ -46,6 +46,7 @@ SUBROUTINE integrate()
      END DO
 
 ! *** Write new field into file ***
+
      WRITE (stepstr, '(i2.2)') step
      OPEN(11, file = 'true_step'//TRIM(stepstr)//'.txt', status = 'replace')
 

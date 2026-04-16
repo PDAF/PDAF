@@ -17,7 +17,7 @@ SUBROUTINE integrate()
   USE mod_model, &            ! Model variables
        ONLY: nx, ny, nx_p, field_p, total_steps
   USE mod_parallel_model, &   ! Model parallelization variables
-       ONLY: mype_world, MPIErr, COMM_model
+       ONLY: mype_world, MPIErr, COMM_2Dmodel
 
   IMPLICIT NONE
 
@@ -56,7 +56,7 @@ SUBROUTINE integrate()
      ALLOCATE(field(ny, nx))
 
      CALL MPI_Gather(field_p, nx_p*ny, MPI_DOUBLE_PRECISION, field, nx_p*ny, &
-          MPI_DOUBLE_PRECISION, 0, COMM_model, MPIerr)
+          MPI_DOUBLE_PRECISION, 0, COMM_2Dmodel, MPIerr)
 
      ! Write file from process 0
      IF (mype_world==0) THEN

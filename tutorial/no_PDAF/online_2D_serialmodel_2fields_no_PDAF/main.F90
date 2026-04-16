@@ -1,4 +1,3 @@
-!$Id: main.F90 659 2021-02-17 15:04:37Z lnerger $
 !>  Main driver for PDAF tutorial (without assimilation)
 !!
 !! This is a simple model program to demonstrate the

@@ -1,4 +1,3 @@
-!$Id: integrate.F90 659 2021-02-17 15:04:37Z lnerger $
 !>  Time stepping loop of tutorial model
 !!
 !! Time integration for simple 2D tutorial model
@@ -13,7 +12,7 @@
 !!
 SUBROUTINE integrate()
 
-  USE mod_model, &          ! Include model variables
+  USE mod_model, &          ! Model variables
        ONLY: nx, ny, field, fieldB, total_steps
 
   IMPLICIT NONE
