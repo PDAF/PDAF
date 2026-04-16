@@ -2845,9 +2845,6 @@ CONTAINS
   SUBROUTINE PDAFomi_localize_covar_serial_iso(thisobs, iobs_all, dim, dim_obs, locweight, &
        cradius, sradius, coords, HP, HXY)
 
-!     USE PDAF_analysis_utils, &
-!          ONLY: PDAF_local_weight 
-
     IMPLICIT NONE
 
 ! *** Arguments ***
