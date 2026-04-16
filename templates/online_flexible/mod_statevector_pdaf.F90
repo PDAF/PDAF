@@ -28,8 +28,9 @@ MODULE mod_statevector_pdaf
   !< Fortran type holding the indices of model fields in the state vector
   !< This should be adapted to the fields in the state vector - it serves to give each field a name
   TYPE field_ids
-     INTEGER :: fieldA 
-     INTEGER :: fieldB
+     INTEGER :: NAME_OF_FIELD_1 
+!     INTEGER :: NAME_OF_FIELD_1 
+!     INTEGER :: ...
   END TYPE field_ids
 
   !< Fortran type storing size and offset of each model field in the state vector
@@ -69,16 +70,20 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(out) :: n_fields
 
-!+++ Specific part for 2D tutorial model
+  ! Template reminder - delete when implementing functionality
+  write (*,*) 'TEMPLATE mod_statevector_pdaf.F90: Define n_fields and IDs of fields in state vector!'
+
 
 ! Set total number of fields
-    n_fields = 2
+!    n_fields = ?
+
+  ! Dummy setting to ensure that code can be run
+    n_fields = 1
 
 ! Set field IDs
-    id%fieldA = 1
-    id%fieldB = 2
+    id%NAME_OF_FIELD_1 = 1
+!    id%NAME_OF_FIELD_2 = 2
 
-!+++ End of specific part
 
   END SUBROUTINE init_id
 
@@ -93,8 +98,8 @@ CONTAINS
   SUBROUTINE init_sfields()
 
     ! Specific for model
-    USE mod_model, &       ! Model variables
-         ONLY: nx, ny
+!    USE mod_model_pdaf, &       ! Model variables
+!         ONLY: nx, ny
 
     IMPLICIT NONE
 
@@ -110,23 +115,24 @@ CONTAINS
 ! *** Specify sfields entry for each field variable ***
 ! *****************************************************
 
-!+++ Specific part for 2D tutorial model
+    ! Template reminder - delete when implementing functionality
+    write (*,*) 'TEMPLATE mod_statevector_pdaf.F90: define field properties in variables SFIELDS!'
 
-    ! fieldA
-    sfields(id%fieldA)%name = 'A'
+    ! field NAME_OF_FIELD_1
+    sfields(id%NAME_OF_FIELD_1)%name = 'A'
+!    sfields(id%NAME_OF_FIELD_1)%dim = ??
 
-    ! fieldB
-    sfields(id%fieldB)%name = 'B'
+!+++ TEMPLATE: Dummy initialization for compilation
+    sfields(id%NAME_OF_FIELD_1)%dim = 10
+
+    ! field NAME_OF_FIELD_2
+!    sfields(id%NAME_OF_FIELD_2)%name = ??
+!    sfields(id%NAME_OF_FIELD_2)%dim = ??
 
 
 ! **************************************
-! ***   Set dimensions and offsets   ***
+! ***   Set offsets                  ***
 ! **************************************
-
-    ! Set field dimensions
-    DO i = 1, n_fields
-       sfields(i)%dim = nx * ny
-    END DO
 
 ! +++ The following is generic
 
