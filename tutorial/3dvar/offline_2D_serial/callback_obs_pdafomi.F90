@@ -43,9 +43,7 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   INTEGER, INTENT(out) :: dim_obs  !< Dimension of full observation vector
 
 ! *** Local variables ***
-  INTEGER :: dim_obs_A ! Observation dimensions
-  INTEGER :: dim_obs_B ! Observation dimensions
-  INTEGER :: dim_obs_C ! Observation dimensions
+  INTEGER :: dim_obs_type          ! Dimension of one observation type
 
 
 ! *********************************************
@@ -53,19 +51,25 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
 ! *********************************************
 
   ! Initialize number of observations
-  dim_obs_A = 0
-  dim_obs_B = 0
-  dim_obs_C = 0
+  dim_obs = 0
+  dim_obs_type = 0
 
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
 
-  IF (assim_A) CALL init_dim_obs_A(step, dim_obs_A)
-  IF (assim_B) CALL init_dim_obs_B(step, dim_obs_B)
-  IF (assim_C) CALL init_dim_obs_C(step, dim_obs_C)
-
-  dim_obs = dim_obs_A + dim_obs_B + dim_obs_C
+  IF (assim_A) THEN
+     CALL init_dim_obs_A(step, dim_obs_type)
+     dim_obs = dim_obs + dim_obs_type
+  END IF
+  IF (assim_B) THEN
+     CALL init_dim_obs_B(step, dim_obs_type)
+     dim_obs = dim_obs + dim_obs_type
+  END IF
+  IF (assim_C) THEN
+     CALL init_dim_obs_C(step, dim_obs_type)
+     dim_obs = dim_obs + dim_obs_type
+  END IF
 
 END SUBROUTINE init_dim_obs_pdafomi
 
