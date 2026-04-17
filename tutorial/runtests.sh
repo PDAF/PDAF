@@ -7,7 +7,7 @@ export DA_SPECS2="-filtertype 6 -screen 1"
 export DA_SPECS3="-filtertype 7 screen 1 -assim_A .false. -assim_B .true"
 
 COMPILEPDAF=0
-COMPILE=0
+COMPILE=1
 RUN_OFFLINE=1
 RUN_ONLINE_SERIAL=1
 RUN_ONLINE_PARALLEL=1
