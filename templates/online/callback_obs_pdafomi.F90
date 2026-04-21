@@ -41,24 +41,26 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   INTEGER, INTENT(out) :: dim_obs  !< Dimension of full observation vector
 
 ! *** Local variables ***
-  INTEGER :: dim_obs_OBSTYPE ! Observation dimensions
+  INTEGER :: dim_obs_type    ! Dimension of one observation type
 
 
 ! *********************************************
 ! *** Initialize full observation dimension ***
 ! *********************************************
 
-  WRITE (*, *) 'TEMPLATE callback_obs_pdafomi.F90/init_dim_obs_pdafomi: complete interface to observation modules'
-
   ! Initialize number of observations
-  dim_obs_OBSTYPE = 0
+  dim_obs = 0
+  dim_obs_type = 0
+
+  WRITE (*, *) 'TEMPLATE callback_obs_pdafomi.F90/init_dim_obs_pdafomi: complete interface to observation modules'
 
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
-  IF (assim_OBSTYPE) CALL init_dim_obs_OBSTYPE(step, dim_obs_OBSTYPE)
-
-  dim_obs = dim_obs_OBSTYPE ! + dim_obs_OBSTYPE2 ...
+  IF (assim_OBSTYPE) THEN
+     CALL init_dim_obs_OBSTYPE(step, dim_obs_type)
+     dim_obs = dim_obs + dim_obs_type
+  END IF
 
 END SUBROUTINE init_dim_obs_pdafomi
 
