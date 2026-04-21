@@ -3886,10 +3886,7 @@ CONTAINS
                 distflag = .FALSE.
              ELSE
                 ! full squared distance
-                distance2 = 0.0
-                DO k = 1, thisobs%ncoord
-                   distance2 = distance2 + dists(k)*dists(k)
-                END DO
+                distance2 = dists(2)*dists(2)
              END IF
           END IF
        END IF
@@ -4279,10 +4276,7 @@ CONTAINS
                 distflag = .FALSE.
              ELSE
                 ! full squared distance
-                distance2 = 0.0
-                DO k = 1, thisobs%ncoord
-                   distance2 = distance2 + dists(k)*dists(k)
-                END DO
+                distance2 = dists(2)*dists(2)
              END IF
           END IF
        END IF
