@@ -50,7 +50,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        ONLY: dim_ens, dim_eof, dim_p, flag, &
        screen, step, step_obs, type_filter, filterstr, &
        subtype_filter, ensemblefilter, state, Ainv, ens, &
-       debug
+       debug, pdaf_initialized
   USE PDAF_mod_parallel, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
        isset_comm_pdaf, isset_parallel
@@ -277,6 +277,9 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 ! ********************
 ! *** FINISHING UP ***
 ! ********************
+
+  ! Set initialized flag
+  pdaf_initialized = .true.
 
   ! Store internal status flag
   outflag = flag

@@ -54,6 +54,7 @@ MODULE PDAF_mod_core
   INTEGER :: debug=0              !< Debugging flag: print debug information if >0
 
   ! *** Variables controlling ensemble forecasts ***
+  LOGICAL :: pdaf_initialized=.false. !< Whether PDAF_init or PDAF3_init was executed
   LOGICAL :: offline_mode=.false. !< Whether to use PDAF offline mode
   INTEGER :: firsttime=1          !< Are the filter routines called for the first time?
   INTEGER :: initevol=1           !< Initialize a new forecast phase?

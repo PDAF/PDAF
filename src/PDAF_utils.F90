@@ -281,7 +281,7 @@ SUBROUTINE PDAF_deallocate()
   USE mpi
   USE PDAF_mod_core, &
        ONLY: screen, dim_bias_p, state, Ainv, ens, &
-       sens, bias, dim_lag
+       sens, bias, dim_lag, pdaf_initialized
   USE PDAF_mod_parallel, &
        ONLY: filterpe, mype_world, COMM_couple, mpi_init_by_pdaf, MPIerr
   USE PDAF_iau, &
@@ -297,11 +297,11 @@ SUBROUTINE PDAF_deallocate()
   on_filterpe: IF (filterpe) THEN
      ! Allocate all arrays and full ensemble matrix on Filter-PEs
 
-     DEALLOCATE(state)
-     DEALLOCATE(Ainv)
-
-     ! Allocate full ensemble on filter-PEs
-     DEALLOCATE(ens)
+     IF (pdaf_initialized) THEN
+        DEALLOCATE(state)
+        DEALLOCATE(Ainv)
+        DEALLOCATE(ens)
+     END IF
 
      ! Allocate array for past ensembles for smoothing on filter-PEs
      IF (dim_lag > 0) THEN
@@ -321,7 +321,7 @@ SUBROUTINE PDAF_deallocate()
 
      ! Allocate partial ensemble on model-only PEs that do coupling communication
      IF (COMM_couple /= MPI_COMM_NULL) THEN
-        DEALLOCATE(ens)
+        IF (pdaf_initialized) DEALLOCATE(ens)
      END IF
 
   END IF on_filterpe
