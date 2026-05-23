@@ -24,20 +24,6 @@
 !!
 !! * PDAFomi_set_debug_flag \n
 !!        Set or unset the debugging flag for PDAFomi routines
-!! * PDAFomi_init_dim_obs_l_old \n
-!!        Initialize dimension of local obs. vetor and arrays for
-!!        local observations
-!! * PDAFomi_cnt_dim_obs_l_old \n
-!!        Set dimension of local obs. vector with isotropic localization
-!! * PDAFomi_cnt_dim_obs_l_noniso_old \n
-!!        Set dimension of local obs. vector with nonisotropic localization
-!! * PDAFomi_init_obsarrays_l_old \n
-!!        Initialize arrays for the index of a local observation in 
-!!        the full observation vector and its corresponding distance.
-!! * PDAFomi_init_obsarrays_l_noniso_old \n
-!!        Initialize arrays for the index of a local observation in 
-!!        the full observation vector and its corresponding distance
-!!        with onoisotrppic localization.
 !! * PDAFomi_g2l_obs \n
 !!        Initialize local observation vector from full observation vector
 !! * PDAFomi_init_obs_l \n
