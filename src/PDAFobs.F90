@@ -276,10 +276,12 @@ CONTAINS
 
           ! [Hx_1 ... Hx_N]
           IF (do_HXbar) THEN
-             obs_member = 0
-             CALL PDAF_timeit(44, 'new')
-             CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
-             CALL PDAF_timeit(44, 'old')
+             IF (.NOT.observe_ens) THEN
+                obs_member = 0
+                CALL PDAF_timeit(44, 'new')
+                CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
+                CALL PDAF_timeit(44, 'old')
+             END IF
           END IF
 
           IF (do_HX) THEN
