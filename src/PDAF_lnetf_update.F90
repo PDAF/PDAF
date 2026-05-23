@@ -620,7 +620,7 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
      ! clean up
      DEALLOCATE(ens_l, state_l)
-     CALL PDAFobs_dealloc_local()
+     CALL PDAFobs_dealloc_local(1)
 
      ! Set allocflag
      allocflag_l = 1

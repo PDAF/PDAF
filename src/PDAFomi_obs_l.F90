@@ -73,6 +73,8 @@
 !!        Deallocate arrays in observation type
 !! * PDAFomi_dealloc \n
 !!        Deallocate arrays in all observation types
+!! * PDAFomi_dealloc_local \n
+!!        Deallocate thisobs_l for all observation types
 !! * PDAFomi_omit_by_innovation_l \
 !!        Exclude observations if innovation is too large (thisobs%inno_exclude)
 !!
@@ -4296,7 +4298,6 @@ CONTAINS
          have_obsmean_diag, have_obsens_diag, rmsd, dim_obs_diag_p, &
          obsstats, crps_allobs
 
-
 ! *** Local variables
     INTEGER :: i
 
@@ -4361,6 +4362,46 @@ CONTAINS
     END IF 
    
   END SUBROUTINE PDAFomi_dealloc
+
+
+!-------------------------------------------------------------------------------
+!> Deallocate arrays in thisobs_l for all observation types
+!!
+!! This routine deallocates arrays in the thisobs_l arrays for all
+!! observation types. The routine is only called internally in PDAF. 
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2026-05 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_dealloc_local()
+
+    IMPLICIT NONE
+
+! *** Local variables
+    INTEGER :: i
+
+
+! *** Perform deallocation of all thisobs_l types ***
+
+    IF (n_obstypes>0) THEN
+       DO i=1, n_obstypes
+          IF (ALLOCATED(obs_l_all(i)%ptr%id_obs_l)) DEALLOCATE(obs_l_all(i)%ptr%id_obs_l)
+          IF (ALLOCATED(obs_l_all(i)%ptr%distance_l)) DEALLOCATE(obs_l_all(i)%ptr%distance_l)
+          IF (ALLOCATED(obs_l_all(i)%ptr%cradius_l)) DEALLOCATE(obs_l_all(i)%ptr%cradius_l)
+          IF (ALLOCATED(obs_l_all(i)%ptr%sradius_l)) DEALLOCATE(obs_l_all(i)%ptr%sradius_l)
+          IF (ALLOCATED(obs_l_all(i)%ptr%ivar_obs_l)) DEALLOCATE(obs_l_all(i)%ptr%ivar_obs_l)
+          IF (ALLOCATED(obs_l_all(i)%ptr%dist_l_v)) DEALLOCATE(obs_l_all(i)%ptr%dist_l_v)
+          IF (ALLOCATED(obs_l_all(i)%ptr%cradius)) DEALLOCATE(obs_l_all(i)%ptr%cradius)
+          IF (ALLOCATED(obs_l_all(i)%ptr%sradius)) DEALLOCATE(obs_l_all(i)%ptr%sradius)
+       END DO
+
+       IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
+    END IF
+
+  END SUBROUTINE PDAFomi_dealloc_local
 
 
 !-------------------------------------------------------------------------------

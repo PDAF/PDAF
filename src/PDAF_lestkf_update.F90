@@ -555,7 +555,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      CALL PDAF_timeit(15, 'old')
 
      ! clean up
-     CALL PDAFobs_dealloc_local()
+     CALL PDAFobs_dealloc_local(1)
 
      DEALLOCATE(ens_l, state_l)
 

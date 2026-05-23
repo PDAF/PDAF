@@ -610,7 +610,7 @@ SUBROUTINE  PDAFlknetf_update_step(step, dim_p, dim_obs_f, dim_ens, &
 
      ! clean up
      DEALLOCATE(ens_l, state_l)
-     CALL PDAFobs_dealloc_local()
+     CALL PDAFobs_dealloc_local(0)
 
   END DO localanalysis
 
@@ -760,7 +760,7 @@ SUBROUTINE  PDAFlknetf_update_step(step, dim_p, dim_obs_f, dim_ens, &
 
         CALL PDAF_timeit(12, 'old')
 
-        CALL PDAFobs_dealloc_local()
+        CALL PDAFobs_dealloc_local(0)
 
      ELSE
         IF (debug>0) &
@@ -786,7 +786,7 @@ SUBROUTINE  PDAFlknetf_update_step(step, dim_p, dim_obs_f, dim_ens, &
 
      ! clean up
      DEALLOCATE(ens_l, state_l)
-     CALL PDAFobs_dealloc_local()
+     CALL PDAFobs_dealloc_local(1)
 
   END DO localanalysisA
 

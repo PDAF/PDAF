@@ -508,13 +508,25 @@ CONTAINS
 !! This routine deallocates the observation-related arrays
 !! that were allocated in PDAFomi_initialize
 !!
-  SUBROUTINE PDAFobs_dealloc_local()
+  SUBROUTINE PDAFobs_dealloc_local(mode)
+
+    USE PDAFomi_obs_f, &
+         ONLY: omi_n_obstypes => n_obstypes
+    USE PDAFomi_obs_l, &
+         ONLY: PDAFomi_dealloc_local
 
     IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: mode  ! 1: to also deallocate thisobs_lin PDAFomi
 
     IF (ALLOCATED(HX_l)) DEALLOCATE(HX_l)
     IF (ALLOCATED(HXbar_l)) DEALLOCATE(HXbar_l)
     IF (ALLOCATED(obs_l)) DEALLOCATE(obs_l)
+
+    IF (omi_n_obstypes>0 .AND. mode==1) THEN
+       CALL PDAFomi_dealloc_local()
+    END IF
 
   END SUBROUTINE PDAFobs_dealloc_local
 
