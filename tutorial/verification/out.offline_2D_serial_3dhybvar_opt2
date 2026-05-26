@@ -23,7 +23,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.1                      +++
+PDAF    +++                  Version 3.1.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -165,8 +165,8 @@ PDAF                 PDAF-OMI:      0.004 MiB (temporary)
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          Hyb3DVAR analysis:                   0.000 s
+PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Hyb3DVAR analysis:                   0.001 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Solver:                              0.000 s

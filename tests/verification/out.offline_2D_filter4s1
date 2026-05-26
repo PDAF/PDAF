@@ -28,7 +28,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.1                      +++
+PDAF    +++                  Version 3.1.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -79,8 +79,8 @@ PDAF          param_int(5) type_forget=  0
 PDAF            --> Use fixed forgetting factor: 0.80
 PDAF          param_int(6) type_trans=  0
 PDAF            --> Deterministic symmetric ensemble transformation
-PDAF          param_int(8) observe_ens= F
-PDAF            --> 0: Apply H to ensemble mean to compute innovation
+PDAF          param_int(8) observe_ens= T
+PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
@@ -125,7 +125,7 @@ PDAF                 PDAF-OMI:      0.004 MiB (temporary)
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF            init_ens_pdaf:                       0.001 s
 PDAF          ETKF analysis:                       0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s

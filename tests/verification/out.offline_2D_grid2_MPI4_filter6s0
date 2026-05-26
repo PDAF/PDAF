@@ -32,7 +32,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.1                      +++
+PDAF    +++                  Version 3.1.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -84,8 +84,8 @@ PDAF          param_int(6) type_trans=  0
 PDAF            --> Deterministic ensemble transformation (default)
 PDAF          param_int(7) type_sqrt=  0
 PDAF            --> symmetric square root (default)
-PDAF          param_int(8) observe_ens= F
-PDAF            --> 0: Apply H to ensemble mean to compute innovation
+PDAF          param_int(8) observe_ens= T
+PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
@@ -121,9 +121,9 @@ PDAF Forecast -------------------------------------------------------
  PDAF offline mode: EXITED ASSIMILATION
  model PE exited: mype            1
  model PE exited: mype            2
+ model PE exited: mype            3
 
 PDAF                       PDAF Memory overview
- model PE exited: mype            3
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      2.000 MiB (persistent)
@@ -134,23 +134,23 @@ PDAF                 PDAF-OMI:      0.349 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     2.907 s
-PDAF            init_ens_pdaf:                       2.907 s
-PDAF          ESTKF analysis:                      0.493 s
-PDAF            PDAF-internal operations:            0.008 s
+PDAF          Initialize PDAF:                     2.836 s
+PDAF            init_ens_pdaf:                       2.836 s
+PDAF          ESTKF analysis:                      0.429 s
+PDAF            PDAF-internal operations:            0.009 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.484 s
-PDAF              obs_op_pdafomi:                    0.002 s
-PDAF          prepoststep_pdaf:                    4.580 s
+PDAF              init_dim_obs_pdafomi:              0.421 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF          prepoststep_pdaf:                    4.253 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      2.907 s
-PDAF                      ESTKF analysis (3):      0.493 s
-PDAF                        get mean state (9):      0.001 s
-PDAF                  prepare observations (6):      0.486 s
+PDAF                     Initialize PDAF (1):      2.836 s
+PDAF                      ESTKF analysis (3):      0.429 s
+PDAF                        get mean state (9):      0.003 s
+PDAF                  prepare observations (6):      0.421 s
 PDAF                        init residual (10):      0.000 s
 PDAF                         compute Ainv (11):      0.000 s
 PDAF              get state weight vector (12):      0.001 s
@@ -159,6 +159,6 @@ PDAF                             SQRT(Ainv) (32):      0.000 s
 PDAF                             init Omega (33):      0.000 s
 PDAF                     compute C^T OmegaT (34):      0.000 s
 PDAF                       complete weights (35):      0.000 s
-PDAF                   transform ensemble (21):      0.006 s
-PDAF                         Prepoststep (5):      4.580 s
+PDAF                   transform ensemble (21):      0.005 s
+PDAF                         Prepoststep (5):      4.253 s
 PDAF  MPI_finalize called by PDAF

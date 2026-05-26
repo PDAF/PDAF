@@ -29,7 +29,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.1                      +++
+PDAF    +++                  Version 3.1.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -81,8 +81,8 @@ PDAF              --> EnKF with analysis for small observation dimension
 PDAF          param_int(4) rank_ana_enkf=  0
 PDAF            ---> analysis with direct inversion
 PDAF          Use fixed forgetting factor: 0.80
-PDAF          param_int(8) observe_ens= F
-PDAF            --> 0: Apply H to ensemble mean to compute innovation
+PDAF          param_int(8) observe_ens= T
+PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800

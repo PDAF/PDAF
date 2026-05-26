@@ -23,7 +23,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.1                      +++
+PDAF    +++                  Version 3.1.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -64,7 +64,7 @@ PDAF: Call ensemble initialization
          Initialize B^1/2
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 
   PDAF offline mode: START ASSIMILATION
 
@@ -140,10 +140,10 @@ PDAF                 PDAF-OMI:      0.002 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          3DVAR analysis:                      0.001 s
-PDAF            PDAF-internal operations:       349692.315 s
+PDAF            PDAF-internal operations:      1400449.781 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Solver:                              0.000 s
 PDAF            cvt_pdaf:                            0.000 s

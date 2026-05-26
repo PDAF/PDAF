@@ -30,7 +30,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.1                      +++
+PDAF    +++                  Version 3.1.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -81,8 +81,8 @@ PDAF          param_int(5) type_forget=  0
 PDAF            --> prior inflation, forgetting factor: 1.00
 PDAF          param_int(7) type_winf=  0
 PDAF            --> no inflation of particle weights relating to N_eff (default)
-PDAF          param_int(8) observe_ens= F
-PDAF            --> 0: Apply H to ensemble mean to compute innovation
+PDAF          param_int(8) observe_ens= T
+PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     1.000
@@ -134,8 +134,8 @@ PDAF                 PDAF-OMI:      0.007 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          PF analysis:                         0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
@@ -147,7 +147,7 @@ PDAF          prepoststep_pdaf:                    0.004 s
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      0.002 s
+PDAF                     Initialize PDAF (1):      0.003 s
 PDAF                         PF analysis (3):      0.000 s
 PDAF                  prepare observations (6):      0.000 s
 PDAF             compute particle weights (10):      0.000 s

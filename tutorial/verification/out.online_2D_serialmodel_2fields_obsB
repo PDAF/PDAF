@@ -17,18 +17,21 @@ PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
 PDAF    Pconf  ------------------------------------------------------------
 PDAF    Pconf      2                3        0       1        2       F
 PDAF    Pconf      4                5        0       1        4       F
-PDAF    Pconf      6                7        0       1        6       F
 PDAF    Pconf      3                4        0       1        3       F
+PDAF    Pconf      6                7        0       1        6       F
+PDAF    Pconf      5                6        0       1        5       F
 PDAF    Pconf      1                2        0       1        1       F
 PDAF    Pconf      7                8        0       1        7       F
-PDAF    Pconf      5                6        0       1        5       F
-PDAF    Pconf      8                9        0       1        8       F
 PDAF    Pconf      0        0       1        0       1        0       T
- INITIALIZE 2D-2FIELDS TUTORIAL MODEL
-          Grid size:  36 x   18
+PDAF    Pconf      8                9        0       1        8       F
  INITIALIZE 2D-2FIELDS TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
+ INITIALIZE 2D-2FIELDS TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+ INITIALIZE 2D-2FIELDS TUTORIAL MODEL
+          Grid size:  36 x   18
           Time steps  18
  INITIALIZE 2D-2FIELDS TUTORIAL MODEL
           Grid size:  36 x   18
@@ -48,15 +51,12 @@ PDAF    Pconf      0        0       1        0       1        0       T
                  +++++ PDAF tutorial - online mode +++++
 
          Tutorial: 2D model with 2 fields without parallelization
- INITIALIZE 2D-2FIELDS TUTORIAL MODEL
-          Grid size:  36 x   18
 
  INITIALIZE 2D-2FIELDS TUTORIAL MODEL
-          Time steps  18
           Grid size:  36 x   18
+          Time steps  18
 
  INITIALIZE 2D-2FIELDS TUTORIAL MODEL
-          Time steps  18
           Grid size:  36 x   18
           Time steps  18
 
@@ -77,7 +77,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.1                      +++
+PDAF    +++                  Version 3.1.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -118,7 +118,7 @@ PDAF: Call ensemble initialization
          --- Ensemble size:      9
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.014 s
+PDAF     --- duration of PDAF initialization:     0.012 s
 
 PDAF    LESTKF configuration
 PDAF          ensemble size:     9
@@ -145,7 +145,7 @@ PDAF     Call pre-post routine at initial time
         Ensemble standard deviation (estimated RMS error)
            stddev-ini             A    5.7637E-01
            stddev-ini             B    7.5000E-01
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.002 s
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      2
 PDAF     Evolve state ensemble
@@ -171,7 +171,7 @@ PDAF     Call pre-post routine after forecast; step       2
            stddev-for             A    5.7637E-01
            stddev-for             B    7.5000E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.010 s
+PDAF     --- duration of prestep:     0.018 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type B
         --- number of full observations    18
@@ -180,7 +180,7 @@ PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      18
 PDAFomi     --- Search type for local observations:   2
 PDAFomi        --- optimized search function, single loop
-PDAF     --- duration of observation preparation:     0.001 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -220,7 +220,7 @@ PDAF     --- Distribute sub-ensembles
  step           3
  step           4
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       4
@@ -229,7 +229,7 @@ PDAF     Call pre-post routine after forecast; step       4
            stddev-for             A    5.7431E-01
            stddev-for             B    7.4275E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.012 s
+PDAF     --- duration of prestep:     0.009 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type B
         --- number of full observations    18
@@ -238,7 +238,7 @@ PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      18
 PDAFomi     --- Search type for local observations:   2
 PDAFomi        --- optimized search function, single loop
-PDAF     --- duration of observation preparation:     0.001 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -262,7 +262,7 @@ PDAF        Local domains without observations:           630
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.002 s
+PDAF     --- analysis/re-init duration:     0.004 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -270,7 +270,7 @@ PDAF     Call pre-post routine after analysis step
            stddev-ana             A    5.7271E-01
            stddev-ana             B    7.3544E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.009 s
+PDAF     --- duration of poststep:     0.013 s
 PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Evolve state ensemble
@@ -287,7 +287,7 @@ PDAF     Call pre-post routine after forecast; step       6
            stddev-for             A    5.7271E-01
            stddev-for             B    7.3544E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.010 s
+PDAF     --- duration of prestep:     0.009 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type B
         --- number of full observations    18
@@ -328,7 +328,7 @@ PDAF     Call pre-post routine after analysis step
            stddev-ana             A    5.7064E-01
            stddev-ana             B    7.2804E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.015 s
+PDAF     --- duration of poststep:     0.010 s
 PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Evolve state ensemble
@@ -345,7 +345,7 @@ PDAF     Call pre-post routine after forecast; step       8
            stddev-for             A    5.7064E-01
            stddev-for             B    7.2804E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.008 s
+PDAF     --- duration of prestep:     0.015 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type B
         --- number of full observations    18
@@ -378,7 +378,7 @@ PDAF        Local domains without observations:           630
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.000 s
+PDAF     --- analysis/re-init duration:     0.003 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -394,7 +394,7 @@ PDAF     --- Distribute sub-ensembles
  step           9
  step          10
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      10
@@ -403,7 +403,7 @@ PDAF     Call pre-post routine after forecast; step      10
            stddev-for             A    5.6792E-01
            stddev-for             B    7.2058E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.009 s
+PDAF     --- duration of prestep:     0.015 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type B
         --- number of full observations    18
@@ -436,7 +436,7 @@ PDAF        Local domains without observations:           630
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.002 s
+PDAF     --- analysis/re-init duration:     0.005 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -444,7 +444,7 @@ PDAF     Call pre-post routine after analysis step
            stddev-ana             A    5.6614E-01
            stddev-ana             B    7.1510E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.015 s
+PDAF     --- duration of poststep:     0.017 s
 PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Evolve state ensemble
@@ -452,7 +452,7 @@ PDAF     --- Distribute sub-ensembles
  step          11
  step          12
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.003 s
 PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      12
@@ -461,7 +461,7 @@ PDAF     Call pre-post routine after forecast; step      12
            stddev-for             A    5.6614E-01
            stddev-for             B    7.1510E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.008 s
+PDAF     --- duration of prestep:     0.011 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type B
         --- number of full observations    18
@@ -470,7 +470,7 @@ PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      18
 PDAFomi     --- Search type for local observations:   2
 PDAFomi        --- optimized search function, single loop
-PDAF     --- duration of observation preparation:     0.001 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -494,7 +494,7 @@ PDAF        Local domains without observations:           630
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.002 s
+PDAF     --- analysis/re-init duration:     0.001 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -502,7 +502,7 @@ PDAF     Call pre-post routine after analysis step
            stddev-ana             A    5.6481E-01
            stddev-ana             B    7.1165E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.009 s
+PDAF     --- duration of poststep:     0.013 s
 PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Evolve state ensemble
@@ -510,7 +510,7 @@ PDAF     --- Distribute sub-ensembles
  step          13
  step          14
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Perform assimilation with PDAF
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after forecast; step      14
@@ -519,7 +519,7 @@ PDAF     Call pre-post routine after forecast; step      14
            stddev-for             A    5.6481E-01
            stddev-for             B    7.1165E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.009 s
+PDAF     --- duration of prestep:     0.014 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type B
         --- number of full observations    18
@@ -528,7 +528,7 @@ PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      18
 PDAFomi     --- Search type for local observations:   2
 PDAFomi        --- optimized search function, single loop
-PDAF     --- duration of observation preparation:     0.001 s
+PDAF     --- duration of observation preparation:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -560,7 +560,7 @@ PDAF     Call pre-post routine after analysis step
            stddev-ana             A    5.6348E-01
            stddev-ana             B    7.0819E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.008 s
+PDAF     --- duration of poststep:     0.011 s
 PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Evolve state ensemble
@@ -577,7 +577,7 @@ PDAF     Call pre-post routine after forecast; step      16
            stddev-for             A    5.6348E-01
            stddev-for             B    7.0819E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.014 s
+PDAF     --- duration of prestep:     0.018 s
 PDAF Prepare observations -------------------------------------------
         Assimilate observations - obs type B
         --- number of full observations    18
@@ -586,7 +586,7 @@ PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      18
 PDAFomi     --- Search type for local observations:   2
 PDAFomi        --- optimized search function, single loop
-PDAF     --- duration of observation preparation:     0.000 s
+PDAF     --- duration of observation preparation:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Local ESTKF analysis
 PDAF     --- local analysis domains:      648
@@ -610,7 +610,7 @@ PDAF        Local domains without observations:           630
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.003 s
+PDAF     --- analysis/re-init duration:     0.002 s
 PDAF Prepoststep ----------------------------------------------------
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
@@ -618,7 +618,7 @@ PDAF     Call pre-post routine after analysis step
            stddev-ana             A    5.6270E-01
            stddev-ana             B    7.0471E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.011 s
+PDAF     --- duration of poststep:     0.016 s
 PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Evolve state ensemble
@@ -676,7 +676,7 @@ PDAF     Call pre-post routine after analysis step
            stddev-ana             A    5.6210E-01
            stddev-ana             B    7.0121E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.009 s
+PDAF     --- duration of poststep:     0.010 s
 PDAF Forecast -------------------------------------------------------
      18   No more observations - end assimilation
 
@@ -691,20 +691,20 @@ PDAF                 PDAF-OMI:      0.002 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.014 s
-PDAF            init_ens_pdaf:                       0.013 s
-PDAF          Ensemble forecast:                   0.006 s
-PDAF            MPI communication in PDAF:           0.006 s
+PDAF          Initialize PDAF:                     0.012 s
+PDAF            init_ens_pdaf:                       0.010 s
+PDAF          Ensemble forecast:                   0.005 s
+PDAF            MPI communication in PDAF:           0.005 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.021 s
-PDAF            PDAF-internal operations:            0.005 s
-PDAF            OMI-internal routines:               0.002 s
+PDAF          LESTKF analysis:                     0.024 s
+PDAF            PDAF-internal operations:            0.007 s
+PDAF            OMI-internal routines:               0.006 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.001 s
+PDAF            init_dim_l_pdaf:                     0.003 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.005 s
+PDAF              init_dim_obs_pdafomi:              0.002 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.005 s
-PDAF          prepoststep_pdaf:                    0.190 s
+PDAF              init_dim_obs_l_pdafomi:            0.001 s
+PDAF          prepoststep_pdaf:                    0.234 s
 PDAF  MPI_finalize called by PDAF

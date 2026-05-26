@@ -6,8 +6,8 @@ PDAF    Pconf   world    assim       model           couple        assimPE
 PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
 PDAF    Pconf  ------------------------------------------------------------
 PDAF    Pconf      0        0       1        0       1        0       T
-PDAF    Pconf      2                3        0       1        2       F
 PDAF    Pconf      1                2        0       1        1       F
+PDAF    Pconf      2                3        0       1        2       F
 PDAF    Pconf      3                4        0       1        3       F
 
 
@@ -39,7 +39,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 3.1                      +++
+PDAF    +++                  Version 3.1.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -438,6 +438,7 @@ PDAF     --- Support radius   5.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
+PDAF     Perform smoothing up to lag        6
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
@@ -568,12 +569,12 @@ PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
 PDAF          LESTKF analysis:                     0.020 s
-PDAF            PDAF-internal operations:            0.006 s
-PDAF            OMI-internal routines:               0.002 s
+PDAF            PDAF-internal operations:            0.005 s
+PDAF            OMI-internal routines:               0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_l_pdaf:                     0.002 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.005 s
-PDAF              obs_op_pdafomi:                    0.001 s
+PDAF              init_dim_obs_pdafomi:              0.003 s
+PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.001 s
-PDAF          prepoststep_pdaf:                    0.047 s
+PDAF          prepoststep_pdaf:                    0.045 s
