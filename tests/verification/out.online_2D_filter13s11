@@ -195,4 +195,4 @@ PDAF            Time in OMI observation module routines
 PDAF              init_dim_obs_pdafomi:               0.000 s
 PDAF              obs_op_pdafomi:                     0.000 s
 PDAF              localize_covar_serial_pdafomi:      0.002 s
-PDAF          prepoststep_pdaf:                     0.009 s
+PDAF          prepoststep_pdaf:                     0.010 s

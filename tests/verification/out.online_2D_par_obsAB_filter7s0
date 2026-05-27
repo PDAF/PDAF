@@ -6,13 +6,13 @@ PDAF    Pconf   world    assim       model           couple        assimPE
 PDAF    Pconf   rank     rank    task     rank    task     rank      T/F
 PDAF    Pconf  ------------------------------------------------------------
 PDAF    Pconf      0        0       1        0       1        0       T
+PDAF    Pconf      4                3        0       1        2       F
+PDAF    Pconf      2                2        0       1        1       F
 PDAF    Pconf      1        1       1        1       2        0       T
 PDAF    Pconf      3                2        1       2        1       F
 PDAF    Pconf      7                4        1       2        3       F
-PDAF    Pconf      6                4        0       1        3       F
-PDAF    Pconf      4                3        0       1        2       F
 PDAF    Pconf      5                3        1       2        2       F
-PDAF    Pconf      2                2        0       1        1       F
+PDAF    Pconf      6                4        0       1        3       F
 
 
 
@@ -214,25 +214,6 @@ PDAF      18   Local ESTKF analysis
 PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
 PDAF     --- apply multiplicative inflation with fixed forget   0.80
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAFomi     --- Domain localization for obs. type ID   1
-PDAFomi        --- isotropic localization
-PDAFomi        --- localization cut-off radius   5.000E+00
-PDAFomi        --- support radius   5.000E+00
-PDAFomi        --- Cartesian distance calculation, disttype   0
-PDAFomi        --- Use distance-dependent weight for observation errors
-PDAF     Set localization weights
-PDAF     --- Initialize weights by 5th-order polynomial
-PDAF     --- Support radius   5.0000E+00
-PDAFomi     --- Domain localization for obs. type ID   2
-PDAFomi        --- isotropic localization
-PDAFomi        --- localization cut-off radius   5.000E+00
-PDAFomi        --- support radius   5.000E+00
-PDAFomi        --- Cartesian distance calculation, disttype   0
-PDAFomi        --- Use distance-dependent weight for observation errors
-PDAF     Transform state ensemble
-PDAF     --- use symmetric square-root of A
-PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
@@ -257,19 +238,19 @@ PDAF                 PDAF-OMI:        0.004 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.005 s
-PDAF            init_ens_pdaf:                       0.003 s
+PDAF          Initialize PDAF:                     0.004 s
+PDAF            init_ens_pdaf:                       0.002 s
 PDAF          Ensemble forecast:                   0.002 s
 PDAF            MPI communication in PDAF:           0.002 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.010 s
-PDAF            PDAF-internal operations:            0.000 s
+PDAF          LESTKF analysis:                     0.009 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            OMI-internal routines:               0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.004 s
-PDAF              obs_op_pdafomi:                    0.001 s
-PDAF              init_dim_obs_l_pdafomi:            0.003 s
-PDAF          prepoststep_pdaf:                    0.017 s
+PDAF              init_dim_obs_pdafomi:              0.003 s
+PDAF              obs_op_pdafomi:                    0.004 s
+PDAF              init_dim_obs_l_pdafomi:            0.001 s
+PDAF          prepoststep_pdaf:                    0.013 s
