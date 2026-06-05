@@ -3,12 +3,14 @@
 # ARCH specifies PDAF_ARCH without and with PDAF
 export ARCH=linux_gfortran_openmpi
 DA_SPECS=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 5.0"
+DA_SPECS_PAR=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 3.0"
 DA_SPECS_GEO=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 5.0e5"
 DA_SPECS_PF=" -dim_ens 8 -forget 1.0 -pf_noise_amp 0.8 -screen 1 -cradius 5.0"
 DA_SPECS_2OBS="$DA_SPECS -assim_B T"
 DA_SPECS_PF_2OBS="$DA_SPECS_PF -assim_B T"
 RUNSTR="mpirun -np 1 ./PDAF_offline"
-RUNPAR="mpirun -np 3 ./PDAF_offline"
+RUNPAR3="mpirun -np 3 ./PDAF_offline"
+RUNPAR6="mpirun -np 6 ./PDAF_offline"
 
 
 COMPILEPDAF=0
@@ -17,6 +19,7 @@ TEST_SUBTYPES=1
 TEST_SUBTYPES_2OBS=1
 TEST_OPTIONS=1
 TEST_PARALLEL=1
+TEST_PARALLEL_CRAD3=1
 
 echo "------------------ COMPILING ----------------"
 
@@ -861,8 +864,8 @@ then
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    echo $RUNPAR3 $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR3 $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
@@ -873,15 +876,15 @@ then
 
     FTYPE=7
     STYPE=0
-    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8, observe_ens 0 -----------"
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    echo $RUNPAR3 $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR3 $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
-
+    
 
     # NETF ##############
 
@@ -893,8 +896,8 @@ then
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    echo $RUNPAR3 $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR3 $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
@@ -909,8 +912,8 @@ then
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    echo $RUNPAR3 $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR3 $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
@@ -924,8 +927,8 @@ then
     export OMP_NUM_THREADS=4
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    echo $RUNPAR3 $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR3 $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_par_ftype${FTYPE}s${STYPE}
 
@@ -940,8 +943,8 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    echo $RUNPAR3 $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR3 $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
@@ -951,8 +954,8 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    echo $RUNPAR3 $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR3 $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
@@ -967,9 +970,66 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_parallel
     make cleandataq
-    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    echo $RUNPAR3 $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR3 $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
+
+fi
+
+
+if [ $TEST_PARALLEL_CRAD3 -eq 1 ]
+then
+
+    echo "     +++++++++++++ PARALLEL TESTS - checking the case of dim_obs_p=0 in one sub-domain +++++++++++++"
+
+    # We run with 6 MPI tasks since then task=1 has dim_obs_p=0, i.e. there are no observations
+    # in one of the middle process subdomains within cardius=3. This is a special case that
+    # has to be correctly handled by PDAFobs.
+
+
+    # LESTKF ##############
+
+    echo "     +++++++++++++ LESTKF offline parallel +++++++++++++"
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8, observe_ens 0 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNPAR6 $DA_SPECS_PAR -filtertype $FTYPE -subtype $STYPE -observe_ens 0
+    $RUNPAR6 $DA_SPECS_PAR  -observe_ens 0 -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_crad3_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}_crad3
+
+
+    # LESTKF ##############
+
+    FTYPE=7
+    STYPE=0
+    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8, observe_ens 1 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNPAR6 $DA_SPECS_PAR -filtertype $FTYPE -subtype $STYPE -observe_ens 1
+    $RUNPAR6 $DA_SPECS_PAR  -observe_ens 1 -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_crad3_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}_crad3
+
+    # ENSRF ##############
+
+    echo "     +++++++++++++ ENSRF offline parallel +++++++++++++"
+
+    FTYPE=13
+    STYPE=1
+    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNPAR6 $DA_SPECS_PAR -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR6 $DA_SPECS_PAR  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_crad3_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_par_ftype${FTYPE}s${STYPE}_crad3
 
 fi
