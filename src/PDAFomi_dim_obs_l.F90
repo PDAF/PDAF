@@ -3542,13 +3542,18 @@ CONTAINS
 
              coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
+             ! vertical distance
              dists(3) = ABS(coordsX(3) - coordsO(3))
-             IF (dists(3) <= thisobs_l%cradius(1)) THEN
+             IF (dists(3) <= thisobs_l%cradius(3)) THEN
 
                 dists(2) = ABS(coordsX(2) - coordsO(2))
                 IF (dists(2) <= crad2) THEN
 
-                   ! Haversine formula
+                   ! zonal (east–west) distance in meters
+                   dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1))* COS(coordsX(2)), &
+                     ABS(ABS(coordsX(1) - coordsO(1)) - 2.0*pi) * COS(coordsX(2)))
+
+                   ! Haversine formula - distance along great circle
                    slon = SIN((coordsX(1) - coordsO(1))/2.0)
                    slat = SIN((coordsX(2) - coordsO(2))/2.0)
 
@@ -3560,13 +3565,15 @@ CONTAINS
                    END IF
                    IF (dists(2) <= crad2) THEN
 
+                      dists(2) = dists(2)*r_earth
+
                       ! full squared distance
                       IF (thisobs%disttype<10) THEN
                          ! full 3D localization
-                         distance2 = dists(3)*dists(3) + dists(2)*dists(2)*r2_earth
+                         distance2 = dists(3)*dists(3) + dists(2)*dists(2)
                       ELSE
                          ! factorized 2+1D localization
-                         distance2 = dists(2)*dists(2) * r2_earth
+                         distance2 = dists(2)*dists(2)
                       END IF
 
                       CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
@@ -3585,6 +3592,10 @@ CONTAINS
              dists(2) = ABS(coordsX(2) - coordsO(2))
              IF (dists(2) <= crad2) THEN
 
+                ! zonal (east–west) distance in meters
+                dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1))* COS(coordsX(2)), &
+                  ABS(ABS(coordsX(1) - coordsO(1)) - 2.0*pi) * COS(coordsX(2)))
+
                 ! Haversine formula
                 slon = SIN((coordsX(1) - coordsO(1))/2)
                 slat = SIN((coordsX(2) - coordsO(2))/2)
@@ -3597,8 +3608,9 @@ CONTAINS
                 END IF
                 IF (dists(2) <= crad2) THEN
 
+                   dists(2) = dists(2)*r_earth
                    ! full squared distance
-                   distance2 = dists(2)*dists(2) * r2_earth
+                   distance2 = dists(2)*dists(2)
 
                    CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
                 END IF
@@ -4715,12 +4727,18 @@ CONTAINS
        ELSE
 
           ! *** 2D anisotropic case: Use polar radius of ellipse in 2 dimensions ***
-
-          ! Compute angle
-          IF (dists(1) /= 0.0) THEN
-             theta = ATAN(dists(2) / dists(1))
+          IF(thisobs%disttype==3.OR.thisobs%disttype==13) THEN
+             IF (dists(2) > 0.0) THEN
+                 theta = ACOS(MIN(1.0, dists(1) / dists(2)))
+             ELSE
+                 theta = 0.0
+             END IF
           ELSE
-             theta = pi / 2.0
+             IF (dists(1) /= 0.0) THEN
+                 theta = ATAN(dists(2) / dists(1))
+             ELSE
+                 theta = pi / 2.0
+             END IF
           END IF
 
           ! Compute radius in direction of theta
@@ -4782,7 +4800,14 @@ CONTAINS
 
           ! *** Isotropic in horizontal direction, distinct radius in the third direction (vertical) ***
 
-          dist_xy = SQRT(dists(1)*dists(1) + dists(2)*dists(2))
+          IF(thisobs%disttype==3.OR.thisobs%disttype==13) THEN
+             ! in case isotropic horizontal direction and geographic coordinates, the direction is equal to
+             ! greatcircle distance
+             dist_xy = dists(2)
+          ELSE
+             ! for cartesian coordinates the distance is computed from orthogonal components
+             dist_xy = SQRT(dists(1)*dists(1) + dists(2)*dists(2))
+          END IF
 
           ! 2D anisotropy: Polar radius of ellipse in 2 dimensions
 
@@ -4875,14 +4900,28 @@ CONTAINS
           ! Polar radius of ellipsoid in 3 dimensions
 
           ! Compute angle in x-y direction
-          IF (dists(1) /= 0.0) THEN
-             theta = ATAN(dists(2) / dists(1))
+          IF(thisobs%disttype==3.OR.thisobs%disttype==13) THEN
+             IF (dists(2) > 0.0) THEN
+                 theta = ACOS(MIN(1.0, dists(1) / dists(2)))
+             ELSE
+                 theta = 0.0
+             END IF
           ELSE
-             theta = pi / 2.0
+             IF (dists(1) /= 0.0) THEN
+                 theta = ATAN(dists(2) / dists(1))
+             ELSE
+                 theta = pi / 2.0
+             END IF
           END IF
 
-          ! Distance in xy-plane
-          dist_xy = SQRT(dists(1)**2 + dists(2)**2)
+          IF(thisobs%disttype==3.OR.thisobs%disttype==13) THEN
+             ! in case isotropic horizontal direction and geographic coordinates, the direction is equal to
+             ! greatcircle distance
+             dist_xy = dists(2)
+          ELSE
+             ! for cartesian coordinates the distance is computed from orthogonal components
+             dist_xy = SQRT(dists(1)*dists(1) + dists(2)*dists(2))
+          END IF
 
           ! Compute angle of xy-plane to z direction
           IF (dist_xy /= 0.0) THEN
