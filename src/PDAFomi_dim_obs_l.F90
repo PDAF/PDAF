@@ -1293,6 +1293,8 @@ CONTAINS
        tree_offset = 0.0
        CALL PDAFomi_tree_idx_lower(sort_dir, coordsX(sort_dir)-thisobs_l%cradius(1), thisobs%ocoord_f, &
             thisobs%dim_obs_f, startidx, tree_offset, tree_level)
+    ELSE
+       startidx = 1
     END IF
 
     ! Set squared cut-off radius
@@ -1782,7 +1784,7 @@ CONTAINS
              coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
              dists(2) = ABS(coordsX(2) - coordsO(2))
-             IF (dists(2) < crad) THEN
+             IF (dists(2) <= crad) THEN
 
                 ! Haversine formula
                 slon = SIN((coordsX(1) - coordsO(1))/2)
@@ -1794,7 +1796,7 @@ CONTAINS
                 ELSE
                    dists(2) = pi
                 END IF
-                IF (dists(2) < crad) THEN
+                IF (dists(2) <= crad) THEN
 
                    ! full squared distance
                    distance2 = dists(2)*dists(2) * r2_earth
@@ -2379,7 +2381,7 @@ CONTAINS
              coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
              dists(2) = ABS(coordsX(2) - coordsO(2))
-             IF (dists(2) < crad) THEN
+             IF (dists(2) <= crad) THEN
 
                 ! Haversine formula
                 slon = SIN((coordsX(1) - coordsO(1))/2)
@@ -2391,7 +2393,7 @@ CONTAINS
                 ELSE
                    dists(2) = pi
                 END IF
-                IF (dists(2) < crad) THEN
+                IF (dists(2) <= crad) THEN
 
                    ! full squared distance
                    distance2 = dists(2)*dists(2) * r2_earth
@@ -2830,6 +2832,7 @@ CONTAINS
     REAL :: cradius                 ! Directional cut-off radius
     REAL :: sradius                 ! Directional support radius
     LOGICAL :: checkdist            ! Flag whether distance is within cut-off radius
+    REAL :: dist_gc                 ! Great circle distance in case disttype is haversine
 
 
 ! **********************
@@ -3109,27 +3112,23 @@ CONTAINS
                    slon = SIN((coordsX(1) - coordsO(1))/2)
                    slat = SIN((coordsX(2) - coordsO(2))/2)
 
-                   dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
-                   IF (dists(2)<=1.0) THEN
-                      dists(2) = 2.0 * r_earth* ASIN(dists(2))
+                   dist_gc = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                   IF (dist_gc <= 1.0) THEN
+                      dist_gc = 2.0 * r_earth* ASIN(dist_gc)
                    ELSE
-                      dists(2) = r_earth* pi
+                      dist_gc = r_earth* pi
                    END IF
-                   IF (dists(2)>thisobs_l%cradius(1)) THEN
+                   IF (dist_gc>MAX(thisobs_l%cradius(1),thisobs_l%cradius(2))) THEN
                       distflag = .FALSE.
                    ELSE
                       ! full squared distance
                       distance2 = 0.0
                       IF (thisobs%disttype<10) THEN
                          ! full 3D localization
-                         DO k = 2, thisobs%ncoord
-                            distance2 = distance2 + dists(k)*dists(k)
-                         END DO
+                         distance2 = dist_gc*dist_gc + dists(3)*dists(3)
                       ELSE
                          ! factorized 2+1D localization
-                         DO k = 2, thisobs%ncoord-1
-                            distance2 = distance2 + dists(k)*dists(k)
-                         END DO
+                         distance2 = dist_gc*dist_gc
                       END IF
                    END IF
                 END IF
@@ -3146,20 +3145,17 @@ CONTAINS
                 slon = SIN((coordsX(1) - coordsO(1))/2)
                 slat = SIN((coordsX(2) - coordsO(2))/2)
 
-                dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
-                IF (dists(2)<=1.0) THEN
-                   dists(2) = 2.0 * r_earth* ASIN(dists(2))
+                dist_gc = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                IF (dist_gc <= 1.0) THEN
+                   dist_gc = 2.0 * r_earth* ASIN(dist_gc)
                 ELSE
-                   dists(2) = r_earth* pi
+                   dist_gc = r_earth* pi
                 END IF
-                IF (dists(2)>thisobs_l%cradius(1)) THEN
+                IF (dist_gc>MAX(thisobs_l%cradius(1),thisobs_l%cradius(2))) THEN
                    distflag = .FALSE.
                 ELSE
                    ! full squared distance
-                   distance2 = 0.0
-                   DO k = 1, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   distance2 = dist_gc*dist_gc
                 END IF
              END IF
           END IF
@@ -3233,6 +3229,7 @@ CONTAINS
     REAL :: crad1                   ! Cut-off radius in direction 1 divided by Earth radius
     REAL :: crad2                   ! Cut-off radius in direction 2 divided by Earth radius
     REAL :: cos_coordsX             ! Cosine of 2nd element of coordsX
+    REAL :: dist_gc                 ! Great circle distance in case disttype is haversine
 
 
 ! **********************
@@ -3542,38 +3539,38 @@ CONTAINS
 
              coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
-             ! vertical distance
              dists(3) = ABS(coordsX(3) - coordsO(3))
              IF (dists(3) <= thisobs_l%cradius(3)) THEN
 
                 dists(2) = ABS(coordsX(2) - coordsO(2))
                 IF (dists(2) <= crad2) THEN
 
-                   ! zonal (east–west) distance in meters
-                   dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1))* COS(coordsX(2)), &
-                     ABS(ABS(coordsX(1) - coordsO(1)) - 2.0*pi) * COS(coordsX(2)))
-
-                   ! Haversine formula - distance along great circle
+                   ! Haversine formula
                    slon = SIN((coordsX(1) - coordsO(1))/2.0)
                    slat = SIN((coordsX(2) - coordsO(2))/2.0)
 
-                   dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
-                   IF (dists(2)<=1.0) THEN
-                      dists(2) = 2.0 * ASIN(dists(2))
+                   dist_gc = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                   IF (dist_gc <= 1.0) THEN
+                      dist_gc = 2.0 * ASIN(dist_gc)
                    ELSE
-                      dists(2) = pi
+                      dist_gc = pi
                    END IF
-                   IF (dists(2) <= crad2) THEN
+                   IF (dist_gc <= MAX(crad1,crad2)) THEN
 
+                      ! meridional (north-south) distance in meters
                       dists(2) = dists(2)*r_earth
+
+                      ! zonal (east-west) distance in meters
+                      dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1)), &
+                           ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
 
                       ! full squared distance
                       IF (thisobs%disttype<10) THEN
                          ! full 3D localization
-                         distance2 = dists(3)*dists(3) + dists(2)*dists(2)
+                         distance2 = dists(3)*dists(3) + dist_gc*dist_gc*r2_earth
                       ELSE
                          ! factorized 2+1D localization
-                         distance2 = dists(2)*dists(2)
+                         distance2 = dist_gc*dist_gc * r2_earth
                       END IF
 
                       CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
@@ -3592,25 +3589,27 @@ CONTAINS
              dists(2) = ABS(coordsX(2) - coordsO(2))
              IF (dists(2) <= crad2) THEN
 
-                ! zonal (east–west) distance in meters
-                dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1))* COS(coordsX(2)), &
-                  ABS(ABS(coordsX(1) - coordsO(1)) - 2.0*pi) * COS(coordsX(2)))
-
                 ! Haversine formula
                 slon = SIN((coordsX(1) - coordsO(1))/2)
                 slat = SIN((coordsX(2) - coordsO(2))/2)
 
-                dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
-                IF (dists(2)<=1.0) THEN
-                   dists(2) = 2.0 * ASIN(dists(2))
+                dist_gc = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                IF (dist_gc <= 1.0) THEN
+                   dist_gc = 2.0 * ASIN(dist_gc)
                 ELSE
-                   dists(2) = pi
+                   dist_gc = pi
                 END IF
-                IF (dists(2) <= crad2) THEN
+                IF (dist_gc <= MAX(crad1,crad2)) THEN
 
+                   ! meridional (north-south) distance in meters
                    dists(2) = dists(2)*r_earth
+
+                   ! zonal (east-west) distance in meters
+                   dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1)), &
+                        ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
+
                    ! full squared distance
-                   distance2 = dists(2)*dists(2)
+                   distance2 = dist_gc*dist_gc * r2_earth
 
                    CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
                 END IF
@@ -3686,6 +3685,7 @@ CONTAINS
     REAL :: crad2                   ! Cut-off radius in direction 2 divided by Earth radius
     REAL :: cos_coordsX             ! Cosine of 2nd element of coordsX
     REAL :: lim_coord               ! Limit coordinate for exit check
+    REAL :: dist_gc                 ! Great circle distance in case disttype is haversine
 
 
 ! **********************
@@ -3707,6 +3707,8 @@ CONTAINS
        tree_offset = 0.0
        CALL PDAFomi_tree_idx_lower(sort_dir, coordsX(sort_dir)-thisobs_l%cradius(1), thisobs%ocoord_f, &
             thisobs%dim_obs_f, startidx, tree_offset, tree_level)
+    ELSE
+       startidx = 1
     END IF
 
     ! Debuggin output (outsize of loops for performance reasons)
@@ -4083,22 +4085,29 @@ CONTAINS
                    slon = SIN((coordsX(1) - coordsO(1))/2)
                    slat = SIN((coordsX(2) - coordsO(2))/2)
 
-                   dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
-                   IF (dists(2)<=1.0) THEN
-                      dists(2) = 2.0 * ASIN(dists(2))
+                   dist_gc = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                   IF (dist_gc <= 1.0) THEN
+                      dist_gc = 2.0 * ASIN(dist_gc)
                    ELSE
-                      dists(2) = pi
+                      dist_gc = pi
                    END IF
 
-                   IF (dists(2) <= crad1) THEN
+                   IF (dist_gc <= MAX(crad1, crad2)) THEN
+
+                      ! meridional (north-south) distance in meters
+                      dists(2) = dists(2)*r_earth
+
+                      ! zonal (east-west) distance in meters
+                      dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1)), &
+                           ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
 
                       ! full squared distance
                       IF (thisobs%disttype<10) THEN
                          ! full 3D localization
-                         distance2 = dists(3)*dists(3) + dists(2)*dists(2)*r2_earth
+                         distance2 = dists(3)*dists(3) + dist_gc*dist_gc*r2_earth
                       ELSE
                          ! factorized 2+1D localization
-                         distance2 = dists(2)*dists(2) * r2_earth
+                         distance2 = dist_gc*dist_gc * r2_earth
                       END IF
 
                       CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
@@ -4119,22 +4128,29 @@ CONTAINS
              coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
              dists(2) = ABS(coordsX(2) - coordsO(2))
-             IF (dists(2) < crad2) THEN
+             IF (dists(2) <= crad2) THEN
 
                 ! Haversine formula
                 slon = SIN((coordsX(1) - coordsO(1))/2)
                 slat = SIN((coordsX(2) - coordsO(2))/2)
 
-                dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
-                IF (dists(2)<=1.0) THEN
-                   dists(2) = 2.0 * ASIN(dists(2))
+                dist_gc = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                IF (dist_gc <= 1.0) THEN
+                   dist_gc = 2.0 * ASIN(dist_gc)
                 ELSE
-                   dists(2) = pi
+                   dist_gc = pi
                 END IF
-                IF (dists(2) < max(crad1, crad2)) THEN
+                IF (dist_gc <= max(crad1, crad2)) THEN
+
+                   ! meridional (north-south) distance in meters
+                   dists(2) = dists(2)*r_earth
+
+                   ! zonal (east-west) distance in meters
+                   dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1)), &
+                        ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
 
                    ! full squared distance
-                   distance2 = dists(2)*dists(2) * r2_earth
+                   distance2 = dist_gc*dist_gc * r2_earth
 
                    CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
                 END IF
@@ -4212,6 +4228,7 @@ CONTAINS
     REAL :: crad2                   ! Cut-off radius in direction 2 divided by Earth radius
     REAL :: cos_coordsX             ! Cosine of 2nd element of coordsX
     REAL :: lim_coord               ! Limit coordinate for exit check
+    REAL :: dist_gc                 ! Great circle distance in case disttype is haversine
 
 
 ! **********************
@@ -4588,22 +4605,29 @@ CONTAINS
                    slon = SIN((coordsX(1) - coordsO(1))/2)
                    slat = SIN((coordsX(2) - coordsO(2))/2)
 
-                   dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
-                   IF (dists(2)<=1.0) THEN
-                      dists(2) = 2.0 * ASIN(dists(2))
+                   dist_gc = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                   IF (dist_gc <= 1.0) THEN
+                      dist_gc = 2.0 * ASIN(dist_gc)
                    ELSE
-                      dists(2) = pi
+                      dist_gc = pi
                    END IF
 
-                   IF (dists(2) <= crad1) THEN
+                   IF (dist_gc <= MAX(crad1,crad2)) THEN
+
+                      ! meridional (north-south) distance in meters
+                      dists(2) = dists(2)*r_earth
+
+                      ! zonal (east-west) distance in meters
+                      dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1)), &
+                           ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
 
                       ! full squared distance
                       IF (thisobs%disttype<10) THEN
                          ! full 3D localization
-                         distance2 = dists(3)*dists(3) + dists(2)*dists(2)*r2_earth
+                         distance2 = dists(3)*dists(3) + dist_gc*dist_gc*r2_earth
                       ELSE
                          ! factorized 2+1D localization
-                         distance2 = dists(2)*dists(2) * r2_earth
+                         distance2 = dist_gc*dist_gc * r2_earth
                       END IF
 
                       CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
@@ -4620,22 +4644,29 @@ CONTAINS
              coordsO = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
              dists(2) = ABS(coordsX(2) - coordsO(2))
-             IF (dists(2) < crad2) THEN
+             IF (dists(2) <= crad2) THEN
 
                 ! Haversine formula
                 slon = SIN((coordsX(1) - coordsO(1))/2)
                 slat = SIN((coordsX(2) - coordsO(2))/2)
 
-                dists(2) = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
-                IF (dists(2)<=1.0) THEN
-                   dists(2) = 2.0 * ASIN(dists(2))
+                dist_gc = SQRT(slat*slat + COS(coordsX(2))*COS(coordsO(2))*slon*slon)
+                IF (dist_gc <= 1.0) THEN
+                   dist_gc = 2.0 * ASIN(dist_gc)
                 ELSE
-                   dists(2) = pi
+                   dist_gc = pi
                 END IF
-                IF (dists(2) < max(crad1, crad2)) THEN
+                IF (dist_gc <= max(crad1, crad2)) THEN
+
+                   ! meridional (north-south) distance in meters
+                   dists(2) = dists(2)*r_earth
+
+                   ! zonal (east-west) distance in meters
+                   dists(1) = r_earth * MIN( ABS(coordsX(1) - coordsO(1)), &
+                        ABS(ABS(coordsX(1) - coordsO(1)) - twopi)) * cos_coordsX
 
                    ! full squared distance
-                   distance2 = dists(2)*dists(2) * r2_earth
+                   distance2 = dist_gc*dist_gc * r2_earth
 
                    CALL PDAFomi_check_noniso(thisobs_l, thisobs, i, cnt_obs, dists, distance2, mode)
                 END IF
@@ -4692,12 +4723,16 @@ CONTAINS
     REAL :: cradius                 ! Directional cut-off radius
     REAL :: sradius                 ! Directional support radius
     REAL :: cradius2                ! cut-off radius on ellipse or ellipsoid
+    REAL :: crad3cost, crad1sint    ! Temporary variables
+    REAL :: srad3cost, srad1sint    ! Temporary variables
+    REAL :: crad23cospcost, crad13cospsint, crad12sinp ! Temporary variables
+    REAL :: srad23cospcost, srad13cospsint, srad12sinp ! Temporary variables
 
 
     nrad: IF (thisobs_l%nradii == 2 .OR. (thisobs_l%nradii == 3 .AND. thisobs%disttype >= 10)) THEN
 
-       IF ((thisobs_l%cradius(1) == thisobs_l%cradius(2)) .OR. &
-            (thisobs_l%sradius(1) == thisobs_l%sradius(2))) THEN
+       IF ((thisobs_l%cradius(1) == thisobs_l%cradius(2)) .AND. &
+           (thisobs_l%sradius(1) == thisobs_l%sradius(2))) THEN
 
           ! *** 2D isotropic case ***
           cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
@@ -4727,18 +4762,10 @@ CONTAINS
        ELSE
 
           ! *** 2D anisotropic case: Use polar radius of ellipse in 2 dimensions ***
-          IF(thisobs%disttype==3.OR.thisobs%disttype==13) THEN
-             IF (dists(2) > 0.0) THEN
-                 theta = ACOS(MIN(1.0, dists(1) / dists(2)))
-             ELSE
-                 theta = 0.0
-             END IF
+          IF (dists(1) /= 0.0) THEN
+             theta = ATAN(dists(2) / dists(1))
           ELSE
-             IF (dists(1) /= 0.0) THEN
-                 theta = ATAN(dists(2) / dists(1))
-             ELSE
-                 theta = pi / 2.0
-             END IF
+             theta = pi / 2.0
           END IF
 
           ! Compute radius in direction of theta
@@ -4787,27 +4814,24 @@ CONTAINS
 
        END IF
 
-    ELSE IF (thisobs_l%nradii == 3  .AND. thisobs%disttype < 10) THEN nrad
+    ELSE IF (thisobs_l%nradii == 3  .AND. thisobs%disttype < 10 ) THEN nrad
 
-       ! To save computing time, we here distinguish whether 
+       ! To save computing time, we here distinguish whether
        ! - the horizontal radii are equal and only direction 3 has a different radius
        ! - whether all radii are equal (isotropic but specified with separate radii)
        ! - the anisotropy is in all 3 dimensions (all radii different)
 
        aniso: IF ((thisobs_l%cradius(1) == thisobs_l%cradius(2)) .AND. &
-            (thisobs_l%cradius(1) /= thisobs_l%cradius(3)) .AND. &
-            (thisobs_l%sradius(1) == thisobs_l%sradius(2))) THEN
+                  (thisobs_l%cradius(1) /= thisobs_l%cradius(3)) .AND. &
+                  (thisobs_l%sradius(1) == thisobs_l%sradius(2))) THEN
 
           ! *** Isotropic in horizontal direction, distinct radius in the third direction (vertical) ***
 
-          IF(thisobs%disttype==3.OR.thisobs%disttype==13) THEN
-             ! in case isotropic horizontal direction and geographic coordinates, the direction is equal to
-             ! greatcircle distance
-             dist_xy = dists(2)
-          ELSE
-             ! for cartesian coordinates the distance is computed from orthogonal components
-             dist_xy = SQRT(dists(1)*dists(1) + dists(2)*dists(2))
-          END IF
+          ! Horizontal distance. All callers build distance2 as
+          ! dist_xy**2 + dists(3)**2, so the horizontal part is recovered from it.
+          ! This is the great-circle distance for geographic coordinates and
+          ! SQRT(dists(1)**2 + dists(2)**2) for Cartesian ones.
+          dist_xy = SQRT(MAX(0.0, distance2 - dists(3)**2))
 
           ! 2D anisotropy: Polar radius of ellipse in 2 dimensions
 
@@ -4820,9 +4844,15 @@ CONTAINS
 
           ! Compute radius in direction of theta
           IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(3)>0.0) THEN
-             cradius = thisobs_l%cradius(1) * thisobs_l%cradius(3) / &
-                  SQRT( (thisobs_l%cradius(3)*COS(theta))**2  &
-                  + (thisobs_l%cradius(1)*SIN(theta))**2 )
+             crad3cost = thisobs_l%cradius(3)*COS(theta)
+             crad1sint = thisobs_l%cradius(1)*SIN(theta)
+
+             IF (crad3cost > 0.0 .OR. crad1sint > 0.0) THEN
+                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(3) / &
+                     SQRT(crad3cost**2 + crad1sint**2)
+             ELSE
+                cradius = 0.0
+             END IF
           ELSE
              cradius = 0.0
           END IF
@@ -4835,9 +4865,15 @@ CONTAINS
 
              ! Compute support radius in direction of theta
              IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(3)>0.0) THEN
-                sradius = thisobs_l%sradius(1) * thisobs_l%sradius(3) / &
-                     SQRT( (thisobs_l%sradius(3)*COS(theta))**2 &
-                     + (thisobs_l%sradius(1)*SIN(theta))**2 )
+                srad3cost = thisobs_l%sradius(3)*COS(theta)
+                srad1sint = thisobs_l%sradius(1)*SIN(theta)
+
+                IF (srad3cost > 0.0 .OR. srad1sint > 0.0) THEN
+                   sradius = thisobs_l%sradius(1) * thisobs_l%sradius(3) / &
+                     SQRT(srad3cost**2 + srad1sint**2)
+                ELSE
+                   sradius = 0.0
+                END IF
              ELSE
                 sradius = 0.0
              END IF
@@ -4900,42 +4936,37 @@ CONTAINS
           ! Polar radius of ellipsoid in 3 dimensions
 
           ! Compute angle in x-y direction
-          IF(thisobs%disttype==3.OR.thisobs%disttype==13) THEN
-             IF (dists(2) > 0.0) THEN
-                 theta = ACOS(MIN(1.0, dists(1) / dists(2)))
-             ELSE
-                 theta = 0.0
-             END IF
+          IF (dists(1) /= 0.0) THEN
+             theta = ATAN(dists(2) / dists(1))
           ELSE
-             IF (dists(1) /= 0.0) THEN
-                 theta = ATAN(dists(2) / dists(1))
-             ELSE
-                 theta = pi / 2.0
-             END IF
+             theta = pi / 2.0
           END IF
 
-          IF(thisobs%disttype==3.OR.thisobs%disttype==13) THEN
-             ! in case isotropic horizontal direction and geographic coordinates, the direction is equal to
-             ! greatcircle distance
-             dist_xy = dists(2)
-          ELSE
-             ! for cartesian coordinates the distance is computed from orthogonal components
-             dist_xy = SQRT(dists(1)*dists(1) + dists(2)*dists(2))
-          END IF
+          ! Horizontal distance. All callers build distance2 as
+          ! dist_xy**2 + dists(3)**2, so the horizontal part is recovered from it.
+          ! This is the great-circle distance for geographic coordinates and
+          ! SQRT(dists(1)**2 + dists(2)**2) for Cartesian ones.
+          dist_xy = SQRT(MAX(0.0, distance2 - dists(3)**2))
 
           ! Compute angle of xy-plane to z direction
           IF (dist_xy /= 0.0) THEN
              phi = ATAN(dists(3) / dist_xy)
           ELSE
-             phi = 0.0
+             phi = pi / 2.0
           END IF
 
           ! Compute radius in direction of theta
           IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0 .OR. thisobs_l%cradius(3)>0.0) THEN
-             cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) * thisobs_l%cradius(3) / &
-                  SQRT( (thisobs_l%cradius(2)*thisobs_l%cradius(3)*COS(phi)*COS(theta))**2 &
-                  + (thisobs_l%cradius(1)*thisobs_l%cradius(3)*COS(phi)*SIN(theta))**2 &
-                  + (thisobs_l%cradius(1)*thisobs_l%cradius(2)*SIN(phi))**2 )
+             crad23cospcost = thisobs_l%cradius(2)*thisobs_l%cradius(3)*COS(phi)*COS(theta)
+             crad13cospsint = thisobs_l%cradius(1)*thisobs_l%cradius(3)*COS(phi)*SIN(theta)
+             crad12sinp = thisobs_l%cradius(1)*thisobs_l%cradius(2)*SIN(phi)
+
+             IF (crad23cospcost > 0.0 .OR. crad13cospsint > 0.0 .OR. crad12sinp > 0.0) THEN
+                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) * thisobs_l%cradius(3) / &
+                     SQRT(crad23cospcost**2 + crad13cospsint**2 + crad12sinp**2)
+             ELSE
+                cradius = 0.0
+             END IF
           ELSE
              cradius = 0.0
           END IF
@@ -4949,10 +4980,16 @@ CONTAINS
 
              ! Compute support radius in direction of theta
              IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0 .OR. thisobs_l%sradius(3)>0.0) THEN
-                sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) * thisobs_l%sradius(3) / &
-                     SQRT( (thisobs_l%sradius(2)*thisobs_l%sradius(3)*COS(phi)*COS(theta))**2 &
-                     + (thisobs_l%sradius(1)*thisobs_l%sradius(3)*COS(phi)*SIN(theta))**2 &
-                     + (thisobs_l%sradius(1)*thisobs_l%sradius(2)*SIN(phi))**2 )
+                srad23cospcost = thisobs_l%sradius(2)*thisobs_l%sradius(3)*COS(phi)*COS(theta)
+                srad13cospsint = thisobs_l%sradius(1)*thisobs_l%sradius(3)*COS(phi)*SIN(theta)
+                srad12sinp = thisobs_l%sradius(1)*thisobs_l%sradius(2)*SIN(phi)
+
+                IF (srad23cospcost > 0.0 .OR. srad13cospsint > 0.0 .OR. srad12sinp > 0.0) THEN
+                   sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) * thisobs_l%sradius(3) / &
+                        SQRT(srad23cospcost**2 + srad13cospsint**2 + srad12sinp**2)
+                ELSE
+                   sradius = 0.0
+                END IF
              ELSE
                 sradius = 0.0
              END IF
@@ -5306,7 +5343,7 @@ CONTAINS
     IF (level<=maxlevel) THEN
 
        scale = 0.5**level
-       tstidx = FLOOR((npts) * (scale + offset))
+       tstidx = MAX(FLOOR(npts * (scale + offset)), 1)
 
        level = level + 1
 
@@ -5359,7 +5396,7 @@ CONTAINS
     IF (level<=maxlevel) THEN
 
        scale = 0.5**level
-       tstidx = FLOOR((npts) * (scale + offset))
+       tstidx = MAX(FLOOR(npts * (scale + offset)), 1)
 
        level = level + 1
 
@@ -5374,5 +5411,4 @@ CONTAINS
     END IF
 
   END SUBROUTINE PDAFomi_tree_idx_upper
-
 END MODULE PDAFomi_dim_obs_l

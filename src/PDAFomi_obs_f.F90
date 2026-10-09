@@ -518,6 +518,10 @@ CONTAINS
 
        END IF fullobs
 
+       IF (localfilter==1 .AND. covarloc==0) THEN
+          if(search_type>10) sort_dir = MIN(sort_dir, thisobs%ncoord)
+       END IF
+
        IF (mype == 0 .AND. screen >0 .AND. localfilter==1 .AND. covarloc==0) THEN
           WRITE (*, '(a, 5x, a, 1x, i3)') 'PDAFomi', '--- Search type for local observations:', search_type
           IF (search_type == 0) THEN
@@ -527,25 +531,21 @@ CONTAINS
           ELSEIF (search_type == 2) THEN
              WRITE (*, '(a, 8x, a, 1x)') 'PDAFomi', '--- optimized search function, single loop'
           ELSEIF (search_type == 11) THEN
-             sort_dir = MIN(sort_dir, thisobs%ncoord)
              WRITE (*, '(a, 8x, a)') 'PDAFomi', &
                   '--- search sorted obs.; double loop'
              WRITE (*, '(a, 8x, a, 1x, i2)') 'PDAFomi', &
                   '--- sorted coordinate direction', sort_dir
           ELSEIF (search_type == 12) THEN
-             sort_dir = MIN(sort_dir, thisobs%ncoord)
              WRITE (*, '(a, 8x, a)') 'PDAFomi', &
                   '--- search sorted obs.; single loop'
              WRITE (*, '(a, 8x, a, 1x, i2)') 'PDAFomi', &
                   '--- sorted coordinate direction', sort_dir
           ELSEIF (search_type == 21) THEN
-             sort_dir = MIN(sort_dir, thisobs%ncoord)
              WRITE (*, '(a, 8x, a)') 'PDAFomi', &
                   '--- search sorted obs.; double loop; upper loop limit'
              WRITE (*, '(a, 8x, a, 1x, i2)') 'PDAFomi', &
                   '--- sorted coordinate direction', sort_dir
           ELSEIF (search_type == 22) THEN
-             sort_dir = MIN(sort_dir, thisobs%ncoord)
              WRITE (*, '(a, 8x, a)') 'PDAFomi', &
                   '--- search sorted obs.; single loop; upper loop limit'
              WRITE (*, '(a, 8x, a, 1x, i2)') 'PDAFomi', &

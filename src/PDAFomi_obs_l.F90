@@ -3664,7 +3664,7 @@ CONTAINS
              IF (dist_xy /= 0.0) THEN
                 phi = ATAN(dists(3) / dist_xy)
              ELSE
-                phi = 0.0
+                phi = pi / 2.0
              END IF
 
              ! Compute radius in direction of theta
