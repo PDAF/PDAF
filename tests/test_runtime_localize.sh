@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Script to test various settings of localization to check their run time
+# 2026-10 L. Nerger
+
 # ARCH specifies PDAF_ARCH without and with PDAF
 export ARCH=linux_gfortran_openmpi
 DA_SPECS=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 500.0 -gridsize 3"
