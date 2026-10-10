@@ -39,7 +39,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 3.1.1                     +++
+PDAF    +++                  Version 3.1.3                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -143,6 +143,7 @@ PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
 PDAF     Compute transform matrix for smoother without inflation
+PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
@@ -336,7 +337,6 @@ PDAF      10   LNETF analysis using T-matrix
 PDAF     --- local analysis domains:      648
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- use blocking with size   200
 PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
@@ -346,6 +346,7 @@ PDAFomi        --- Use distance-dependent weight for observation errors
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
+PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        4
 PDAF     --- Global statistics for local analysis:
@@ -439,6 +440,8 @@ PDAF      14   LNETF analysis using T-matrix
 PDAF     --- local analysis domains:      648
 PDAF     --- Initialize random transformation
 PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- use blocking with size   200
+PDAF     --- use blocking with size   200
 PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
@@ -450,6 +453,7 @@ PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        6
+PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
@@ -501,7 +505,6 @@ PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        7
-PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              648
 PDAF        Local domains without observations:             0
@@ -546,12 +549,13 @@ PDAFomi     --- Assume Gaussian observation errors
 PDAFomi     --- Domain localization
 PDAFomi        --- Localization cut-off radius   5.000E+00
 PDAFomi        --- Support radius   5.000E+00
+PDAF     --- use blocking with size   200
 PDAFomi        --- Cartesian distance calculation, disttype   0
 PDAFomi        --- Use distance-dependent weight for observation errors
+PDAF     --- use blocking with size   200
 PDAF     Set localization weights
 PDAF     --- Initialize weights by 5th-order polynomial
 PDAF     --- Support radius   5.0000E+00
-PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        8
 PDAF     --- Global statistics for local analysis:
@@ -583,19 +587,19 @@ PDAF                 PDAF-OMI:        0.003 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.001 s
-PDAF            MPI communication in PDAF:          0.001 s
+PDAF          Initialize PDAF:                     0.000 s
+PDAF            init_ens_pdaf:                       0.000 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:          0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LNETF analysis:                      0.031 s
-PDAF            PDAF-internal operations:            0.016 s
-PDAF            OMI-internal routines:               0.004 s
+PDAF          LNETF analysis:                      0.023 s
+PDAF            PDAF-internal operations:            0.011 s
+PDAF            OMI-internal routines:               0.005 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.001 s
+PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.004 s
+PDAF              init_dim_obs_pdafomi:              0.003 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.003 s
-PDAF          prepoststep_pdaf:                    0.043 s
+PDAF              init_dim_obs_l_pdafomi:            0.000 s
+PDAF          prepoststep_pdaf:                    0.037 s

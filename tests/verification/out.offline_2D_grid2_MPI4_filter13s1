@@ -32,7 +32,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                       PDAF                         +++
 PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 3.1.1                     +++
+PDAF    +++                  Version 3.1.3                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -84,8 +84,8 @@ PDAF          ensemble size:     8
 PDAF          filter sub-type=   1
 PDAF              --> 2-step local least squares EAKF cf. Anderson (2003)
 PDAF          Use fixed forgetting factor: 0.80
-PDAF          param_int(8) observe_ens= T
-PDAF            --> 1: Apply H to ensemble states and compute innovation as mean (default)
+PDAF          param_int(8) observe_ens= F
+PDAF            --> 0: Apply H to ensemble mean to compute innovation
 PDAF          param_int(9) type_obs_init=  1
 PDAF            --> Initialize observations after PDAF prestep
 PDAF          param_real(1) forget=     0.800
@@ -119,10 +119,7 @@ PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
  PDAF offline mode: EXITED ASSIMILATION
- model PE exited: mype            2
- model PE exited: mype            3
 
- model PE exited: mype            1
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
@@ -134,29 +131,32 @@ PDAF                 PDAF-OMI:      0.805 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     2.854 s
-PDAF            init_ens_pdaf:                       2.854 s
-PDAF          ENSRF analysis:                       49.462 s
-PDAF            PDAF-internal operations:             8.853 s
+ model PE exited: mype            2
+ model PE exited: mype            3
+PDAF          Initialize PDAF:                     1.261 s
+PDAF            init_ens_pdaf:                       1.261 s
+PDAF          ENSRF analysis:                       35.177 s
+PDAF            PDAF-internal operations:             5.974 s
 PDAF            OMI-internal routines:                0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:               0.391 s
-PDAF              obs_op_pdafomi:                    29.224 s
-PDAF              localize_covar_serial_pdafomi:     40.216 s
-PDAF          prepoststep_pdaf:                     4.256 s
+PDAF              init_dim_obs_pdafomi:               1.189 s
+PDAF              obs_op_pdafomi:                    17.102 s
+PDAF              localize_covar_serial_pdafomi:     28.014 s
+PDAF          prepoststep_pdaf:                     3.238 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                     Initialize PDAF (1):      2.854 s
-PDAF                      EnSRF analysis (3):     49.462 s
-PDAF                  prepare observations (6):     29.615 s
+ model PE exited: mype            1
+PDAF                     Initialize PDAF (1):      1.261 s
+PDAF                      EnSRF analysis (3):     35.177 s
+PDAF                  prepare observations (6):     18.291 s
 PDAF                 compute ensemble mean (9):      0.001 s
-PDAF              HXpert, var(hx), covars (10):     44.562 s
+PDAF              HXpert, var(hx), covars (10):     30.629 s
 PDAF                 HXpert, HXbar, var(hx) (30):      0.000 s
-PDAF              covariances X(HX), HX(HX) (31):      4.342 s
-PDAF                     Apply localization (45):     40.216 s
-PDAF              transform obs. ensemble (13):      0.172 s
-PDAF              ensemble transformation (14):      4.335 s
-PDAF                         Prepoststep (5):      4.256 s
+PDAF              covariances X(HX), HX(HX) (31):      2.615 s
+PDAF                     Apply localization (45):     28.014 s
+PDAF              transform obs. ensemble (13):      0.112 s
+PDAF              ensemble transformation (14):      3.241 s
+PDAF                         Prepoststep (5):      3.238 s
 PDAF  MPI_finalize called by PDAF

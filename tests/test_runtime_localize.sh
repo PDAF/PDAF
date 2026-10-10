@@ -8,16 +8,15 @@ export ARCH=linux_gfortran_openmpi
 DA_SPECS=" -dim_ens 8 -forget 0.8 -screen 1 -cradius 500.0 -gridsize 3"
 DA_SPECS_GEO=" -dim_ens 8 -forget 0.8 -screen 1 -gridsize 3 -cradius 1.0e4"
 RUNSTR="mpirun -np 1 ./PDAF_offline"
-RUNPAR="mpirun -np 4 ./PDAF_offline"
 
 COMPILEPDAF=0
 COMPILE=1
 GENERATE_INPUTS=1
-TEST_PAR=1         # Cartesian coordinates (type_coords=0)
-TEST_PAR_GEO=1     # Geographic coordinates, simplified distance (type_coords=2)
-TEST_PAR_GC=1      # Geographic coordinates, great circle distance (type_coords=3)
-TEST_PAR_GEO_NONISO=1
-TEST_PAR_GC_NONISO=1
+TEST_PAR_CART=1           # Cartesian coordinates (type_coords=0)
+TEST_PAR_GEO=1            # Geographic coordinates, simplified distance (type_coords=2)
+TEST_PAR_GC=1             # Geographic coordinates, great circle distance (type_coords=3)
+TEST_PAR_GEO_NONISO=1     # Geographic coordinates, simplified distance (type_coords=2), non-isotropic
+TEST_PAR_GC_NONISO=1      # Geographic coordinates, great circle distance (type_coords=3), non-isotropic
 DO_CHECK=0
 
 echo "------------------ GENERATE INPUT FILES ----------------"
@@ -62,7 +61,7 @@ echo "-------------------- RUNNING ----------------"
 
 #--------- OFFLINE -------------
 
-if [ $TEST_PAR -eq 1 ]
+if [ $TEST_PAR_CART -eq 1 ]
 then
 
 
@@ -77,7 +76,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 0
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 0 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search0
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 0 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search0
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -91,7 +90,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 1
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search1
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search1
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -105,7 +104,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search2
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search2
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -119,7 +118,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 11 -omi_sort_dir 1
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 11 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search11dir1
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 11 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search11dir1
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -133,7 +132,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 11 -omi_sort_dir 2
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 11 -omi_sort_dir 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search11dir2
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 11 -omi_sort_dir 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search11dir2
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -147,7 +146,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 12 -omi_sort_dir 1
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 12 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search12dir1
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 12 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search12dir1
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -161,7 +160,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 12 -omi_sort_dir 2
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 12 -omi_sort_dir 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search12dir2
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 12 -omi_sort_dir 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search12dir2
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -175,7 +174,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 21 -omi_sort_dir 1
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 21 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search21dir1
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 21 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search21dir1
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -189,7 +188,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 21 -omi_sort_dir 2
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 21 -omi_sort_dir 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search21dir2
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 21 -omi_sort_dir 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search21dir2
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -203,7 +202,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 22 -omi_sort_dir 1
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 22 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search22dir1
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 22 -omi_sort_dir 1 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search22dir1
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -217,7 +216,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE -omi_search_type 22 -omi_sort_dir 2
-    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 22 -omi_sort_dir 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}search22dir2
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE -omi_search_type 22 -omi_sort_dir 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}coords0search22dir2
     cd ..
     if [ $DO_CHECK -eq 1 ]
     then
@@ -556,7 +555,7 @@ then
     cd offline_2D_parallel
     make cleandataq
     echo $RUNSTR $DA_SPECS_GEO -filtertype $FTYPE -subtype $STYPE -type_coords 2 -omi_search_type 22 -omi_sort_dir 1 -loc_noniso 2
-    $RUNSTR $DA_SPECS_GEO  -filtertype $FTYPE -subtype $STYPE -type_coords 2 -omi_search_type 22 -omi_sort_dir -loc_noniso 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}noniso2coords2search22dir1
+    $RUNSTR $DA_SPECS_GEO  -filtertype $FTYPE -subtype $STYPE -type_coords 2 -omi_search_type 22 -omi_sort_dir 1 -loc_noniso 2 > ../out.offline_2D_grid2_OMP1_filter${FTYPE}s${STYPE}noniso2coords2search22dir1
     cd ..
 
     FTYPE=7
